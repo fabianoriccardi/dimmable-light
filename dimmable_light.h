@@ -44,8 +44,11 @@ class DimmableLight{
 	private:
 	static uint8_t nLights;
 	static DimmableLight* lights[];
-	
-	static bool newBrightness;
+
+  /**
+   * Variable to tell the interrupt routine to update its internal structures
+   */
+	static bool newBrightnessValues;
 	static bool updatingStruct;
 
 	static uint8_t syncPin;

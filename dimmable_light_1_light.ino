@@ -11,45 +11,28 @@
 #include "dimmable_light.h"
 
 Ticker dim;
-int period=5;
+float period=0.1;
 
 DimmableLight l1(D5);
-DimmableLight l2(D6);
-DimmableLight l3(D4);
 
 void doDim(void){
+  static int briLevels[]={0,1,2,3/*,4,127,252,253,254,255*/};
   static uint8_t step=0;
-  Serial.println("Dimming...");
-  switch(step){
-    case 0:
-    l1.setBrightness(1000);
-    l2.setBrightness(3000);
-    l3.setBrightness(5000);
-    break;
-    case 1:
-    l1.setBrightness(3000);
-    l2.setBrightness(5000);
-    l3.setBrightness(7000);
-    break;
-    case 2:
-    l1.setBrightness(5000);
-    l2.setBrightness(7000);
-    l3.setBrightness(9000);
-    break;
-    case 3:
-    l1.setBrightness(7000);
-    l2.setBrightness(9000);
-    l3.setBrightness(9000);
-    break;
-    case 4:
-    l1.setBrightness(9000);
-    l2.setBrightness(9000);
-    l3.setBrightness(9000);
-    break;
-    default: break;
+  Serial.println(String("Dimming at: ") + briLevels[step] + "/255");
+  l1.setBrightness(briLevels[step]);
+  
+  if(step==sizeof(briLevels)/sizeof(briLevels[0])){
+    step=0;
+  }else{
+    step++;
   }
+}
 
-  if(step==4){
+void doDimLinear(void){
+  static uint8_t step=0;
+  Serial.println(String("Dimming at: ") + step + "/255");
+  l1.setBrightness(step);
+  if(step==255){
     step=0;
   }else{
     step++;
@@ -66,7 +49,7 @@ void setup() {
   DimmableLight::begin();
   Serial.println("Done!");
 
-  dim.attach(period,doDim);
+  dim.attach(period,doDimLinear);
 }
 
 void loop() {}
