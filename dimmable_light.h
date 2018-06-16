@@ -34,11 +34,18 @@ class DimmableLight{
 
   	~DimmableLight();
 
-  	/**
-  	 * Set the timer and the interrupt routine
-  	 * Actually this function doesn't do nothing the first light is created 
-  	 */
-  	static void begin();
+  /**
+   * Set the timer and the interrupt routine
+   * Actually this function doesn't do nothing the first light is created 
+   */
+  static void begin();
+
+  /**
+   * Return the number of instantiated lights
+   */
+  static uint8_t getLightNumber(){
+    return nLights;
+  };
 
   static const uint8_t N = 8;
 	private:
@@ -52,6 +59,8 @@ class DimmableLight{
 	static bool updatingStruct;
 
 	static uint8_t syncPin;
+
+  static const uint8_t verbosity = 2;
 
 	uint8_t pin;
 	

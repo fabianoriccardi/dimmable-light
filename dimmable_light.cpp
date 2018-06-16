@@ -17,7 +17,30 @@ static struct PinBri pinBri[DimmableLight::N];
  */
 static uint8_t lightManaged=0;
 
-void activateLights();
+/**
+ * Timer routine to turn on one or more lights
+ */
+void activateLights(){
+  // Alternative way to manage the pin, it should become low after the triac started
+  //delayMicroseconds(10);
+  //digitalWrite(AC_LOADS[phase],LOW);
+  
+  // This condition means:
+  // trigger immediately is there is not time to active the timer for the next light (i.e delay differene less than 150microseconds)
+  for(; (lightManaged<DimmableLight::nLights-1 && pinBri[lightManaged+1].delay-pinBri[lightManaged].delay<150); lightManaged++){
+    digitalWrite(pinBri[lightManaged].pin, HIGH);
+    // Turn on the following light, it this really similar to the previous... 
+    //Some lights could be turned on 2 times, but of course it hasn't any effect
+    //Serial.println("#");
+  }
+
+  digitalWrite(pinBri[lightManaged].pin, HIGH);
+  lightManaged++;
+
+  if(lightManaged<DimmableLight::nLights){
+    hw_timer_arm(pinBri[lightManaged].delay-pinBri[lightManaged-1].delay);
+  }
+}
 
 /**
  * This function manage the triac/dimmer in a single semi-period (that is 10ms @50Hz)
@@ -40,11 +63,11 @@ void zero_cross_int(){
   		pinBri[i].pin=DimmableLight::lights[i]->pin;
   		pinBri[i].delay=DimmableLight::lights[i]->brightness;
   	}
-//    for(int i=0;i<DimmableLight::nLights;i++){
-//      Serial.print(pinBri[i].pin);
-//      Serial.print(" ");
-//      Serial.println(pinBri[i].delay);
-//    }
+    for(int i=0;i<DimmableLight::nLights;i++){
+      Serial.print(pinBri[i].pin);
+      Serial.print(" ");
+      Serial.println(pinBri[i].delay);
+    }
    
   }
 
@@ -52,7 +75,7 @@ void zero_cross_int(){
   
   // This for is intended for full brightness
   for(int lightManaged=0;pinBri[lightManaged].delay<30;lightManaged++){
-  	//Serial.println("NL");
+  	//Serial.println("FB");
   	digitalWrite(pinBri[lightManaged].pin,HIGH);
   }
 
@@ -71,31 +94,6 @@ void zero_cross_int(){
   }else{
     hw_timer_set_func(NULL);
   }
-}
-
-/**
- * Timer routine to turn on one or more lights
- */
-void activateLights(){
-	// Alternative way to manage the pin, it should become low after the triac started
-	//delayMicroseconds(10);
-	//digitalWrite(AC_LOADS[phase],LOW);
-  
-	// This condition means:
-	// trigger immediately is there is not time to active the timer for the next light (i.e delay differene less than 150microseconds)
-	for(; (lightManaged<DimmableLight::nLights-1 && pinBri[lightManaged].delay<pinBri[lightManaged+1].delay+150); lightManaged++){
-		digitalWrite(pinBri[lightManaged].pin, HIGH);
-		// Turn on the following light, it this really similar to the previous... 
-		//Some lights could be turned on 2 times, but of course it hasn't any effect
-		//digitalWrite(pinBri[lightManaged+1].pin, HIGH);
-	}
-
-	digitalWrite(pinBri[lightManaged].pin, HIGH);
-	lightManaged++;
-
-	if(lightManaged<DimmableLight::nLights){
-	  hw_timer_arm(pinBri[lightManaged].delay-pinBri[lightManaged-1].delay);
-	}
 }
 
 void DimmableLight::begin(){
@@ -118,35 +116,70 @@ void DimmableLight::setBrightness(uint8_t newBri){
   // Array example, it is always ordered, higher values means lower brightness
   // [45,678,5000,7500,9000]
   if(newBrightness>brightness){
+  	if(verbosity>2) Serial.println("\tlowering the light..");
   	bool done=false;
-  	for(int i=posIntoArray+1;i<nLights && !done;i++){
-  		if(newBri<lights[i]->brightness){
-  			// perform the exchange between posIntoArray
-  			DimmableLight *temp=lights[posIntoArray];
-  			lights[posIntoArray]=lights[i];
-  			lights[i]=temp;
-  			// update posinto array
-  			lights[posIntoArray]->posIntoArray=i;
-  			// this->posIntoArray=posIntoArray
-  			lights[i]->posIntoArray=posIntoArray;
-  			done=true;
-  		}
-  	}
+  	/////////////////////////////////////////////////////////////////
+  	// Let's find the new position
+    int i=posIntoArray+1;
+    while(i<nLights && !done){
+      if(newBrightness<lights[i]->brightness){
+        done=true;
+      }else{
+        i++;
+      }
+    }
+    // This could be due to 2 factor:
+    // 1) the light is already the lowest brightness
+    // 2) the brightness is not changed to overpass the neightbour
+    if(posIntoArray+1==i){
+      if(verbosity>2) Serial.println("No need to shift..");
+    }else{
+      int target;
+      // Means that we have reached the end, the target i the last element
+      if(i==nLights){
+        target=nLights-1;
+      }else{
+        target=i;
+      }
+  
+      // Let's shift
+      for(int i=posIntoArray;i<target;i++){
+        lights[i]=lights[i+1];
+        lights[i]->posIntoArray=i;
+      }
+      lights[target]=this;
+      this->posIntoArray=target;
+    }
   }else if(newBrightness<brightness){
+    if(verbosity>2) Serial.println("\traising the light..");
   	bool done=false;
-  	for(int i=posIntoArray-1;i>0  && !done;i--){
-  		if(newBri>lights[i]->brightness){
-  			// perform the exchange between posIntoArray
-  			DimmableLight *temp=lights[posIntoArray];
-  			lights[posIntoArray]=lights[i];
-  			lights[i]=temp;
-  			// update posinto array
-  			lights[posIntoArray]->posIntoArray=i;
-  			// this->posIntoArray=posIntoArray
-  			lights[i]->posIntoArray=posIntoArray;
-  			done=true;
-  		}
-  	}
+  	int i=posIntoArray-1;
+    while(i>=0 && !done){
+      if(newBrightness>lights[i]->brightness){
+        done=true;
+      }else{
+        i--;
+      }
+    }
+    if(posIntoArray-1==i){
+      if(verbosity>2) Serial.println("No need to shift..");
+    }else{
+      int target;
+      // Means that we have reached the end, the target is the first element
+      if(!done){
+        target=0;
+      }else{
+        target=i;
+      }
+  
+      // Let's shift
+      for(int i=posIntoArray;i>target;i--){
+        lights[i]=lights[i-1];
+        lights[i]->posIntoArray=i;
+      }
+      lights[target]=this;
+      this->posIntoArray=target;
+    }
   }else{
   	Serial.println("No need to perform the exchange, the brightness is the same!");
   }
@@ -154,11 +187,11 @@ void DimmableLight::setBrightness(uint8_t newBri){
   newBrightnessValues=true;
   updatingStruct=false;
   
-	Serial.println(String("Brightness (in ms to wait): ") + brightness);
+	//Serial.println(String("Brightness (in ms to wait): ") + brightness);
 }
 
 DimmableLight::DimmableLight(int pin)
-								:pin(pin),brightness(0){
+								:pin(pin),brightness(10000){
 	if(nLights<N-1){
 		pinMode(pin,OUTPUT);
     
@@ -167,9 +200,22 @@ DimmableLight::DimmableLight(int pin)
 		posIntoArray=nLights;
 		nLights++;
 		lights[posIntoArray]=this;
-		
-		pinBri[posIntoArray].pin;
-		pinBri[posIntoArray].delay=10000;
+    
+    // Full reorder of the array
+    for(int i=0;i<nLights;i++){
+      for(int j=i+1;j<nLights-1;j++){
+        if(lights[i]>lights[j]){
+          DimmableLight *temp=lights[i];
+          lights[i]=lights[j];
+          lights[j]=temp;
+        }
+      }
+    }
+    newBrightnessValues=true;
+    
+    // NO because this struct is updated by the routine!
+//		pinBri[posIntoArray].pin;
+//		pinBri[posIntoArray].delay=10000;
 		
 		updatingStruct=false;
 	}else{

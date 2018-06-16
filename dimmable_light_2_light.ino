@@ -11,18 +11,23 @@
 #include "dimmable_light.h"
 
 Ticker dim;
-float period = 0.1;
+float period = 3;
 
 DimmableLight l1(D5);
+DimmableLight l2(D6);
 
 void doDim(void){
-  static int briLevels[]={0,1,2,3,4,127,252,253,254,255};
+//  static int briLevels1[]={40,90};
+//  static int briLevels2[]={210,180};
+  static int briLevels1[]={40,230};
+  static int briLevels2[]={90,180};
   static uint8_t brightnessStep=0;
-  Serial.println(String("Dimming at: ") + briLevels[brightnessStep] + "/255");
-  l1.setBrightness(briLevels[brightnessStep]);
+  Serial.println(String("Dimming at: ") + briLevels1[brightnessStep] + " and " + briLevels2[brightnessStep] +" /255");
+  l1.setBrightness(briLevels1[brightnessStep]);
+  l2.setBrightness(briLevels2[brightnessStep]);
 
   brightnessStep++;
-  if(brightnessStep==sizeof(briLevels)/sizeof(briLevels[0])){
+  if(brightnessStep==sizeof(briLevels1)/sizeof(briLevels1[0])){
     brightnessStep=0;
   }
 }
@@ -31,7 +36,10 @@ void doDimLinear(void){
   static uint8_t brightnessStep=0;
   Serial.println(String("Dimming at: ") + brightnessStep + "/255");
   l1.setBrightness(brightnessStep);
-  if(l1.getBrightness()!=brightnessStep){
+  
+  int b2=-(brightnessStep-255);
+  l2.setBrightness(b2);
+  if(l1.getBrightness()!=brightnessStep || l2.getBrightness()!=b2){
     Serial.println("Error!");
   }
   
@@ -52,7 +60,10 @@ void setup() {
   DimmableLight::begin();
   Serial.println("Done!");
 
-  dim.attach(period,doDimLinear);
+  Serial.println(String("Number of instantiated lights: ") + DimmableLight::getLightNumber());
+  
+  dim.attach(period,doDim);
+  //l2.setBrightness(200);
 }
 
 void loop() {}
