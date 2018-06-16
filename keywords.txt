@@ -1,0 +1,4 @@
+DimmableLight			KEYWORD1
+getBrightness			KEYWORD2
+setBrightness			KEYWORD2
+begin             KEYWORD2
