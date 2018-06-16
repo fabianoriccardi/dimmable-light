@@ -22,7 +22,7 @@ class DimmableLight{
   	 * Return the current brightness
   	 */
   	uint8_t getBrightness(){
-  		return brightness;
+  		return ceil(-(brightness-10000)*255/10000.0);
   	}
 
   	/**

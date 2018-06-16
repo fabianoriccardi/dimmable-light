@@ -11,31 +11,35 @@
 #include "dimmable_light.h"
 
 Ticker dim;
-float period=0.1;
+float period = 0.1;
 
 DimmableLight l1(D5);
 
 void doDim(void){
-  static int briLevels[]={0,1,2,3/*,4,127,252,253,254,255*/};
+  static int briLevels[]={0,1,2,3,4,127,252,253,254,255};
   static uint8_t step=0;
   Serial.println(String("Dimming at: ") + briLevels[step] + "/255");
   l1.setBrightness(briLevels[step]);
-  
+  Serial.println(l1.getBrightness());
+
+  step++;
   if(step==sizeof(briLevels)/sizeof(briLevels[0])){
     step=0;
-  }else{
-    step++;
   }
 }
 
 void doDimLinear(void){
-  static uint8_t step=0;
-  Serial.println(String("Dimming at: ") + step + "/255");
-  l1.setBrightness(step);
-  if(step==255){
-    step=0;
+  static uint8_t brightnessStep=0;
+  Serial.println(String("Dimming at: ") + brightnessStep + "/255");
+  l1.setBrightness(brightnessStep);
+  if(l1.getBrightness()!=brightnessStep){
+    Serial.println("Error!");
+  }
+  
+  if(brightnessStep==255){
+    brightnessStep=0;
   }else{
-    step++;
+    brightnessStep++;
   }
 }
 

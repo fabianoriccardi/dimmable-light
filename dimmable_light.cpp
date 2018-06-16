@@ -108,52 +108,52 @@ void DimmableLight::begin(){
 }
 
 void DimmableLight::setBrightness(uint8_t newBri){
-  uint16_t newBrightness=10000-(int)(newBri)*10000/255;
-  Serial.println(String("Brightness in between [0,10000]: ") + newBrightness);
-	// reorder the array to speed up the interrupt.
-	// Thi mini-algorithm works on a different memory area wrt the interrupt,
+  uint16_t newBrightness=10000-newBri*10000/255;
+
+	// Reorder the array to speed up the interrupt.
+	// This mini-algorithm works on a different memory area wrt the interrupt,
 	// so it is concurrent-safe code
 
-  	updatingStruct=true;
-    // Array example, it is always ordered, higher values means lower brightness
-    // [45,678,5000,7500,9000]
-    if(newBrightness>brightness){
-    	bool done=false;
-    	for(int i=posIntoArray+1;i<nLights && !done;i++){
-    		if(newBri<lights[i]->brightness){
-    			// perform the exchange between posIntoArray
-    			DimmableLight *temp=lights[posIntoArray];
-    			lights[posIntoArray]=lights[i];
-    			lights[i]=temp;
-    			// update posinto array
-    			lights[posIntoArray]->posIntoArray=i;
-    			// this->posIntoArray=posIntoArray
-    			lights[i]->posIntoArray=posIntoArray;
-    			done=true;
-    		}
-    	}
-    }else if(newBrightness<brightness){
-    	bool done=false;
-    	for(int i=posIntoArray-1;i>0  && !done;i--){
-    		if(newBri>lights[i]->brightness){
-    			// perform the exchange between posIntoArray
-    			DimmableLight *temp=lights[posIntoArray];
-    			lights[posIntoArray]=lights[i];
-    			lights[i]=temp;
-    			// update posinto array
-    			lights[posIntoArray]->posIntoArray=i;
-    			// this->posIntoArray=posIntoArray
-    			lights[i]->posIntoArray=posIntoArray;
-    			done=true;
-    		}
-    	}
-    }else{
-    	Serial.println("No need to perform the exchange, the brightness is the same!");
-    }
-    brightness=newBrightness;
-    newBrightnessValues=true;
-    updatingStruct=false;
-    
+	updatingStruct=true;
+  // Array example, it is always ordered, higher values means lower brightness
+  // [45,678,5000,7500,9000]
+  if(newBrightness>brightness){
+  	bool done=false;
+  	for(int i=posIntoArray+1;i<nLights && !done;i++){
+  		if(newBri<lights[i]->brightness){
+  			// perform the exchange between posIntoArray
+  			DimmableLight *temp=lights[posIntoArray];
+  			lights[posIntoArray]=lights[i];
+  			lights[i]=temp;
+  			// update posinto array
+  			lights[posIntoArray]->posIntoArray=i;
+  			// this->posIntoArray=posIntoArray
+  			lights[i]->posIntoArray=posIntoArray;
+  			done=true;
+  		}
+  	}
+  }else if(newBrightness<brightness){
+  	bool done=false;
+  	for(int i=posIntoArray-1;i>0  && !done;i--){
+  		if(newBri>lights[i]->brightness){
+  			// perform the exchange between posIntoArray
+  			DimmableLight *temp=lights[posIntoArray];
+  			lights[posIntoArray]=lights[i];
+  			lights[i]=temp;
+  			// update posinto array
+  			lights[posIntoArray]->posIntoArray=i;
+  			// this->posIntoArray=posIntoArray
+  			lights[i]->posIntoArray=posIntoArray;
+  			done=true;
+  		}
+  	}
+  }else{
+  	Serial.println("No need to perform the exchange, the brightness is the same!");
+  }
+  brightness=newBrightness;
+  newBrightnessValues=true;
+  updatingStruct=false;
+  
 	Serial.println(String("Brightness (in ms to wait): ") + brightness);
 }
 
