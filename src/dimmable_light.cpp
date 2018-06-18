@@ -63,11 +63,11 @@ void zero_cross_int(){
   		pinBri[i].pin=DimmableLight::lights[i]->pin;
   		pinBri[i].delay=DimmableLight::lights[i]->brightness;
   	}
-    for(int i=0;i<DimmableLight::nLights;i++){
-      Serial.print(pinBri[i].pin);
-      Serial.print(" ");
-      Serial.println(pinBri[i].delay);
-    }
+    // for(int i=0;i<DimmableLight::nLights;i++){
+    //   Serial.print(String("int: ") + pinBri[i].pin);
+    //   Serial.print(" ");
+    //   Serial.println(pinBri[i].delay);
+    // }
    
   }
 
@@ -108,6 +108,12 @@ void DimmableLight::begin(){
 void DimmableLight::setBrightness(uint8_t newBri){
   uint16_t newBrightness=10000-newBri*10000/255;
 
+  for(int i=0;i<DimmableLight::nLights;i++){
+    Serial.print(String("setB: ") + "posIntoArray:" + lights[i]->posIntoArray + " pin:" + lights[i]->pin);
+    Serial.print(" ");
+    Serial.println(lights[i]->brightness);
+  }
+
 	// Reorder the array to speed up the interrupt.
 	// This mini-algorithm works on a different memory area wrt the interrupt,
 	// so it is concurrent-safe code
@@ -122,7 +128,7 @@ void DimmableLight::setBrightness(uint8_t newBri){
   	// Let's find the new position
     int i=posIntoArray+1;
     while(i<nLights && !done){
-      if(newBrightness<lights[i]->brightness){
+      if(newBrightness<=lights[i]->brightness){
         done=true;
       }else{
         i++;
@@ -139,7 +145,7 @@ void DimmableLight::setBrightness(uint8_t newBri){
       if(i==nLights){
         target=nLights-1;
       }else{
-        target=i;
+        target=i-1;
       }
   
       // Let's shift
@@ -155,7 +161,7 @@ void DimmableLight::setBrightness(uint8_t newBri){
   	bool done=false;
   	int i=posIntoArray-1;
     while(i>=0 && !done){
-      if(newBrightness>lights[i]->brightness){
+      if(newBrightness>=lights[i]->brightness){
         done=true;
       }else{
         i--;
@@ -165,11 +171,11 @@ void DimmableLight::setBrightness(uint8_t newBri){
       if(verbosity>2) Serial.println("No need to shift..");
     }else{
       int target;
-      // Means that we have reached the end, the target is the first element
+      // Means that we have reached the start, the target is the first element
       if(!done){
         target=0;
       }else{
-        target=i;
+        target=i+1;
       }
   
       // Let's shift
@@ -187,9 +193,20 @@ void DimmableLight::setBrightness(uint8_t newBri){
   newBrightnessValues=true;
   updatingStruct=false;
   
+  for(int i=0;i<DimmableLight::nLights;i++){
+    Serial.print(String("\tsetB: ") + "posIntoArray:" + lights[i]->posIntoArray + " pin:" + lights[i]->pin);
+    Serial.print(" ");
+    Serial.println(lights[i]->brightness);
+  }
+
 	//Serial.println(String("Brightness (in ms to wait): ") + brightness);
 }
 
+/**
+ * @brief      No reorder, init all the light at the begin of your sketch
+ *
+ * @param[in]  pin   The pin
+ */
 DimmableLight::DimmableLight(int pin)
 								:pin(pin),brightness(10000){
 	if(nLights<N-1){
@@ -201,16 +218,21 @@ DimmableLight::DimmableLight(int pin)
 		nLights++;
 		lights[posIntoArray]=this;
     
-    // Full reorder of the array
+    //Full reorder of the array
     for(int i=0;i<nLights;i++){
       for(int j=i+1;j<nLights-1;j++){
-        if(lights[i]>lights[j]){
+        if(lights[i]->brightness>lights[j]->brightness){
           DimmableLight *temp=lights[i];
           lights[i]=lights[j];
           lights[j]=temp;
         }
       }
     }
+    // Set the posIntoArray with a "brutal" assignement to each DimmableLight
+    for(int i=0;i<nLights;i++){
+      lights[i]->posIntoArray=i;
+    }
+
     newBrightnessValues=true;
     
     // NO because this struct is updated by the routine!
