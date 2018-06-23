@@ -76,6 +76,4 @@ class DimmableLight{
 	uint8_t brightness;
 };
 
-uint8_t DimmableLight::nLights = 0;
-
 #endif
