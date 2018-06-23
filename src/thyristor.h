@@ -12,6 +12,8 @@
 class Thyristor{
   public:
     Thyristor(int pin);
+    Thyristor(Thyristor const &) = delete; 
+    void operator=(Thyristor const &t) = delete;
 
     /**
      * Set the delay, 10000 (ms, with 50Hz voltage) to turn off the thyristor
