@@ -25,6 +25,7 @@ class DimmableLight{
    	 * Set the brightness, 0 to turn off the lamp
    	 */
   	void setBrightness(uint8_t bri){
+      brightness=bri;
       uint16_t newDelay=10000-bri*10000/255;
       thyristor.setDelay(newDelay);
     };
@@ -65,8 +66,6 @@ class DimmableLight{
 	private:
   static const uint8_t N = 8;
 	static uint8_t nLights;
-
-  static const uint8_t verbosity = 3;
 
   Thyristor thyristor;
 	

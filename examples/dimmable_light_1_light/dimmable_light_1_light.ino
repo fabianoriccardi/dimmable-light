@@ -9,9 +9,10 @@
 #include <Ticker.h>
 
 #include "dimmable_light.h"
+#include "thyristor.h"
 
 Ticker dim;
-float period = 0.1;
+float period = 0.05;
 
 DimmableLight l1(D5);
 
@@ -27,7 +28,7 @@ void doDim(void){
   }
 }
 
-void doDimLinear(void){
+void doRaise(void){
   static uint8_t brightnessStep=0;
   Serial.println(String("Dimming at: ") + brightnessStep + "/255");
   l1.setBrightness(brightnessStep);
@@ -37,8 +38,25 @@ void doDimLinear(void){
   
   if(brightnessStep==255){
     brightnessStep=0;
+    dim.attach(period,doLower);
   }else{
     brightnessStep++;
+  }
+}
+
+void doLower(void){
+  static uint8_t brightnessStep=255;
+  Serial.println(String("Dimming at: ") + brightnessStep + "/255");
+  l1.setBrightness(brightnessStep);
+  if(l1.getBrightness()!=brightnessStep){
+    Serial.println("Error!");
+  }
+  
+  if(brightnessStep==0){
+    brightnessStep=255;
+    dim.attach(period,doRaise);
+  }else{
+    brightnessStep--;
   }
 }
 
@@ -52,7 +70,7 @@ void setup() {
   DimmableLight::begin();
   Serial.println("Done!");
 
-  dim.attach(period,doDimLinear);
+  dim.attach(period,doRaise);
 }
 
 void loop() {}

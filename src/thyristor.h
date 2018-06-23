@@ -60,7 +60,7 @@ class Thyristor{
 
   static uint8_t syncPin;
 
-  static const uint8_t verbosity = 3;
+  static const uint8_t verbosity = 2;
 
   uint8_t pin;
   

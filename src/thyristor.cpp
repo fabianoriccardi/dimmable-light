@@ -1,6 +1,8 @@
 #include "thyristor.h"
-
 #include "hw_timer.h"
+
+// Activate this define to enable a check on the period between zero and the next one
+//#define CHECK_INT_PERIOD
 
 struct PinDelay{
   uint8_t pin;
@@ -42,6 +44,11 @@ void activateThyristors(){
   }
 }
 
+#ifdef CHECK_INT_PERIOD
+bool first=true;
+uint32_t lastTime;
+#endif
+
 /**
  * This function manage the triac/dimmer in a single semi-period (that is 10ms @50Hz)
  * This function will be called multiple times per semi-period (in case of multi 
@@ -54,6 +61,19 @@ void zero_cross_int(){
   for(int i=0;i<Thyristor::nThyristors;i++){
     digitalWrite(pinDelay[i].pin,LOW);
   }
+
+#ifdef CHECK_INT_PERIOD
+  if(first){
+    lastTime=micros();
+    first=false;
+  }else{
+    uint32_t now=micros();
+    if(now-lastTime>10015||now-lastTime<9090){
+      Serial.println(now-lastTime);
+    }
+    lastTime=now;
+  }
+#endif
 
   // Update the structures, if needed
   if(Thyristor::newDelayValues && !Thyristor::updatingStruct){
@@ -105,10 +125,12 @@ void Thyristor::begin(){
 }
 
 void Thyristor::setDelay(uint16_t newDelay){
-  for(int i=0;i<Thyristor::nThyristors;i++){
-    Serial.print(String("setB: ") + "posIntoArray:" + thyristors[i]->posIntoArray + " pin:" + thyristors[i]->pin);
-    Serial.print(" ");
-    Serial.println(thyristors[i]->delay);
+  if(verbosity>2){
+    for(int i=0;i<Thyristor::nThyristors;i++){
+      Serial.print(String("setB: ") + "posIntoArray:" + thyristors[i]->posIntoArray + " pin:" + thyristors[i]->pin);
+      Serial.print(" ");
+      Serial.println(thyristors[i]->delay);
+    }
   }
 
   // Reorder the array to speed up the interrupt.
@@ -184,16 +206,18 @@ void Thyristor::setDelay(uint16_t newDelay){
       this->posIntoArray=target;
     }
   }else{
-    Serial.println("No need to perform the exchange, the delay is the same!");
+    if(verbosity>2) Serial.println("No need to perform the exchange, the delay is the same!");
   }
   delay=newDelay;
   newDelayValues=true;
   updatingStruct=false;
   
-  for(int i=0;i<Thyristor::nThyristors;i++){
-    Serial.print(String("\tsetB: ") + "posIntoArray:" + thyristors[i]->posIntoArray + " pin:" + thyristors[i]->pin);
-    Serial.print(" ");
-    Serial.println(thyristors[i]->delay);
+  if(verbosity>2){
+    for(int i=0;i<Thyristor::nThyristors;i++){
+      Serial.print(String("\tsetB: ") + "posIntoArray:" + thyristors[i]->posIntoArray + " pin:" + thyristors[i]->pin);
+      Serial.print(" ");
+      Serial.println(thyristors[i]->delay);
+    }
   }
 
   //Serial.println(String("Brightness (in ms to wait): ") + delay);
