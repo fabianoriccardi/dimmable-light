@@ -3,6 +3,8 @@
 
 // Activate this define to enable a check on the period between zero and the next one
 //#define CHECK_INT_PERIOD
+// Activate this macro to check if all the light were managed in a semi-period
+//#define CHECK_MANAGED_THYR
 
 struct PinDelay{
   uint8_t pin;
@@ -27,20 +29,30 @@ void activateThyristors(){
   //delayMicroseconds(10);
   //digitalWrite(AC_LOADS[phase],LOW);
   
+  uint8_t firstToBeUpdated=thyristorManaged;
   // This condition means:
-  // trigger immediately is there is not time to active the timer for the next light (i.e delay differene less than 150microseconds)
-  for(; (thyristorManaged<Thyristor::nThyristors-1 && pinDelay[thyristorManaged+1].delay-pinDelay[thyristorManaged].delay<150); thyristorManaged++){
+  // trigger immediately is there is not time to active the timer for the next light 
+  // (i.e delay differene less than 20microseconds)
+  // After some experiment, even 50 microseconrd are noticeble, so I decided 
+  // to set the threshold lower that 20microsecond (wrt the resolution of the user class, 
+  // that it about 39microsecond, this loop is used only for equal values)
+  for(; (thyristorManaged<Thyristor::nThyristors-1 && pinDelay[thyristorManaged+1].delay-pinDelay[firstToBeUpdated].delay<20); thyristorManaged++){
     digitalWrite(pinDelay[thyristorManaged].pin, HIGH);
-    // Turn on the following light, it this really similar to the previous... 
-    //Some thyristors could be turned on 2 times, but of course it hasn't any effect
-    //Serial.println("#");
   }
 
   digitalWrite(pinDelay[thyristorManaged].pin, HIGH);
+
   thyristorManaged++;
 
+  uint8_t pulseWidth = 15;
+  delayMicroseconds(pulseWidth);
+
+  for(int i=0;i<thyristorManaged;i++){
+    digitalWrite(pinDelay[i].pin, LOW);
+  }
+
   if(thyristorManaged<Thyristor::nThyristors){
-    hw_timer_arm(pinDelay[thyristorManaged].delay-pinDelay[thyristorManaged-1].delay);
+    hw_timer_arm(pinDelay[thyristorManaged].delay-pinDelay[thyristorManaged-1].delay-pulseWidth);
   }
 }
 
@@ -59,7 +71,7 @@ void zero_cross_int(){
   // This avoid to wait 10micros in a interrupt or setting interrupt 
   // to turn off the PIN (this last solution could be evaluated...)
   for(int i=0;i<Thyristor::nThyristors;i++){
-    digitalWrite(pinDelay[i].pin,LOW);
+   digitalWrite(pinDelay[i].pin,LOW);
   }
 
 #ifdef CHECK_INT_PERIOD
@@ -75,31 +87,37 @@ void zero_cross_int(){
   }
 #endif
 
-  // Update the structures, if needed
+#ifdef CHECK_MANAGED_THYR
+  if(thyristorManaged!=Thyristor::nThyristors){
+    Serial.print("E");
+    Serial.println(thyristorManaged);
+  }
+#endif
+
+  // Update the structures and set thresholds, if needed
   if(Thyristor::newDelayValues && !Thyristor::updatingStruct){
     Thyristor::newDelayValues=false;
     //Serial.println("UI");
     for(int i=0;i<Thyristor::nThyristors;i++){
       pinDelay[i].pin=Thyristor::thyristors[i]->pin;
-      pinDelay[i].delay=Thyristor::thyristors[i]->delay;
+      if(Thyristor::thyristors[i]->delay<=120){
+        pinDelay[i].delay=120;
+      }else if(Thyristor::thyristors[i]->delay>=9880){
+        pinDelay[i].delay=9880;
+      }else{
+        pinDelay[i].delay=Thyristor::thyristors[i]->delay;
+      }
     }
     // for(int i=0;i<Thyristor::nThyristors;i++){
     //   Serial.print(String("int: ") + pinDelay[i].pin);
     //   Serial.print(" ");
     //   Serial.println(pinDelay[i].delay);
-    // }
-   
+    // }   
   }
 
   thyristorManaged = 0;
-  
-  // This for is intended for full delay
-  for(int thyristorManaged=0;pinDelay[thyristorManaged].delay<30;thyristorManaged++){
-    //Serial.println("FB");
-    digitalWrite(pinDelay[thyristorManaged].pin,HIGH);
-  }
 
-  // This block opof code is inteded to manage the case near to the next semi-period:
+  // This block of code is inteded to manage the case near to the next semi-period:
   // In this case we should avoid to trigger the timer, because the effective semiperiod 
   // perceived by the esp8266 could be less than 10000microsecond. This could be due to 
   // the relative time (there is no possibily to set the timer to an absolute time)
