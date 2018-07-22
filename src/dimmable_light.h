@@ -57,6 +57,13 @@ class DimmableLight{
   }
 
   /**
+   * Set the pin dedicated to receive the AC zero cross signal
+   */
+  static void setSyncPin(uint8_t pin){
+    Thyristor::setSyncPin(pin);
+  }
+
+  /**
    * Return the number of instantiated lights
    */
   static uint8_t getLightNumber(){

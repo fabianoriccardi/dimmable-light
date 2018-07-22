@@ -297,4 +297,4 @@ uint8_t Thyristor::nThyristors = 0;
 Thyristor* Thyristor::thyristors[Thyristor::N] = {nullptr};
 bool Thyristor::newDelayValues = false;
 bool Thyristor::updatingStruct = false;
-uint8_t Thyristor::syncPin = D7;
+uint8_t Thyristor::syncPin = 255;

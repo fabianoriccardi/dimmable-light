@@ -10,13 +10,14 @@
 #include <Ticker.h>
 #include "dimmable_light.h"
 
-Ticker dim;
-
+const int syncPin = D7;
 DimmableLight l1(D1);
 DimmableLight l2(D2);
 DimmableLight l3(D5);
 DimmableLight l4(D6);
 DimmableLight l5(D8);
+
+Ticker dim;
 
 void setup() {
   Serial.begin(115200);
@@ -25,6 +26,7 @@ void setup() {
   Serial.println("Test HARDWARE timer for dimmer on ESP8266");
   
   Serial.print("Init the dimmable light class... ");
+  DimmableLight::setSyncPin(syncPin);
   DimmableLight::begin();
   Serial.println("Done!");
 

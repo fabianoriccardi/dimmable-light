@@ -49,6 +49,13 @@ class Thyristor{
     return nThyristors;
   };
 
+  /**
+   * Set the pin dedicated to receive the AC zero cross signal
+   */
+  static void setSyncPin(uint8_t pin){
+    syncPin = pin;
+  }
+
   static const uint8_t N = 8;
   private:
   static uint8_t nThyristors;

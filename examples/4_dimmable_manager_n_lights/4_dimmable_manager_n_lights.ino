@@ -3,7 +3,8 @@
  * Basically it gives you the ability to add a friendly/logic name to a Dimmable Light.
  * 
  * The main parameters to configure accordingly to your hardware settings are:
- *  - N, that is the number of light
+ *  - syncPin, that is the pin listening to AC zero cross signal
+ *  - N, that is the number of lights
  *  - pins, that is the array containing the pins which are connected to the thyristor
  *  
  * In this case the friendly name are "light1", "light2" and so on...
@@ -17,6 +18,7 @@
 
 #define N 5
 
+const int syncPin = D7;
 int pins[N] = {D1, D2, D5, D6, D8};
 
 // This param modifies the effect speed. The value is the perios between a 
@@ -74,6 +76,7 @@ void setup() {
     }
   }
 
+  DimmableLight::setSyncPin(syncPin);
   DimmableLightManager::begin();
   
   Serial.println("Done!");

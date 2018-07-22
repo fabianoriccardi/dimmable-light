@@ -7,3 +7,4 @@ get                   KEYWORD2
 add                   KEYWORD2
 getCount              KEYWORD2
 turnOff               KEYWORD2
+setSyncPin            KEYWORD2

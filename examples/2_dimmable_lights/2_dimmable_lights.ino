@@ -1,5 +1,8 @@
 #include "dimmable_light.h"
 
+// Pin listening to AC zero cross signal
+const int syncPin = D7;
+
 // Delay between a brightness changement in millisecond
 int period = 1000;
 
@@ -13,6 +16,7 @@ void setup() {
   Serial.println("Test HARDWARE timer for dimmer on ESP8266");
   
   Serial.print("Init the dimmable light class... ");
+  DimmableLight::setSyncPin(syncPin);
   DimmableLight::begin();
   Serial.println("Done!");
 }
