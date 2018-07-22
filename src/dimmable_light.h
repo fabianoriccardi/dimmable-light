@@ -13,7 +13,7 @@
 class DimmableLight{
   public:
   	DimmableLight(int pin)
-                  :thyristor(pin),brightness(255){
+                  :thyristor(pin),brightness(0){
       if(nLights<N-1){   
         nLights++;
       }else{

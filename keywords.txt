@@ -1,4 +1,9 @@
-DimmableLight			KEYWORD1
-getBrightness			KEYWORD2
-setBrightness			KEYWORD2
-begin             KEYWORD2
+DimmableLight         KEYWORD1
+DimmableLightManager  KEYWORD1
+getBrightness         KEYWORD2
+setBrightness         KEYWORD2
+begin                 KEYWORD2
+get                   KEYWORD2
+add                   KEYWORD2
+getCount              KEYWORD2
+turnOff               KEYWORD2
