@@ -1,5 +1,5 @@
 /**
- * This example aims to show how to use the Dimmable Light Manager.
+ * This advance example aims to show how to use the Dimmable Light Manager.
  * Basically it gives you the ability to add a friendly/logic name to a Dimmable Light.
  * 
  * The main parameters to configure accordingly to your hardware settings are:
@@ -33,7 +33,8 @@ void doRaise(void){
   static uint8_t brightnessStep=0;
   
   for(int i=0;i<dlm.getCount();i++){
-    dlm.get().second->setBrightness(brightnessStep);
+    DimmableLight* dimLight = dlm.get().second;
+    dimLight->setBrightness(brightnessStep);
   }
   
   if(brightnessStep==255){
@@ -48,7 +49,8 @@ void doLower(void){
   static uint8_t brightnessStep=255;
   
   for(int i=0;i<dlm.getCount();i++){
-    dlm.get().second->setBrightness(brightnessStep);
+    DimmableLight* dimLight = dlm.get().second;
+    dimLight->setBrightness(brightnessStep);
   }
     
   if(brightnessStep==0){
@@ -90,10 +92,11 @@ void loop() {
   // Print the light name and its actual brightness
   for(int i=0;i<dlm.getCount();i++){
     std::pair<String,DimmableLight*> p=dlm.get();
+    DimmableLight* dimLight = p.second;
     // Altervatively, you can require to the manager a specific light
-    //dlm.get("lightname");
+    //DimmableLight* dimLight = dlm.get("light1");
     
-    Serial.println(String(p.first) + " brightness:" + p.second->getBrightness());
+    Serial.println(String(p.first) + " brightness:" + dimLight->getBrightness());
   }
   Serial.println();
 
