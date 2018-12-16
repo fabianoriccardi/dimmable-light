@@ -128,10 +128,12 @@ void zero_cross_int(){
     //Serial.println("UI");
     for(int i=0;i<Thyristor::nThyristors;i++){
       pinDelay[i].pin=Thyristor::thyristors[i]->pin;
-      if(Thyristor::thyristors[i]->delay<=120){
-        pinDelay[i].delay=120;
-      }else if(Thyristor::thyristors[i]->delay>=9880){
-        pinDelay[i].delay=9880;
+      // Rounding delays to avoid error and unexpected behaviour due to 
+      // non-ideal thyristors and not perfect sine wave 
+      if(Thyristor::thyristors[i]->delay<=200){
+        pinDelay[i].delay=200;
+      }else if(Thyristor::thyristors[i]->delay>=9800){
+        pinDelay[i].delay=9800;
       }else{
         pinDelay[i].delay=Thyristor::thyristors[i]->delay;
       }
