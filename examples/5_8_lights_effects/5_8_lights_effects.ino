@@ -1,18 +1,22 @@
-#include <SoftwareSerial.h>
+/**
+ * Some effects to test and demonstrate the potentiality of DimmableLight.
+ * Upload the code and select one effect through the serial port. 
+ * Available effect list can be read in setup() function.
+ * 
+ * NOTE: install https://github.com/kroimon/Arduino-SerialCommand
+ */
 #include <SerialCommand.h>
 #include <Ticker.h>
 
 #include "effect.h"
-
-int pins[N_LIGHTS] = {D1,D2,D5,D6,D8,D0,D3,D4};
 
 const int syncPin = D7;
 
 SerialCommand serialCmd;
 
 int effectSelected = -1;
-void unrecognized(){
-  Serial.println("Command not recognized");
+void unrecognized(const char* message){
+  Serial.println(String(message) + ": command not recognized");
   serialCmd.clearBuffer();
 }
 
@@ -108,7 +112,7 @@ void setup() {
   serialCmd.addCommand("e11",[](){selectEffect(11);});
   serialCmd.addCommand("e12",[](){selectEffect(12);});
   
-  serialCmd.addDefaultHandler(unrecognized);
+  serialCmd.setDefaultHandler(unrecognized);
 }
 
 void loop(){
