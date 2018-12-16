@@ -1,7 +1,7 @@
 /***************************************************************************
- *   Copyright (C) 2018 by Riccardi Fabiano                                *
+ *   Copyright (C) 2018 by Fabiano Riccardi                                *
  *                                                                         *
- *   This file is part of Dimmable Light for Arduino.                      *
+ *   This file is part of Dimmable Light for ESP8266.                      *
  *                                                                         *
  *   Dimmable Light for Arduino is free software; you can redistribute     *
  *   it and/or modify it under the terms of the GNU General Public         *
