@@ -3,7 +3,7 @@
 
 #define N_LIGHTS 8
 
-extern DimmableLight** lights;
+extern DimmableLight lights[];
 
 void doEqual();
 void doEqualOnOff();
@@ -17,3 +17,4 @@ void doInvertedDim();
 void doCircularSwipe();
 void doRandomBri();
 void doRandomBriPeehole();
+void doRandomPushExtremeValues();

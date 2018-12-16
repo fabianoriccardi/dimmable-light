@@ -1,5 +1,5 @@
 /**
- * This advance example aims to show how to use the Dimmable Light Manager.
+ * This advanced example aims to show how to use the Dimmable Light Manager.
  * Basically it gives you the ability to add a friendly/logic name to a Dimmable Light.
  * 
  * The main parameters to configure accordingly to your hardware settings are:
@@ -74,7 +74,7 @@ void setup() {
     if(dlm.add(String("light") + (i+1), pins[i])){
       Serial.println(String("   ") + (i+1) + "-th light added correctly");
     }else{
-      Serial.println("   Light isn't added, probably this was is already used...");
+      Serial.println("   Light isn't added, probably this name was already used...");
     }
   }
 

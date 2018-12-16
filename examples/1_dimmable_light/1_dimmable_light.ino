@@ -12,7 +12,7 @@ void setup() {
   Serial.begin(115200);
   while(!Serial);
   Serial.println();
-  Serial.println("Test HARDWARE timer for dimmer on ESP8266");
+  Serial.println("Dimmer for ESP8266");
   
   Serial.print("Init the dimmable light class... ");
   DimmableLight::setSyncPin(syncPin);

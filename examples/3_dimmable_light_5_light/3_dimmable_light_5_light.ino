@@ -1,5 +1,5 @@
 /**
- * In this example you will see a number of effect on multiple indipendent 
+ * In this example you will see a number of effects on different indipendent 
  * dimmable lights. To switch between effect, (un)comment the proper line
  * in the setup function.
  * 
@@ -23,7 +23,8 @@ void setup() {
   Serial.begin(115200);
   while(!Serial);
   Serial.println();
-  Serial.println("Test HARDWARE timer for dimmer on ESP8266");
+  Serial.println("Third example Dimmable Lights for ESP8266");
+  Serial.println();
   
   Serial.print("Init the dimmable light class... ");
   DimmableLight::setSyncPin(syncPin);

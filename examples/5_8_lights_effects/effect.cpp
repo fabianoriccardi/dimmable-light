@@ -3,7 +3,7 @@
 
 Ticker dim;
 
-DimmableLight** lights;
+DimmableLight lights[N_LIGHTS] = {{D1}, {D2}, {D5}, {D6}, {D8}, {D0}, {D3}, {D4}};
 
 /**
  * Do some specific step, all the lights follow the same pattern
@@ -14,7 +14,7 @@ void doEqual(){
   static uint8_t brightnessStep=0;
   Serial.println(String("Dimming at: ") + briLevels[brightnessStep] + "/255");
   for(int i=0;i<N_LIGHTS;i++){
-    lights[i]->setBrightness(briLevels[brightnessStep]);
+    lights[i].setBrightness(briLevels[brightnessStep]);
   }
 
   brightnessStep++;
@@ -33,7 +33,7 @@ void doEqualOnOff(){
   static uint8_t brightnessStep=0;
   Serial.println(String("Dimming at: ") + briLevels[brightnessStep] + "/255");
   for(int i=0;i<N_LIGHTS;i++){
-    lights[i]->setBrightness(briLevels[brightnessStep]);
+    lights[i].setBrightness(briLevels[brightnessStep]);
   }
   
   brightnessStep++;
@@ -53,9 +53,9 @@ void doDimSpecificStep(void){
   static int briLevels3[]={80,150};
   static uint8_t brightnessStep=0;
   Serial.println(String("Dimming at: ") + briLevels1[brightnessStep] + " and " + briLevels2[brightnessStep] + " and " + briLevels3[brightnessStep] +" /255");
-  lights[1]->setBrightness(briLevels1[brightnessStep]);
-  lights[2]->setBrightness(briLevels2[brightnessStep]);
-  lights[3]->setBrightness(briLevels3[brightnessStep]);
+  lights[1].setBrightness(briLevels1[brightnessStep]);
+  lights[2].setBrightness(briLevels2[brightnessStep]);
+  lights[3].setBrightness(briLevels3[brightnessStep]);
 
   brightnessStep++;
   if(brightnessStep==sizeof(briLevels1)/sizeof(briLevels1[0])){
@@ -74,9 +74,9 @@ void doRangeLimit(void){
   static int briLevels3[]={100,100};
   static uint8_t brightnessStep=0;
   Serial.println(String("Dimming at: ") + briLevels1[brightnessStep] + " and " + briLevels2[brightnessStep] + " and " + briLevels3[brightnessStep] +" /255");
-  lights[1]->setBrightness(briLevels1[brightnessStep]);
-  lights[2]->setBrightness(briLevels2[brightnessStep]);
-  lights[3]->setBrightness(briLevels3[brightnessStep]);
+  lights[1].setBrightness(briLevels1[brightnessStep]);
+  lights[2].setBrightness(briLevels2[brightnessStep]);
+  lights[3].setBrightness(briLevels3[brightnessStep]);
 
   brightnessStep++;
   if(brightnessStep==sizeof(briLevels1)/sizeof(briLevels1[0])){
@@ -95,9 +95,9 @@ void doNearValues(void){
   static int briLevels3[]={72,73};
   static uint8_t brightnessStep=0;
   Serial.println(String("Dimming at: ") + briLevels1[brightnessStep] + " and " + briLevels2[brightnessStep] + " and " + briLevels3[brightnessStep] +" /255");
-  lights[1]->setBrightness(briLevels1[brightnessStep]);
-  lights[2]->setBrightness(briLevels2[brightnessStep]);
-  lights[3]->setBrightness(briLevels3[brightnessStep]);
+  lights[1].setBrightness(briLevels1[brightnessStep]);
+  lights[2].setBrightness(briLevels2[brightnessStep]);
+  lights[3].setBrightness(briLevels3[brightnessStep]);
 
   brightnessStep++;
   if(brightnessStep==sizeof(briLevels1)/sizeof(briLevels1[0])){
@@ -115,11 +115,11 @@ void doDimMixed(void){
   static uint8_t brightnessStep=1;
   static bool up = true;
   
-  lights[1]->setBrightness(brightnessStep);
+  lights[1].setBrightness(brightnessStep);
   int b2 = 105;
-  lights[2]->setBrightness(b2);
+  lights[2].setBrightness(b2);
   int b3 = -((int)brightnessStep-255);
-  lights[3]->setBrightness(b3);
+  lights[3].setBrightness(b3);
   Serial.println(String("Dimming at: ") + brightnessStep + " " + b2 + " " + b3 + "/255");
   
   if(brightnessStep==255 && up){
@@ -148,7 +148,7 @@ void doDimSweepEqual(void){
   static uint8_t brightnessStep=1;
   static bool up = true;
   for(int i=0;i<N_LIGHTS;i++){
-    lights[i]->setBrightness(brightnessStep);
+    lights[i].setBrightness(brightnessStep);
   }
   Serial.println(String("Dimming at: ") + brightnessStep + "/255");
   
@@ -172,9 +172,9 @@ void doOnOffSweep(){
   
   for(int i=0;i<N_LIGHTS;i++){
     if(step==i){
-      lights[i]->setBrightness(255);
+      lights[i].setBrightness(255);
     }else{
-      lights[i]->setBrightness(0);
+      lights[i].setBrightness(0);
     }
   }
   
@@ -196,9 +196,9 @@ void doInvertedDim(void){
 
   for(int i=0;i<N_LIGHTS;i++){
     if(i%2==0){
-      lights[i]->setBrightness(brightnessStep);
+      lights[i].setBrightness(brightnessStep);
     }else{
-      lights[i]->setBrightness(oppositeBrightness);
+      lights[i].setBrightness(oppositeBrightness);
     }
   }
   Serial.println(String("Dimming at: ") + brightnessStep + " " + oppositeBrightness + "/255");
@@ -271,7 +271,7 @@ void doCircularSwipe(void){
 
   // Alternatively, you can use the function conversionPow(..) instead conversion(..)
   for(int i=0;i<N_LIGHTS;i++){
-    lights[i]->setBrightness(conversion(tap(brightnessStep+32*i,512)));
+    lights[i].setBrightness(conversion(tap(brightnessStep+32*i,512)));
   }
 
   brightnessStep++;
@@ -286,7 +286,7 @@ void doRandomBri(){
 
   for(int i=0;i<N_LIGHTS;i++){
     int bri = random(0,256);
-    lights[i]->setBrightness(bri);
+    lights[i].setBrightness(bri);
   }
   dim.once(period,doRandomBri);
 }
@@ -296,21 +296,21 @@ void doRandomBri(){
  */
 void doRandomBriPeehole(){
   const float period = 0.7;
-  const uint16_t step = 10;
+  const uint16_t briStep = 10;
   const uint16_t totStep = 16;
   
   static uint16_t iteration = 0;
   
-  for(int i=0;i<N_LIGHTS;i++){
+  for(int i=0; i<N_LIGHTS; i++){
     int bri;
     // The last 2 step are set to the same brightness
     if(iteration>=totStep-3){
       bri = 127;
     }else{
-      bri = random(0 + step* iteration,256 - step*iteration);
+      bri = random(0 + briStep*iteration, 256-briStep*iteration);
     }
-    Serial.print(bri);Serial.print(" ");
-    lights[i]->setBrightness(bri);
+    Serial.print(String(bri) + " ");
+    lights[i].setBrightness(bri);
   }
   Serial.println();
   
@@ -318,5 +318,27 @@ void doRandomBriPeehole(){
   if(iteration==totStep){
     iteration=0;
   }
-  dim.once(period,doRandomBriPeehole);
+  dim.once(period, doRandomBriPeehole);
+}
+
+/**
+ * The variance of random number is restricted around the mean value step after step
+ */
+void doRandomPushExtremeValues(){
+  const float period = 1;
+  const uint16_t briStep = 10;
+    
+  for(int i=0; i<N_LIGHTS; i++){
+    int bri = random(0, briStep*2+1);
+    if(bri<briStep){
+      bri = bri;
+    }else{
+      bri = 256 - (briStep*2 - bri);
+    }
+    Serial.print(String(bri) + " ");
+    lights[i].setBrightness(bri);
+  }
+  Serial.println();
+  
+  dim.once(period, doRandomPushExtremeValues);
 }
