@@ -8,6 +8,7 @@
 * Modification history:
 *     2014/5/1, v1.0 create this file.
 *******************************************************************************/
+#ifdef ESP8266
 //#include "c-types.h"
 typedef __SIZE_TYPE__ size_t;
 #include "ets_sys.h"
@@ -116,3 +117,4 @@ NOTE:
 
 */
 
+#endif // END ESP8266

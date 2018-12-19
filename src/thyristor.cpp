@@ -27,12 +27,22 @@
  *   along with this program; if not, see <http://www.gnu.org/licenses/>   *
  ***************************************************************************/
 #include "thyristor.h"
+#if defined(ESP8266)
 #include "hw_timer.h"
+#elif defined(ESP32)
+// no need to include libraries...
+#else
+#error "only ESP8266 and ESP32 for Arduino are supported"
+#endif
 
 // Activate this define to enable a check on the period between zero and the next one
 //#define CHECK_INT_PERIOD
 // Activate this macro to check if all the light were managed in a semi-period
 //#define CHECK_MANAGED_THYR
+
+#ifdef ESP32
+static hw_timer_t* timer = NULL;
+#endif
 
 struct PinDelay{
   uint8_t pin;
@@ -52,7 +62,11 @@ static uint8_t thyristorManaged=0;
 /**
  * Timer routine to turn on one or more thyristors
  */
+#ifdef ESP32
+void IRAM_ATTR activateThyristors(){
+#else
 void activateThyristors(){
+#endif
   // Alternative way to manage the pin, it should become low after the triac started
   //delayMicroseconds(10);
   //digitalWrite(AC_LOADS[phase],LOW);
@@ -80,7 +94,18 @@ void activateThyristors(){
   }
 
   if(thyristorManaged<Thyristor::nThyristors){
-    hw_timer_arm(pinDelay[thyristorManaged].delay-pinDelay[thyristorManaged-1].delay-pulseWidth);
+    int delay = pinDelay[thyristorManaged].delay-pinDelay[thyristorManaged-1].delay-pulseWidth;
+  #if defined(ESP8266)
+    hw_timer_arm(delay);
+  #elif defined(ESP32)
+    // Reset timer
+    timerWrite(timer, 0);
+    // Set alarm to call onTimer function every second (value in microseconds).
+    // Repeat the alarm (third parameter)
+    timerAlarmWrite(timer, delay, false);
+    // Start an alarm
+    timerAlarmEnable(timer);
+  #endif
   }
 }
 
@@ -157,10 +182,24 @@ void zero_cross_int(){
   // so a provvisory solution if to set the relative callback to NULL!
   // NOTE 2: this improvement should be think eve for multiple lamp!
   if(thyristorManaged<Thyristor::nThyristors && pinDelay[thyristorManaged].delay<9950){
+  #if defined(ESP8266)
     hw_timer_set_func(activateThyristors);
     hw_timer_arm(pinDelay[thyristorManaged].delay);
+  #elif defined(ESP32)
+    // Reset timer
+    timerWrite(timer, 0);
+    // Set alarm to call onTimer function every second (value in microseconds).
+    // Repeat the alarm (third parameter)
+    timerAlarmWrite(timer, pinDelay[thyristorManaged].delay, false);
+    // Start an alarm
+    timerAlarmEnable(timer);
+  #endif
   }else{
+  #if defined(ESP8266)
     hw_timer_set_func(NULL);
+  #elif defined(ESP32)
+    timerAlarmDisable(timer);
+  #endif
   }
 }
 
@@ -168,8 +207,17 @@ void Thyristor::begin(){
   pinMode(digitalPinToInterrupt(syncPin), INPUT);
   attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, RISING);
 
+#if defined(ESP8266)
   // FRC1 is a low priority timer, it can't interrupt other ISR
   hw_timer_init(FRC1_SOURCE, 0);
+#elif defined(ESP32)
+  // Use 1st timer of 4 (counted from zero).
+  // Set 80 divider for prescaler (see ESP32 Technical Reference Manual for more
+  // info).
+  timer = timerBegin(0, 80, true);
+  // Attach onTimer function to our timer.
+  timerAttachInterrupt(timer, &activateThyristors, true);
+#endif
 }
 
 void Thyristor::setDelay(uint16_t newDelay){

@@ -1,3 +1,5 @@
+#ifdef ESP8266
+
 #ifndef HW_TIMER_H
 #define HW_TIMER_H
 
@@ -45,4 +47,6 @@ void  hw_timer_init(FRC1_TIMER_SOURCE_TYPE source_type, u8 req);
 }
 #endif
 
-#endif  /* HW_TIMER_H */  
+#endif  /* HW_TIMER_H */ 
+
+#endif // END ESP8266 
