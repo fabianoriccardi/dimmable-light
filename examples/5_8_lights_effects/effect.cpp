@@ -90,7 +90,7 @@ void doRangeLimit(void){
  */
 void doNearValues(void){
   const float period = 4;
-  static int briLevels1[]={70,70};
+  static int briLevels1[]={73,70};
   static int briLevels2[]={71,71};
   static int briLevels3[]={72,73};
   static uint8_t brightnessStep=0;
