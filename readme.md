@@ -1,10 +1,13 @@
-# Dimmable Light for ESP8266/ESP32
-A simple library to manage up to 8 thyristors (also knows as dimmer) on ESP8266/ESP32 in Arduino environment. 
+# Dimmable Light for ESP
+A simple library to manage up to 8 thyristors (also knows as dimmer) on ESP8266 and ESP32 in Arduino environment. 
 
 ## Motivations
 This library was born from the curiosity to learn how hardware timer works on esp8266 (precision and flexibility) and to control the old fashioned incandescence lights. I can confirm the timer is pretty poor if compared with other SoC, and a single timer (there is also Timer 0, but it is mandatory for WiFi operations) is not enough for some applications (i.e. play a tone with buzzer and simultaneously control dimmers).
 
 ## Installation
+You can install Dimmable Light for ESP through Arduino Library Manager or cloning this repository.
+
+### Requirements
 You need only Arduino IDE and ESP8266 and/or ESP32 Board Package. If you want to compile the 5th example, you also need [ArduinoSerialCommand](https://github.com/kroimon/Arduino-SerialCommand) library.
 
 ## Usage
