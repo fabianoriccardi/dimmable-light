@@ -16,6 +16,7 @@
  *   You should have received a copy of the GNU General Public License     *
  *   along with this program; if not, see <http://www.gnu.org/licenses/>   *
  ***************************************************************************/
+#if defined(ESP8266) || defined(ESP32)
 #include "dimmable_light_manager.h"
 
 bool DimmableLightManager::add(String lightName, uint8_t pin){
@@ -51,3 +52,5 @@ std::pair<String, DimmableLight*> DimmableLightManager::get(){
   }
   return res;
 }
+
+#endif

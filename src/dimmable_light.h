@@ -45,7 +45,7 @@ class DimmableLight{
    	 */
   	void setBrightness(uint8_t bri){
       brightness=bri;
-      uint16_t newDelay=10000-bri*10000/255;
+      uint16_t newDelay=10000-(uint16_t)(((uint32_t)bri*10000)/255);
       thyristor.setDelay(newDelay);
     };
 

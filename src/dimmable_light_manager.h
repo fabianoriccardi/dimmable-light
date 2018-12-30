@@ -16,6 +16,7 @@
  *   You should have received a copy of the GNU General Public License     *
  *   along with this program; if not, see <http://www.gnu.org/licenses/>   *
  ***************************************************************************/
+#if defined(ESP8266) || defined(ESP32)
 #ifndef DIMMABLE_LIGHT_MANAGER_H
 #define DIMMABLE_LIGHT_MANAGER_H
 
@@ -53,5 +54,7 @@ public:
 private:
   std::unordered_map<std::string, DimmableLight*> dla;
 };
+
+#endif
 
 #endif

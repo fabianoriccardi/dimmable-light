@@ -21,8 +21,10 @@
 #include "hw_timer.h"
 #elif defined(ESP32)
 // no need to include libraries...
+#elif defined(__AVR_ATmega328P__)
+#include "hw_timer_avr.h"
 #else
-#error "only ESP8266 and ESP32 for Arduino are supported"
+#error "only ESP8266 and ESP32 and AVR ATmega328P for Arduino are supported"
 #endif
 
 // Activate this define to enable a check on the period between zero and the next one
@@ -31,8 +33,15 @@
 //#define CHECK_MANAGED_THYR
 
 #ifdef ESP32
-static hw_timer_t* timer = NULL;
+static hw_timer_t* timer = nullptr;
 #endif
+
+// In microseconds
+static const uint16_t semiPeriodLength = 10000;
+// The margins are precautions against noise, electrical spikes and frequency skew errors
+// delays after endMargin are always off (hence very small overhead for MCU)
+static const uint16_t startMargin = 200;
+static const uint16_t endMargin = 200;
 
 struct PinDelay{
   uint8_t pin;
@@ -62,19 +71,31 @@ void activateThyristors(){
   //digitalWrite(AC_LOADS[phase],LOW);
   
   uint8_t firstToBeUpdated=thyristorManaged;
+  
   // This condition means:
   // trigger immediately is there is not time to active the timer for the next light 
   // (i.e delay differene less than 20microseconds)
   // After some experiment, even 50 microseconrd are noticeble, so I decided 
   // to set the threshold lower that 20microsecond (wrt the resolution of the user class, 
   // that it about 39microsecond, this loop is used only for equal values)
-  for(; (thyristorManaged<Thyristor::nThyristors-1 && pinDelay[thyristorManaged+1].delay-pinDelay[firstToBeUpdated].delay<20); thyristorManaged++){
+  // 100us on Arduino because it has a lower resolution and it is slower response time than esp*
+#if defined(ESP8266) || defined(ESP32)
+  unsigned int mergePeriod = 20;
+#else
+  unsigned int mergePeriod = 100;
+#endif
+
+  for(; (thyristorManaged<Thyristor::nThyristors-1 && pinDelay[thyristorManaged+1].delay-pinDelay[firstToBeUpdated].delay<mergePeriod) && (pinDelay[thyristorManaged].delay<semiPeriodLength-endMargin); thyristorManaged++){
     digitalWrite(pinDelay[thyristorManaged].pin, HIGH);
   }
-
   digitalWrite(pinDelay[thyristorManaged].pin, HIGH);
-
   thyristorManaged++;
+
+  // This while is dedicated to all those thyristor wih delay >= semiPeriodLength-margin; those are
+  // the ones who shouldn't turn on, hence they can be skipped
+  while(thyristorManaged<Thyristor::nThyristors && pinDelay[thyristorManaged].delay>=semiPeriodLength-endMargin){
+    thyristorManaged++;
+  }
 
   uint8_t pulseWidth = 15;
   delayMicroseconds(pulseWidth);
@@ -84,7 +105,7 @@ void activateThyristors(){
   }
 
   if(thyristorManaged<Thyristor::nThyristors){
-    int delay = pinDelay[thyristorManaged].delay-pinDelay[thyristorManaged-1].delay-pulseWidth;
+    int delay = pinDelay[thyristorManaged].delay-pinDelay[firstToBeUpdated].delay-pulseWidth;
   #if defined(ESP8266)
     hw_timer_arm(delay);
   #elif defined(ESP32)
@@ -95,6 +116,10 @@ void activateThyristors(){
     timerAlarmWrite(timer, delay, false);
     // Start an alarm
     timerAlarmEnable(timer);
+  #elif defined(__AVR_ATmega328P__)
+    if(!timerStart(microsecond2Tick(delay))){
+      Serial.println("activateThyristors() error timer");
+    }
   #endif
   }
 }
@@ -145,10 +170,10 @@ void zero_cross_int(){
       pinDelay[i].pin=Thyristor::thyristors[i]->pin;
       // Rounding delays to avoid error and unexpected behaviour due to 
       // non-ideal thyristors and not perfect sine wave 
-      if(Thyristor::thyristors[i]->delay<=200){
-        pinDelay[i].delay=200;
-      }else if(Thyristor::thyristors[i]->delay>=9800){
-        pinDelay[i].delay=9800;
+      if(Thyristor::thyristors[i]->delay<=startMargin){
+        pinDelay[i].delay=startMargin;
+      }else if(Thyristor::thyristors[i]->delay>=semiPeriodLength-endMargin){
+        pinDelay[i].delay=semiPeriodLength-endMargin;
       }else{
         pinDelay[i].delay=Thyristor::thyristors[i]->delay;
       }
@@ -170,7 +195,7 @@ void zero_cross_int(){
   // change the callback function.
   // NOTE: don't know why, but the timer seem trigger even when it is not set...
   // so a provvisory solution if to set the relative callback to NULL!
-  // NOTE 2: this improvement should be think eve for multiple lamp!
+  // NOTE 2: this improvement should be think even for multiple lamp!
   if(thyristorManaged<Thyristor::nThyristors && pinDelay[thyristorManaged].delay<9950){
   #if defined(ESP8266)
     hw_timer_set_func(activateThyristors);
@@ -183,12 +208,19 @@ void zero_cross_int(){
     timerAlarmWrite(timer, pinDelay[thyristorManaged].delay, false);
     // Start an alarm
     timerAlarmEnable(timer);
+  #elif defined(__AVR_ATmega328P__)
+    uint8_t ticks = microsecond2Tick(pinDelay[thyristorManaged].delay);
+    if(!timerStart(ticks)){
+      Serial.println("zero_cross_int() error timer");
+    }
   #endif
   }else{
   #if defined(ESP8266)
     hw_timer_set_func(NULL);
   #elif defined(ESP32)
     timerAlarmDisable(timer);
+  #elif defined(__AVR_ATmega328P__)
+    // No need to take actions
   #endif
   }
 }
@@ -207,6 +239,9 @@ void Thyristor::begin(){
   timer = timerBegin(0, 80, true);
   // Attach onTimer function to our timer.
   timerAttachInterrupt(timer, &activateThyristors, true);
+#elif defined(__AVR_ATmega328P__)
+  timerSetCallback(activateThyristors);
+  timerBegin();
 #endif
 }
 
