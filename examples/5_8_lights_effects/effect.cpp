@@ -1,17 +1,25 @@
 #include "effect.h"
-#include "Ticker.h"
 
-Ticker dim;
+void (*effect)() = nullptr;
+// The period between a call and the next one in millisecond
+uint16_t period = 0;
+uint32_t lastCall = 0;
 
+#if defined(ESP8266)
 DimmableLight lights[N_LIGHTS] = {{D1}, {D2}, {D5}, {D6}, {D8}, {D0}, {D3}, {D4}};
+#elif defined(ESP32)
+DimmableLight lights[N_LIGHTS] = {{4}, {16}, {17}, {5}, {18}, {19}, {21}, {22}};
+#else // for Arduino
+DimmableLight lights[N_LIGHTS] = {{3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}};
+#endif
 
 /**
  * Do some specific step, all the lights follow the same pattern
  */
 void doEqual(){
-  const float period = 3;
-  static int briLevels[]={0,1,2,50,100,150,254,255};
-  static uint8_t brightnessStep=0;
+  const unsigned int period = 3000;
+  static const uint8_t briLevels[] = {0,1,2,50,100,150,254,255};
+  static uint8_t brightnessStep = 0;
   Serial.println(String("Dimming at: ") + briLevels[brightnessStep] + "/255");
   for(int i=0;i<N_LIGHTS;i++){
     lights[i].setBrightness(briLevels[brightnessStep]);
@@ -21,14 +29,17 @@ void doEqual(){
   if(brightnessStep==sizeof(briLevels)/sizeof(briLevels[0])){
     brightnessStep=0;
   }
-  dim.once(period,doEqual);
+
+  ::period = period;
+  lastCall = millis();
+  effect = doEqual;
 }
 
 /**
  * Turn on/off all the bulbs simultaneously
  */
 void doEqualOnOff(){
-  const float period = 3;
+  const unsigned int period = 3000;
   static int briLevels[]={0,255};
   static uint8_t brightnessStep=0;
   Serial.println(String("Dimming at: ") + briLevels[brightnessStep] + "/255");
@@ -40,18 +51,21 @@ void doEqualOnOff(){
   if(brightnessStep==sizeof(briLevels)/sizeof(briLevels[0])){
     brightnessStep=0;
   }
-  dim.once(period,doEqualOnOff);
+
+  ::period = period;
+  lastCall = millis();
+  effect = doEqualOnOff;
 }
 
 /**
  * Switch lights between specific steps
  */
 void doDimSpecificStep(void){
-  const float period = 3;
-  static int briLevels1[]={40,200};
-  static int briLevels2[]={60,160};
-  static int briLevels3[]={80,150};
-  static uint8_t brightnessStep=0;
+  const unsigned int period = 3000;
+  static const uint8_t briLevels1[] = {40,200};
+  static const uint8_t briLevels2[] = {60,160};
+  static const uint8_t briLevels3[] = {80,130};
+  static uint8_t brightnessStep = 0;
   Serial.println(String("Dimming at: ") + briLevels1[brightnessStep] + " and " + briLevels2[brightnessStep] + " and " + briLevels3[brightnessStep] +" /255");
   lights[1].setBrightness(briLevels1[brightnessStep]);
   lights[2].setBrightness(briLevels2[brightnessStep]);
@@ -61,18 +75,21 @@ void doDimSpecificStep(void){
   if(brightnessStep==sizeof(briLevels1)/sizeof(briLevels1[0])){
     brightnessStep=0;
   }
-  dim.once(period, doDimSpecificStep);
+
+  ::period = period;
+  lastCall = millis();
+  effect = doDimSpecificStep;
 }
 
 /**
  * Test a mixture between on-off-middle
  */
 void doRangeLimit(void){
-  const float period = 5;
-  static int briLevels1[]={0,255};
-  static int briLevels2[]={255,0};
-  static int briLevels3[]={100,100};
-  static uint8_t brightnessStep=0;
+  const unsigned int period = 5000;
+  static const uint8_t briLevels1[] = {0,255};
+  static const uint8_t briLevels2[] = {255,0};
+  static const uint8_t briLevels3[] = {100,100};
+  static uint8_t brightnessStep = 0;
   Serial.println(String("Dimming at: ") + briLevels1[brightnessStep] + " and " + briLevels2[brightnessStep] + " and " + briLevels3[brightnessStep] +" /255");
   lights[1].setBrightness(briLevels1[brightnessStep]);
   lights[2].setBrightness(briLevels2[brightnessStep]);
@@ -82,28 +99,36 @@ void doRangeLimit(void){
   if(brightnessStep==sizeof(briLevels1)/sizeof(briLevels1[0])){
     brightnessStep=0;
   }
-  dim.once(period, doRangeLimit);
+
+  ::period = period;
+  lastCall = millis();
+  effect = doRangeLimit;
 }
 
 /**
  * Test the eyes limit switching between near values
  */
 void doNearValues(void){
-  const float period = 4;
-  static int briLevels1[]={73,70};
-  static int briLevels2[]={71,71};
-  static int briLevels3[]={72,73};
+  const unsigned int period = 3000;
+  static const uint8_t avg = 80;
+  static const uint8_t diff = 2;
+  static const uint8_t briLevelsLamp1[] = {avg-diff, avg};
+  static const uint8_t briLevelsLamp2[] = {avg,      avg+diff};
+  static const uint8_t briLevelsLamp3[] = {avg+diff, avg-diff};
   static uint8_t brightnessStep=0;
-  Serial.println(String("Dimming at: ") + briLevels1[brightnessStep] + " and " + briLevels2[brightnessStep] + " and " + briLevels3[brightnessStep] +" /255");
-  lights[1].setBrightness(briLevels1[brightnessStep]);
-  lights[2].setBrightness(briLevels2[brightnessStep]);
-  lights[3].setBrightness(briLevels3[brightnessStep]);
+  Serial.println(String("Dimming at: ") + briLevelsLamp1[brightnessStep] + " and " + briLevelsLamp2[brightnessStep] + " and " + briLevelsLamp3[brightnessStep] +" /255");
+  lights[1].setBrightness(briLevelsLamp1[brightnessStep]);
+  lights[2].setBrightness(briLevelsLamp2[brightnessStep]);
+  lights[3].setBrightness(briLevelsLamp3[brightnessStep]);
 
   brightnessStep++;
-  if(brightnessStep==sizeof(briLevels1)/sizeof(briLevels1[0])){
+  if(brightnessStep==sizeof(briLevelsLamp1)/sizeof(briLevelsLamp1[0])){
     brightnessStep=0;
   }
-  dim.once(period, doNearValues);
+
+  ::period = period;
+  lastCall = millis();
+  effect = doNearValues;
 }
 
 /**
@@ -111,7 +136,7 @@ void doNearValues(void){
  * on the contrary than respect each other.
  */
 void doDimMixed(void){
-  const float period = 0.05;
+  const unsigned int period = 50;
   static uint8_t brightnessStep=1;
   static bool up = true;
   
@@ -137,14 +162,17 @@ void doDimMixed(void){
 //      brightnessStep=249;
 //    }
   }
-  dim.once(period,doDimMixed);
+
+  ::period = period;
+  lastCall = millis();
+  effect = doDimMixed;
 }
 
 /**
  * All the lights dim simultaneously in the same way.
  */
 void doDimSweepEqual(void){
-  const float period = 0.05;
+  const unsigned int period = 50;
   static uint8_t brightnessStep=1;
   static bool up = true;
   for(int i=0;i<N_LIGHTS;i++){
@@ -163,11 +191,14 @@ void doDimSweepEqual(void){
       brightnessStep--;
     }
   }
-  dim.once(period,doDimSweepEqual);
+
+  ::period = period;
+  lastCall = millis();
+  effect = doDimSweepEqual;
 }
 
 void doOnOffSweep(){
-  const float period = 0.7;
+  const unsigned int period = 700;
   static int16_t step = 0;
   
   for(int i=0;i<N_LIGHTS;i++){
@@ -182,14 +213,17 @@ void doOnOffSweep(){
   if(step==N_LIGHTS){
     step=0;
   }
-  dim.once(period,doOnOffSweep);
+
+  ::period = period;
+  lastCall = millis();
+  effect = doOnOffSweep;
 }
 
 /**
  * The group formed by even bulbs dim on the contrary to the odd group.
  */
 void doInvertedDim(void){
-  const float period = 0.05;
+  const unsigned int period = 50;
   static uint8_t brightnessStep=1;
   static bool up = true;
   int oppositeBrightness = -((int)brightnessStep-255);
@@ -214,7 +248,10 @@ void doInvertedDim(void){
       brightnessStep--;
     }
   }
-  dim.once(period,doInvertedDim);
+
+  ::period = period;
+  lastCall = millis();
+  effect = doInvertedDim;
 }
 
 /**
@@ -265,7 +302,7 @@ uint8_t conversionPow(uint16_t value){
  * Turn on the light with (255/nLights) steps offset between consecutive lights
  */
 void doCircularSwipe(void){
-  const float period = 0.01;
+  const unsigned int period = 50;
 
   static uint16_t brightnessStep = 255;
 
@@ -278,24 +315,30 @@ void doCircularSwipe(void){
   if(brightnessStep==512){
     brightnessStep=0;
   }
-  dim.once(period,doCircularSwipe);
+
+  ::period = period;
+  lastCall = millis();
+  effect = doCircularSwipe;
 }
 
 void doRandomBri(){
-  const float period = 0.7;
+  const unsigned int period = 700;
 
   for(int i=0;i<N_LIGHTS;i++){
     int bri = random(0,256);
     lights[i].setBrightness(bri);
   }
-  dim.once(period,doRandomBri);
+
+  ::period = period;
+  lastCall = millis();
+  effect = doRandomBri;
 }
 
 /**
  * The variance of random number is restricted around the mean value step after step
  */
 void doRandomBriPeehole(){
-  const float period = 0.7;
+  const unsigned int period = 700;
   const uint16_t briStep = 10;
   const uint16_t totStep = 16;
   
@@ -318,14 +361,17 @@ void doRandomBriPeehole(){
   if(iteration==totStep){
     iteration=0;
   }
-  dim.once(period, doRandomBriPeehole);
+
+  ::period = period;
+  lastCall = millis();
+  effect = doRandomBriPeehole;
 }
 
 /**
  * The variance of random number is restricted around the mean value step after step
  */
 void doRandomPushExtremeValues(){
-  const float period = 1;
+  const unsigned int period = 1000;
   const uint16_t briStep = 10;
     
   for(int i=0; i<N_LIGHTS; i++){
@@ -333,12 +379,13 @@ void doRandomPushExtremeValues(){
     if(bri<briStep){
       bri = bri;
     }else{
-      bri = 256 - (briStep*2 - bri);
+      bri = 255 - (briStep*2 - bri);
     }
     Serial.print(String(bri) + " ");
     lights[i].setBrightness(bri);
   }
-  Serial.println();
   
-  dim.once(period, doRandomPushExtremeValues);
+  ::period = period;
+  lastCall = millis();
+  effect = doRandomPushExtremeValues;
 }

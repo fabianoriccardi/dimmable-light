@@ -6,11 +6,7 @@
  * NOTE: install https://github.com/kroimon/Arduino-SerialCommand
  */
 #include <SerialCommand.h>
-#include <Ticker.h>
-
 #include "effect.h"
-
-const int syncPin = D7;
 
 SerialCommand serialCmd;
 
@@ -78,7 +74,7 @@ void selectEffect(unsigned char effectId){
           doRandomPushExtremeValues();
           break;
         default:
-            Serial.println("Effect ID not implemented");
+          Serial.println("Effect ID not implemented");
     }
   }
 }
@@ -117,7 +113,12 @@ void setup() {
 
 void loop(){
     serialCmd.readSerial();
+    
+    uint32_t now = millis();
     if(effectSelected == -1){
       delay(20);
+    }else if(now-lastCall>period){
+      if(effect != nullptr)
+        effect();
     }
 }
