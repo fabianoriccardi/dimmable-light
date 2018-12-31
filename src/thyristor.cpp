@@ -36,6 +36,40 @@
 static hw_timer_t* timer = nullptr;
 #endif
 
+typedef struct {
+    union {
+        struct {
+            uint32_t reserved0:   10;
+            uint32_t alarm_en:     1;             /*When set  alarm is enabled*/
+            uint32_t level_int_en: 1;             /*When set  level type interrupt will be generated during alarm*/
+            uint32_t edge_int_en:  1;             /*When set  edge type interrupt will be generated during alarm*/
+            uint32_t divider:     16;             /*Timer clock (T0/1_clk) pre-scale value.*/
+            uint32_t autoreload:   1;             /*When set  timer 0/1 auto-reload at alarming is enabled*/
+            uint32_t increase:     1;             /*When set  timer 0/1 time-base counter increment. When cleared timer 0 time-base counter decrement.*/
+            uint32_t enable:       1;             /*When set  timer 0/1 time-base counter is enabled*/
+        };
+        uint32_t val;
+    } config;
+    uint32_t cnt_low;                             /*Register to store timer 0/1 time-base counter current value lower 32 bits.*/
+    uint32_t cnt_high;                            /*Register to store timer 0 time-base counter current value higher 32 bits.*/
+    uint32_t update;                              /*Write any value will trigger a timer 0 time-base counter value update (timer 0 current value will be stored in registers above)*/
+    uint32_t alarm_low;                           /*Timer 0 time-base counter value lower 32 bits that will trigger the alarm*/
+    uint32_t alarm_high;                          /*Timer 0 time-base counter value higher 32 bits that will trigger the alarm*/
+    uint32_t load_low;                            /*Lower 32 bits of the value that will load into timer 0 time-base counter*/
+    uint32_t load_high;                           /*higher 32 bits of the value that will load into timer 0 time-base counter*/
+    uint32_t reload;                              /*Write any value will trigger timer 0 time-base counter reload*/
+} hw_timer_reg_t;
+
+
+
+typedef struct hw_timer_s {
+    hw_timer_reg_t * dev;
+    uint8_t num;
+    uint8_t group;
+    uint8_t timer;
+    portMUX_TYPE lock;
+} hw_timer_t;
+
 // In microseconds
 static const uint16_t semiPeriodLength = 10000;
 // The margins are precautions against noise, electrical spikes and frequency skew errors
@@ -111,12 +145,21 @@ void activateThyristors(){
     timer1_write(US_TO_RTC_TIMER_TICKS(delay));
   #elif defined(ESP32)
     // Reset timer
-    timerWrite(timer, 0);
+    //timerWrite(timer, 0);
+    timer->dev->load_high = 0;
+    timer->dev->load_low = 0;
+    timer->dev->reload = 1;
+
     // Set alarm to call onTimer function every second (value in microseconds).
     // Repeat the alarm (third parameter)
-    timerAlarmWrite(timer, delay, false);
+    //timerAlarmWrite(timer, delay, false);
+    timer->dev->alarm_low = (uint32_t) delay;
+    timer->dev->alarm_high = 0;
+    timer->dev->config.autoreload = 0;
+
     // Start an alarm
-    timerAlarmEnable(timer);
+    //timerAlarmEnable(timer);
+    timer->dev->config.alarm_en = 1;
   #elif defined(__AVR_ATmega328P__)
     if(!timerStart(microsecond2Tick(delay))){
       Serial.println("activateThyristors() error timer");
@@ -222,12 +265,21 @@ void zero_cross_int(){
     timer1_write(US_TO_RTC_TIMER_TICKS(pinDelay[thyristorManaged].delay));
   #elif defined(ESP32)
     // Reset timer
-    timerWrite(timer, 0);
+    //timerWrite(timer, 0);
+    timer->dev->load_high = 0;
+    timer->dev->load_low = 0;
+    timer->dev->reload = 1;
+
     // Set alarm to call onTimer function every second (value in microseconds).
     // Repeat the alarm (third parameter)
-    timerAlarmWrite(timer, pinDelay[thyristorManaged].delay, false);
+    //timerAlarmWrite(timer, pinDelay[thyristorManaged].delay, false);
+    timer->dev->alarm_low = (uint32_t) pinDelay[thyristorManaged].delay;
+    timer->dev->alarm_high = 0;
+    timer->dev->config.autoreload = 0;
+
     // Start an alarm
-    timerAlarmEnable(timer);
+    //timerAlarmEnable(timer);
+    timer->dev->config.alarm_en = 1;
   #elif defined(__AVR_ATmega328P__)
     uint8_t ticks = microsecond2Tick(pinDelay[thyristorManaged].delay);
     if(!timerStart(ticks)){
