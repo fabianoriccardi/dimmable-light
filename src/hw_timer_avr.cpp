@@ -1,4 +1,4 @@
-#ifdef __AVR_ATmega328P__
+#ifdef AVR
 
 #include <util/atomic.h>
 #include <Arduino.h>
@@ -73,4 +73,4 @@ bool timerStart(uint16_t tick){
     return true;
 }
 
-#endif // END __AVR_ATmega328__
+#endif // END AVR

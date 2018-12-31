@@ -3,7 +3,7 @@
  * than respect ESP8266/ESP32, so this file is needed to provide a minimum "HAL"
  * to simply timer usage
  ***********************************************************************************/
-#ifdef __AVR_ATmega328P__
+#ifdef AVR
 
 #ifndef HW_TIMER_ARDUINO_H
 #define HW_TIMER_ARDUINO_H
@@ -31,4 +31,4 @@ bool timerStart(uint16_t tick);
 
 #endif // HW_TIMER_ARDUINO_H
 
-#endif // END __AVR_ATmega328__
+#endif // END AVR

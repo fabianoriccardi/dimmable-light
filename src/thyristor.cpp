@@ -21,10 +21,10 @@
 #include "hw_timer_esp8266.h"
 #elif defined(ESP32)
 // no need to include libraries...
-#elif defined(__AVR_ATmega328P__)
+#elif defined(AVR)
 #include "hw_timer_avr.h"
 #else
-#error "only ESP8266 and ESP32 and AVR ATmega328P for Arduino are supported"
+#error "only ESP8266 and ESP32 and AVR for Arduino are supported"
 #endif
 
 // Activate this define to enable a check on the period between zero and the next one
@@ -34,7 +34,6 @@
 
 #ifdef ESP32
 static hw_timer_t* timer = nullptr;
-#endif
 
 typedef struct {
     union {
@@ -60,8 +59,6 @@ typedef struct {
     uint32_t reload;                              /*Write any value will trigger timer 0 time-base counter reload*/
 } hw_timer_reg_t;
 
-
-
 typedef struct hw_timer_s {
     hw_timer_reg_t * dev;
     uint8_t num;
@@ -69,6 +66,8 @@ typedef struct hw_timer_s {
     uint8_t timer;
     portMUX_TYPE lock;
 } hw_timer_t;
+
+#endif
 
 // In microseconds
 static const uint16_t semiPeriodLength = 10000;
@@ -160,7 +159,7 @@ void activateThyristors(){
     // Start an alarm
     //timerAlarmEnable(timer);
     timer->dev->config.alarm_en = 1;
-  #elif defined(__AVR_ATmega328P__)
+  #elif defined(AVR)
     if(!timerStart(microsecond2Tick(delay))){
       Serial.println("activateThyristors() error timer");
     }
@@ -171,7 +170,7 @@ void activateThyristors(){
     timer1_disable();
   #elif defined(ESP32)
   
-  #elif defined(__AVR_ATmega328P__)
+  #elif defined(AVR)
 
   #endif
   }
@@ -280,7 +279,7 @@ void zero_cross_int(){
     // Start an alarm
     //timerAlarmEnable(timer);
     timer->dev->config.alarm_en = 1;
-  #elif defined(__AVR_ATmega328P__)
+  #elif defined(AVR)
     uint8_t ticks = microsecond2Tick(pinDelay[thyristorManaged].delay);
     if(!timerStart(ticks)){
       Serial.println("zero_cross_int() error timer");
@@ -291,7 +290,7 @@ void zero_cross_int(){
     // No need to take actions
   #elif defined(ESP32)
     timerAlarmDisable(timer);
-  #elif defined(__AVR_ATmega328P__)
+  #elif defined(AVR)
     // No need to take actions
   #endif
   }
@@ -310,7 +309,7 @@ void Thyristor::begin(){
   timer = timerBegin(0, 80, true);
   // Attach onTimer function to our timer.
   timerAttachInterrupt(timer, &activateThyristors, true);
-#elif defined(__AVR_ATmega328P__)
+#elif defined(AVR)
   timerSetCallback(activateThyristors);
   timerBegin();
 #endif
