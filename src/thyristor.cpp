@@ -18,7 +18,7 @@
  ***************************************************************************/
 #include "thyristor.h"
 #if defined(ESP8266)
-#include "hw_timer.h"
+#include "hw_timer_esp8266.h"
 #elif defined(ESP32)
 // no need to include libraries...
 #elif defined(__AVR_ATmega328P__)
@@ -61,7 +61,9 @@ static uint8_t thyristorManaged=0;
 /**
  * Timer routine to turn on one or more thyristors
  */
-#ifdef ESP32
+#if defined(ESP8266)
+void ICACHE_RAM_ATTR activateThyristors(){
+#elif defined(ESP32)
 void IRAM_ATTR activateThyristors(){
 #else
 void activateThyristors(){
@@ -69,7 +71,6 @@ void activateThyristors(){
   // Alternative way to manage the pin, it should become low after the triac started
   //delayMicroseconds(10);
   //digitalWrite(AC_LOADS[phase],LOW);
-  
   uint8_t firstToBeUpdated=thyristorManaged;
   
   // This condition means:
@@ -107,7 +108,7 @@ void activateThyristors(){
   if(thyristorManaged<Thyristor::nThyristors){
     int delay = pinDelay[thyristorManaged].delay-pinDelay[firstToBeUpdated].delay-pulseWidth;
   #if defined(ESP8266)
-    hw_timer_arm(delay);
+    timer1_write(US_TO_RTC_TIMER_TICKS(delay));
   #elif defined(ESP32)
     // Reset timer
     timerWrite(timer, 0);
@@ -120,6 +121,15 @@ void activateThyristors(){
     if(!timerStart(microsecond2Tick(delay))){
       Serial.println("activateThyristors() error timer");
     }
+  #endif
+  }else{
+    // If there are not more thyristor to serve, I can stop timer. Energy saving?
+  #if defined(ESP8266)
+    timer1_disable();
+  #elif defined(ESP32)
+  
+  #elif defined(__AVR_ATmega328P__)
+
   #endif
   }
 }
@@ -134,7 +144,13 @@ uint32_t lastTime;
  * This function will be called multiple times per semi-period (in case of multi 
  * lamps with different at least a different delay value).
  */
+#if defined(ESP8266)
+void ICACHE_RAM_ATTR zero_cross_int(){
+#elif defined(ESP32)
+void IRAM_ATTR zero_cross_int(){
+#else
 void zero_cross_int(){
+#endif
   // This is kind of optimization software, but not electrical:
   // This avoid to wait 10micros in a interrupt or setting interrupt 
   // to turn off the PIN (this last solution could be evaluated...)
@@ -198,8 +214,12 @@ void zero_cross_int(){
   // NOTE 2: this improvement should be think even for multiple lamp!
   if(thyristorManaged<Thyristor::nThyristors && pinDelay[thyristorManaged].delay<9950){
   #if defined(ESP8266)
-    hw_timer_set_func(activateThyristors);
-    hw_timer_arm(pinDelay[thyristorManaged].delay);
+    //These 2 registers writing are the "unrolling" of: 
+    // timer1_enable(TIM_DIV16, TIM_EDGE, TIM_SINGLE);
+    T1C = (1 << TCTE) | ((TIM_DIV16 & 3) << TCPD) | ((TIM_EDGE & 1) << TCIT) | ((TIM_SINGLE & 1) << TCAR);
+    T1I = 0;
+
+    timer1_write(US_TO_RTC_TIMER_TICKS(pinDelay[thyristorManaged].delay));
   #elif defined(ESP32)
     // Reset timer
     timerWrite(timer, 0);
@@ -216,7 +236,7 @@ void zero_cross_int(){
   #endif
   }else{
   #if defined(ESP8266)
-    hw_timer_set_func(NULL);
+    // No need to take actions
   #elif defined(ESP32)
     timerAlarmDisable(timer);
   #elif defined(__AVR_ATmega328P__)
@@ -230,8 +250,7 @@ void Thyristor::begin(){
   attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, RISING);
 
 #if defined(ESP8266)
-  // FRC1 is a low priority timer, it can't interrupt other ISR
-  hw_timer_init(FRC1_SOURCE, 0);
+  timer1_attachInterrupt(activateThyristors);
 #elif defined(ESP32)
   // Use 1st timer of 4 (counted from zero).
   // Set 80 divider for prescaler (see ESP32 Technical Reference Manual for more

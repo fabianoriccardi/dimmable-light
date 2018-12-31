@@ -14,7 +14,8 @@ typedef __SIZE_TYPE__ size_t;
 #include "ets_sys.h"
 #include "os_type.h"
 #include "osapi.h"
-#include "hw_timer.h"
+
+#include "hw_timer_esp8266.h"
 
 
 /******************************************************************************
@@ -28,7 +29,7 @@ in non autoload mode:
                         10 ~ 0x7fffff;
 * Returns      : NONE
 *******************************************************************************/
-void  hw_timer_arm(u32 val)
+void ICACHE_RAM_ATTR hw_timer_arm(u32 val)
 {
     RTC_REG_WRITE(FRC1_LOAD_ADDRESS, US_TO_RTC_TIMER_TICKS(val));
 }
@@ -41,12 +42,12 @@ static void (* user_hw_timer_cb)(void) = NULL;
                         timer callback function,
 * Returns      : NONE
 *******************************************************************************/
-void  hw_timer_set_func(void (* user_hw_timer_cb_set)(void))
+void ICACHE_RAM_ATTR hw_timer_set_func(void (* user_hw_timer_cb_set)(void))
 {
     user_hw_timer_cb = user_hw_timer_cb_set;
 }
 
-static void  hw_timer_isr_cb(void)
+static ICACHE_RAM_ATTR void  hw_timer_isr_cb(void)
 {
     if (user_hw_timer_cb != NULL) {
         (*(user_hw_timer_cb))();
@@ -65,7 +66,7 @@ u8 req:
                         1,  autoload mode,
 * Returns      : NONE
 *******************************************************************************/
-void ICACHE_FLASH_ATTR hw_timer_init(FRC1_TIMER_SOURCE_TYPE source_type, u8 req)
+void ICACHE_RAM_ATTR hw_timer_init(FRC1_TIMER_SOURCE_TYPE source_type, u8 req)
 {
     if (req == 1) {
         RTC_REG_WRITE(FRC1_CTRL_ADDRESS,
