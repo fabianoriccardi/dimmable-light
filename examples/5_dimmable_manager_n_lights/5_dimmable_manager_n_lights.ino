@@ -11,6 +11,8 @@
  * Once the entire setting is ready (light, thyristor, wemos, and sketch), 
  * you should see a very simple effect: all the light will fade from 
  * dark to maximum brightness simultaneously.
+ * 
+ * NOTE: only for ESP8266 and ESP32
  */
 
 #include <Ticker.h>
@@ -65,12 +67,12 @@ void setup() {
   Serial.begin(115200);
   while(!Serial);
   Serial.println();
-  Serial.println("Test HARDWARE timer for dimmer on ESP8266");
+  Serial.println("Dimmable Light for Arduino: fifth example");
   
   Serial.println("Init the dimmable light class... ");
   
   // Add all the lights you need
-  for(int i=0; i<N;i++){
+  for(int i=0; i<N; i++){
     if(dlm.add(String("light") + (i+1), pins[i])){
       Serial.println(String("   ") + (i+1) + "-th light added correctly");
     }else{
@@ -85,13 +87,13 @@ void setup() {
   
   // This line starts the effect. In the meanwhile,
   // you can continue to execution your own code (thanks to Ticker library)
-  dim.attach(period,doRaise); 
+  dim.attach(period, doRaise);
 }
 
 void loop() {
   // Print the light name and its actual brightness
-  for(int i=0;i<dlm.getCount();i++){
-    std::pair<String,DimmableLight*> p=dlm.get();
+  for(int i=0; i<dlm.getCount(); i++){
+    std::pair<String,DimmableLight*> p = dlm.get();
     DimmableLight* dimLight = p.second;
     // Altervatively, you can require to the manager a specific light
     //DimmableLight* dimLight = dlm.get("light1");

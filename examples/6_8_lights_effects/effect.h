@@ -7,7 +7,7 @@ const int N_LIGHTS = 8;
 const int syncPin = D7;
 #elif defined(ESP32)
 const int syncPin = 23;
-#else
+#elif defined(AVR)
 const int syncPin = 2;
 #endif
 

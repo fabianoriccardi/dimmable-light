@@ -83,7 +83,7 @@ void setup() {
   Serial.begin(115200);
   while(!Serial);
   Serial.println();
-  Serial.println("Starting the example effect");
+  Serial.println("Dimmable Light for Arduino: sixth example");
   
   Serial.print("Init the dimmable light class... ");
   
@@ -109,6 +109,8 @@ void setup() {
   serialCmd.addCommand("e12",[](){selectEffect(12);});
   
   serialCmd.setDefaultHandler(unrecognized);
+
+  Serial.println("Select one effect ranging between e0 and e12");
 }
 
 void loop(){

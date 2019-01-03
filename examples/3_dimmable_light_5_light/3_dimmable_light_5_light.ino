@@ -23,7 +23,7 @@ void setup() {
   Serial.begin(115200);
   while(!Serial);
   Serial.println();
-  Serial.println("Third example Dimmable Lights for ESP8266");
+  Serial.println("Dimmable Light for Arduino: third example");
   Serial.println();
   
   Serial.print("Init the dimmable light class... ");
