@@ -72,9 +72,21 @@ typedef struct hw_timer_s {
 // In microseconds
 static const uint16_t semiPeriodLength = 10000;
 // The margins are precautions against noise, electrical spikes and frequency skew errors
-// delays after endMargin are always off (hence very small overhead for MCU)
+// delays after endMargin are always off (hence no useless interrupts). 
+// You could tune this parameter accordingly to your settings (electrical network and MCU).
 static const uint16_t startMargin = 200;
-static const uint16_t endMargin = 200;
+static const uint16_t endMargin = 500;
+
+// This parameter represents the time span in which 2 (or more) very near delays are merged:
+// This could be necessary for 2 main reasons:
+// 1) Efficiency, in fact in some applications you will never seem differences between
+//    near delays, hence raising many interrupts is useless.
+// 2) MCU inability to satisfy very tight "timer start".
+// After some experiments on incandescence light bulbs, I noted that even 50 microseconds 
+// are not negligible, so I decided to set threshold lower that 20microsecond (note that 
+// ESP8266 API documentation suggests to set timer on >10us). If you would to use 8bit 
+// timers on AVR, you should set a bigger mergePeriod (e.g. 100us).
+static const  unsigned int mergePeriod = 20;
 
 struct PinDelay{
   uint8_t pin;
@@ -105,19 +117,6 @@ void activateThyristors(){
   //delayMicroseconds(10);
   //digitalWrite(AC_LOADS[phase],LOW);
   uint8_t firstToBeUpdated=thyristorManaged;
-  
-  // This condition means:
-  // trigger immediately is there is not time to active the timer for the next light 
-  // (i.e delay differene less than 20microseconds)
-  // After some experiment, even 50 microseconrd are noticeble, so I decided 
-  // to set the threshold lower that 20microsecond (wrt the resolution of the user class, 
-  // that it about 39microsecond, this loop is used only for equal values)
-  // 100us on Arduino because it has a lower resolution and it is slower response time than esp*
-#if defined(ESP8266) || defined(ESP32)
-  unsigned int mergePeriod = 20;
-#else
-  unsigned int mergePeriod = 100;
-#endif
 
   for(; (thyristorManaged<Thyristor::nThyristors-1 && pinDelay[thyristorManaged+1].delay-pinDelay[firstToBeUpdated].delay<mergePeriod) && (pinDelay[thyristorManaged].delay<semiPeriodLength-endMargin); thyristorManaged++){
     digitalWrite(pinDelay[thyristorManaged].pin, HIGH);
@@ -280,8 +279,7 @@ void zero_cross_int(){
     //timerAlarmEnable(timer);
     timer->dev->config.alarm_en = 1;
   #elif defined(AVR)
-    uint8_t ticks = microsecond2Tick(pinDelay[thyristorManaged].delay);
-    if(!timerStart(ticks)){
+    if(!timerStart(microsecond2Tick(pinDelay[thyristorManaged].delay))){
       Serial.println("zero_cross_int() error timer");
     }
   #endif
