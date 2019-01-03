@@ -159,18 +159,20 @@ void activateThyristors(){
     //timerAlarmEnable(timer);
     timer->dev->config.alarm_en = 1;
   #elif defined(AVR)
-    if(!timerStart(microsecond2Tick(delay))){
+    if(!timerStartAndTrigger(microsecond2Tick(delay))){
       Serial.println("activateThyristors() error timer");
     }
   #endif
   }else{
     // If there are not more thyristor to serve, I can stop timer. Energy saving?
   #if defined(ESP8266)
-    timer1_disable();
+    // Given the Arduino HAL and esp8266 technical reference manual,
+    // when timer triggers, the counter stops because it has reach zero
+    // and no-autorealod was set (this timer can only down-count).
   #elif defined(ESP32)
-  
+    timer->dev->config.enable = 0;
   #elif defined(AVR)
-
+    // Given actual HAL, AVR counter automatically stops on interrupt
   #endif
   }
 }
@@ -255,11 +257,6 @@ void zero_cross_int(){
   // NOTE 2: this improvement should be think even for multiple lamp!
   if(thyristorManaged<Thyristor::nThyristors && pinDelay[thyristorManaged].delay<9950){
   #if defined(ESP8266)
-    //These 2 registers writing are the "unrolling" of: 
-    // timer1_enable(TIM_DIV16, TIM_EDGE, TIM_SINGLE);
-    T1C = (1 << TCTE) | ((TIM_DIV16 & 3) << TCPD) | ((TIM_EDGE & 1) << TCIT) | ((TIM_SINGLE & 1) << TCAR);
-    T1I = 0;
-
     timer1_write(US_TO_RTC_TIMER_TICKS(pinDelay[thyristorManaged].delay));
   #elif defined(ESP32)
     // Reset timer
@@ -267,6 +264,7 @@ void zero_cross_int(){
     timer->dev->load_high = 0;
     timer->dev->load_low = 0;
     timer->dev->reload = 1;
+    timer->dev->config.enable = 1;
 
     // Set alarm to call onTimer function every second (value in microseconds).
     // Repeat the alarm (third parameter)
@@ -279,17 +277,19 @@ void zero_cross_int(){
     //timerAlarmEnable(timer);
     timer->dev->config.alarm_en = 1;
   #elif defined(AVR)
-    if(!timerStart(microsecond2Tick(pinDelay[thyristorManaged].delay))){
+    if(!timerStartAndTrigger(microsecond2Tick(pinDelay[thyristorManaged].delay))){
       Serial.println("zero_cross_int() error timer");
     }
   #endif
   }else{
   #if defined(ESP8266)
-    // No need to take actions
+    // Given the Arduino HAL and esp8266 technical reference manual,
+    // when timer triggers, the counter stops because it has reach zero
+    // and no-autorealod was set (this timer can only down-count).
   #elif defined(ESP32)
-    timerAlarmDisable(timer);
+    timer->dev->config.enable = 0;
   #elif defined(AVR)
-    // No need to take actions
+    // Given actual HAL, AVR counter automatically stops on interrupt
   #endif
   }
 }
@@ -300,10 +300,14 @@ void Thyristor::begin(){
 
 #if defined(ESP8266)
   timer1_attachInterrupt(activateThyristors);
+  // These 2 registers assignements are the "unrolling" of:
+  // timer1_enable(TIM_DIV16, TIM_EDGE, TIM_SINGLE);
+  T1C = (1 << TCTE) | ((TIM_DIV16 & 3) << TCPD) | ((TIM_EDGE & 1) << TCIT) | ((TIM_SINGLE & 1) << TCAR);
+  T1I = 0;
 #elif defined(ESP32)
   // Use 1st timer of 4 (counted from zero).
   // Set 80 divider for prescaler (see ESP32 Technical Reference Manual for more
-  // info).
+  // info), count up. The counter starts to increase its value.
   timer = timerBegin(0, 80, true);
   // Attach onTimer function to our timer.
   timerAttachInterrupt(timer, &activateThyristors, true);

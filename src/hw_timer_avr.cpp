@@ -65,18 +65,17 @@
 #define TIMER_COMPA_VECTOR(X) _TIMER_COMPA_VECTOR(X)
 
 
-void (*timer_callback)() = nullptr;
+static void (*timer_callback)() = nullptr;
 
 ISR(TIMER_COMPA_VECTOR(TIMER_ID)){
+    // Stop counter
+    TCCRxB(TIMER_ID) = 0;
+    
     if(timer_callback != nullptr){
         timer_callback();
     }
 }
 
-/**
- * Convert microsecond to tick accordingly to timer prescaler. 
- * The valid input ranges between 0 and 32767.
- */
 uint16_t microsecond2Tick(uint16_t micro){
     // a frequency value to match the conversion in MICROSECONDS
     static const uint32_t freq = F_CPU/1000000;
@@ -111,9 +110,6 @@ uint16_t microsecond2Tick(uint16_t micro){
     }
 }
 
-/**
- * Configure the timer to be ready to be started
- */
 void timerBegin(){
     // clean control registers TCCRxA and TCC2B registers
     TCCRxA(TIMER_ID) = 0;
@@ -134,19 +130,11 @@ void timerBegin(){
     TIMSKx(TIMER_ID) = 1<<OCIExA(TIMER_ID);
 }
 
-/**
- * Set the call started when timer triggers
- */
 void timerSetCallback(void (*f)()){
     timer_callback = f;
 }
 
-
-/**
- * Let's start the timer: it triggers after x ticks.
- * 0 is not's accepted.
- */
-bool timerStart(uint16_t tick){
+bool timerStartAndTrigger(uint16_t tick){
     if(tick<=1){
         return false;
     }
@@ -167,10 +155,10 @@ bool timerStart(uint16_t tick){
 #endif
     
 #if N_BIT_TIMER == 8
-    // 0x07: start with prescaler 1024
+    // 0x07: start counter with prescaler 1024
     TCCRxB(TIMER_ID) = 0x07;
 #elif N_BIT_TIMER == 16
-    // 0x02: start with prescaler 8
+    // 0x02: start counter with prescaler 8
     TCCRxB(TIMER_ID) = 0x02;
 #endif
     return true;

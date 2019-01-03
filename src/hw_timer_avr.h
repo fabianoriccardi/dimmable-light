@@ -19,8 +19,8 @@
 
 /***********************************************************************************
  * Here there is specific AVR code. AVR is usually programmed at very low level
- * than respect ESP8266/ESP32, so this file is needed to provide a minimum "HAL"
- * to simply timer usage
+ * than respect ESP8266/ESP32, so this file is needed to provide a minimalistic
+ * "HAL" to simplify timer usage.
  ***********************************************************************************/
 #ifdef AVR
 
@@ -33,20 +33,24 @@
 uint16_t microsecond2Tick(uint16_t micro);
 
 /**
- * Configure the timer to be ready to be started
+ * Configure the timer to be started by timerStart()
  */
 void timerBegin();
 
 /**
- * Set the call staret when timer triggers
+ * Set callback function on timer triggers
  */
 void timerSetCallback(void (*f)());
 
 /**
- * Let's start the timer: it triggers after x ticks.
- * 0 and 1 are not's accepted.
+ * Let's start the timer: it triggers after x ticks,
+ * then it stops. 
+ * tick length depends on MCU clock and prescaler, please use 
+ * microsecond2Tick(..) to feed timerStart(..).
+ * 
+ * NOTE: 0 or 1 values are not accepted
  */
-bool timerStart(uint16_t tick);
+bool timerStartAndTrigger(uint16_t tick);
 
 #endif // HW_TIMER_ARDUINO_H
 
