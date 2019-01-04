@@ -23,10 +23,8 @@
 #include "thyristor.h"
 
 /**
- * This is the user-accessible DimmableLight class.
- * 
- * NOTE for programmers: the class should keep a static array with a brightness value
- * 					per object (that is a light).
+ * This is the user-oriented DimmableLight class, 
+ * a wrapper on Thyristor class.
  */
 class DimmableLight{
   public:

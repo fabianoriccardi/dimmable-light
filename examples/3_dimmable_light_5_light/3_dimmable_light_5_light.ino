@@ -3,8 +3,10 @@
  * dimmable lights. To switch between effect, (un)comment the proper line
  * in the setup function.
  * 
- * NOTE: do not connect sync or gate with D3 - GPIO0,  D4 - GPIO2
- * they are needed to switch between the boot mode.
+ * NOTE1: do not connect sync or gate with D3 - GPIO0,  D4 - GPIO2
+ * they are needed to switch between different boot modes.
+ *
+ * NOTE2: only for ESP8266 and ESP32 due to Ticker.h dependency
  */
  
 #include <Ticker.h>

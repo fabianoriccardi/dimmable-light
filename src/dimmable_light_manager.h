@@ -28,6 +28,10 @@
 
 #include <dimmable_light.h>
 
+/**
+ * Class to store the mapping between a DimmableLight object and 
+ * a (friendly) name. This could be useful when developing APIs.
+ */
 class DimmableLightManager{
 public:
   

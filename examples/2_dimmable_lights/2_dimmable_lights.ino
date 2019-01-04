@@ -1,13 +1,17 @@
+/** 
+ * An extension of the first example to demonstrate 
+ * how easy it is to control multiple lights.
+ */ 
 #include "dimmable_light.h"
 
 // Pin listening to AC zero cross signal
 const int syncPin = D7;
 
-// Delay between a brightness changement in millisecond
-int period = 1000;
-
 DimmableLight light1(D5);
 DimmableLight light2(D6);
+
+// Delay between a brightness changement in millisecond
+int period = 1000;
 
 void setup() {
   Serial.begin(115200);

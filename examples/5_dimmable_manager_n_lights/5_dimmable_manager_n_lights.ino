@@ -1,18 +1,13 @@
 /**
- * This advanced example aims to show how to use the Dimmable Light Manager.
- * Basically it gives you the ability to add a friendly/logic name to a Dimmable Light.
- * 
- * The main parameters to configure accordingly to your hardware settings are:
- *  - syncPin, that is the pin listening to AC zero cross signal
- *  - N, that is the number of lights
- *  - pins, that is the array containing the pins which are connected to the thyristor
+ * This advanced example aims to show how to use the Dimmable Light Manager,
+ * combined with Ticker.h library.
  *  
- * In this case the friendly name are "light1", "light2" and so on...
- * Once the entire setting is ready (light, thyristor, wemos, and sketch), 
+ * In this case the friendly names are "light1", "light2" and so on...
+ * Once your setup is ready (light, thyristor, wemos flashed with this sketch), 
  * you should see a very simple effect: all the light will fade from 
  * dark to maximum brightness simultaneously.
  * 
- * NOTE: only for ESP8266 and ESP32
+ * NOTE: only for ESP8266 and ESP32 due to Ticker.h dependency
  */
 
 #include <Ticker.h>

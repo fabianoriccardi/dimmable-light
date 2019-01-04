@@ -22,10 +22,20 @@
 #include "Arduino.h"
 
 /**
- * This is the developer-accessible Thryristor class.
+ * This is the developer-oriented Thyristor class. 
  * 
- * NOTE for programmers: the class should keep a static array with a delay value
- *          per object (that is a thyristor).
+ * NOTE Class Design Principle: The concept of Thyristor is agnostic 
+ * with respect to appliance controlled, hence measurement unit 
+ * to regulate the power should be also appliance-agnostic. Moreover,
+ * I decided to separate the code in 2 level of classes: 
+ * a low level one (appliance-agnostic), and a higher level one for final 
+ * user (a nice appliance-dependent Wrapper, e.g. Dimmable Light). Hence, 
+ * about this class:
+ * 1) the control method is called setDelay(..) and not, for example, setPower(..), 
+ *      setBrightness(..),... giving a precise idea of what's happening in 
+ *      electrical world.
+ * 2) time in microsecond (allowing a fine control, often exceeding the real need),
+ *      to match the notion of time given by setDelay()
  */
 class Thyristor{
   public:

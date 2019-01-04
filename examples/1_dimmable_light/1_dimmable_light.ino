@@ -1,12 +1,18 @@
+/** 
+ * The main parameters to configure this sketch accordingly to your hardware setup are:
+ *  - syncPin, that is the pin listening to AC zero cross signal
+ *  - light, the pin which is connected to the thyristor
+ */ 
+
 #include "dimmable_light.h"
 
-// Pin listening to AC zero cross signal
 const int syncPin = D7;
+const int thyristorPin = D5;
+
+DimmableLight light(thyristorPin);
 
 // Delay between a brightness changement in millisecond
 int period = 50;
-
-DimmableLight light(D5);
 
 void setup() {
   Serial.begin(115200);

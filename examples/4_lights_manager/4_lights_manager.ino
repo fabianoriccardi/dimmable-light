@@ -1,3 +1,6 @@
+/**
+ * A simple example to show DimmableLightManager api's.
+ */
 #include "dimmable_light_manager.h"
 
 const int N = 3;
