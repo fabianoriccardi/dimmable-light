@@ -37,6 +37,10 @@
  * 2) time in microsecond (allowing a fine control, often exceeding the real need),
  *      to match the notion of time given by setDelay()
  */
+
+#define NETWORK_FREQ_50HZ
+//#define NETWORK_FREQ_60HZ
+
 class Thyristor{
   public:
     Thyristor(int pin);

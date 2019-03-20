@@ -70,7 +70,13 @@ typedef struct hw_timer_s {
 #endif
 
 // In microseconds
+#ifdef NETWORK_FREQ_50HZ
 static const uint16_t semiPeriodLength = 10000;
+#endif
+#ifdef NETWORK_FREQ_60HZ
+static const uint16_t semiPeriodLength = 8333;
+#endif
+
 // The margins are precautions against noise, electrical spikes and frequency skew errors
 // delays after endMargin are always off (hence no useless interrupts). 
 // You could tune this parameter accordingly to your settings (electrical network and MCU).
@@ -207,7 +213,7 @@ void zero_cross_int(){
     first=false;
   }else{
     uint32_t now=micros();
-    if(now-lastTime>10015||now-lastTime<9090){
+    if(now-lastTime>semiPeriodLength+15||now-lastTime<semiPeriodLength-10){
       Serial.println(now-lastTime);
     }
     lastTime=now;
@@ -255,7 +261,7 @@ void zero_cross_int(){
   // NOTE: don't know why, but the timer seem trigger even when it is not set...
   // so a provvisory solution if to set the relative callback to NULL!
   // NOTE 2: this improvement should be think even for multiple lamp!
-  if(thyristorManaged<Thyristor::nThyristors && pinDelay[thyristorManaged].delay<9950){
+  if(thyristorManaged<Thyristor::nThyristors && pinDelay[thyristorManaged].delay<semiPeriodLength-50){
   #if defined(ESP8266)
     timer1_write(US_TO_RTC_TIMER_TICKS(pinDelay[thyristorManaged].delay));
   #elif defined(ESP32)
@@ -422,7 +428,7 @@ void Thyristor::setDelay(uint16_t newDelay){
  * @param[in]  pin   The pin
  */
 Thyristor::Thyristor(int pin)
-                :pin(pin),delay(10000){
+                :pin(pin),delay(semiPeriodLength){
   if(nThyristors<N){
     pinMode(pin,OUTPUT);
     
@@ -451,7 +457,7 @@ Thyristor::Thyristor(int pin)
     
     // NO because this struct is updated by the routine!
 //    pinDelay[posIntoArray].pin;
-//    pinDelay[posIntoArray].delay=10000;
+//    pinDelay[posIntoArray].delay=semiPeriodLength;
     
     updatingStruct=false;
   }else{

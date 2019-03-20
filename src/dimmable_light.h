@@ -43,7 +43,11 @@ class DimmableLight{
    	 */
   	void setBrightness(uint8_t bri){
       brightness=bri;
+#ifdef NETWORK_FREQ_50HZ
       uint16_t newDelay=10000-(uint16_t)(((uint32_t)bri*10000)/255);
+#elif defined(NETWORK_FREQ_60HZ)
+      uint16_t newDelay=8333-(uint16_t)(((uint32_t)bri*8333)/255);
+#endif
       thyristor.setDelay(newDelay);
     };
 
