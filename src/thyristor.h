@@ -90,17 +90,61 @@ class Thyristor{
 
   static const uint8_t N = 8;
   private:
+    /**
+     * Check if all thyristors are on or off. The result of this comparison 
+     * is stored in allOff and allOn variables. This methos must be called 
+     * every time a thyristor's delay is updated.
+     *
+     * @param[in]  newDelay the new delay just set
+     * @return true if interrupt for zero cross detection should be enabled,
+     * false do nothing
+     */
+    bool checkAllOnOff(uint16_t newDelay);
+
+    /**
+     * Search if the delays set are equal among them. (This method supports
+     * checkAllOnOff method).
+     *
+     * @return     true if they are equal, false otherwise
+     */
+    bool areSameValues(uint16_t value);
+  
+  /**
+   * Number of instantiated thyristors
+   */
   static uint8_t nThyristors;
+
+  /**
+   * Vector of instatiated thyristors
+   */
   static Thyristor* thyristors[];
 
   /**
-   * Variable to tell the interrupt routine to update its internal structures
+   * Variable to tell to interrupt routine to update its internal structures
    */
   static bool newDelayValues;
+
+  /**
+   * Variable to avoid concurrency problem between interrupt and threads.
+   * Condition variable is not used because interrupt cannot be stopped.
+   */
   static bool updatingStruct;
+
+  /**
+   * Variables to store if the entire set of thyristors is off/on.
+   * This is the base for interrupt optimization.
+   */
+  static bool allOff;
+  static bool allOn;
 
   static uint8_t syncPin;
 
+  /**
+   * 0) no messages
+   * 1) error messages: they could cause mcu crash
+   * 2) debug messages
+   * 3) info messages
+   */
   static const uint8_t verbosity = 2;
 
   uint8_t pin;

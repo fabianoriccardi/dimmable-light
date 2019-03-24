@@ -200,6 +200,21 @@ void IRAM_ATTR zero_cross_int(){
 #else
 void zero_cross_int(){
 #endif
+    if(Thyristor::allOff){
+        for(int i=0; i<Thyristor::nThyristors; i++){
+            digitalWrite(pinDelay[i].pin, LOW);
+        }
+        detachInterrupt(digitalPinToInterrupt(Thyristor::syncPin));
+        return;
+    }
+    if(Thyristor::allOn){
+        for(int i=0; i<Thyristor::nThyristors; i++){
+            digitalWrite(pinDelay[i].pin, HIGH);
+        }
+        detachInterrupt(digitalPinToInterrupt(Thyristor::syncPin));
+        return;
+    }
+
   // This is kind of optimization software, but not electrical:
   // This avoid to wait 10micros in a interrupt or setting interrupt 
   // to turn off the PIN (this last solution could be evaluated...)
@@ -230,7 +245,6 @@ void zero_cross_int(){
   // Update the structures and set thresholds, if needed
   if(Thyristor::newDelayValues && !Thyristor::updatingStruct){
     Thyristor::newDelayValues=false;
-    //Serial.println("UI");
     for(int i=0;i<Thyristor::nThyristors;i++){
       pinDelay[i].pin=Thyristor::thyristors[i]->pin;
       // Rounding delays to avoid error and unexpected behaviour due to 
@@ -290,7 +304,7 @@ void zero_cross_int(){
   }else{
   #if defined(ESP8266)
     // Given the Arduino HAL and esp8266 technical reference manual,
-    // when timer triggers, the counter stops because it has reach zero
+    // when timer triggers, the counter stops because it has reached zero
     // and no-autorealod was set (this timer can only down-count).
   #elif defined(ESP32)
     timer->dev->config.enable = 0;
@@ -352,8 +366,8 @@ void Thyristor::setDelay(uint16_t newDelay){
         i++;
       }
     }
-    // This could be due to 2 factor:
-    // 1) the light is already the lowest delay
+    // This could be due to 2 reasons:
+    // 1) the light is already the lowest delay (i.e. turned off)
     // 2) the delay is not changed to overpass the neightbour
     if(posIntoArray+1==i){
       if(verbosity>2) Serial.println("No need to shift..");
@@ -374,6 +388,7 @@ void Thyristor::setDelay(uint16_t newDelay){
       thyristors[target]=this;
       this->posIntoArray=target;
     }
+
   }else if(newDelay<delay){
     if(verbosity>2) Serial.println("\traising the light..");
     bool done=false;
@@ -407,9 +422,15 @@ void Thyristor::setDelay(uint16_t newDelay){
   }else{
     if(verbosity>2) Serial.println("No need to perform the exchange, the delay is the same!");
   }
+
   delay=newDelay;
+  bool enableInt = checkAllOnOff(newDelay);
   newDelayValues=true;
   updatingStruct=false;
+  if(enableInt){
+    if(verbosity>2) Serial.println("Re-enabling interrupt");
+    attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, RISING);        
+  }
   
   if(verbosity>2){
     for(int i=0;i<Thyristor::nThyristors;i++){
@@ -474,8 +495,68 @@ Thyristor::~Thyristor(){
   updatingStruct=false;
 }
 
+bool Thyristor::areSameValues(uint16_t value){
+    bool allTheSame = true;
+    int i=0;
+    while(i<nThyristors && allTheSame){
+        if(thyristors[i]->getDelay() != value){
+            allTheSame = false;
+        }else{
+            i++;
+        }
+    }
+    return allTheSame;
+}
+
+bool Thyristor::checkAllOnOff(uint16_t newDelay){
+    bool retValue = true;
+
+    // Temp values those are commited in the end
+    bool newAllOff = allOff;
+    bool newAllOn = allOn;
+
+    //if newDelay is totally OFF, check if the other values are the same
+    if(newDelay == semiPeriodLength){
+        newAllOn = false;
+        if(areSameValues(newDelay)){
+            newAllOff = true;
+            if(allOn){
+                retValue = true;
+            }else{
+                retValue = false;
+            }
+        }
+    //if newDelay is totally ON, check if the other values are the same
+    }else if(newDelay == 0){
+        newAllOff = false;
+        if(areSameValues(newDelay)){
+            newAllOn = true;
+            if(allOff){
+                retValue = true;
+            }else{
+                retValue = false;
+            }
+        }
+    }else{
+        // Re-enable interrupt
+        if(allOn || allOff){
+            newAllOn = newAllOff = false;
+            retValue = true;
+        }else{
+            retValue = false;
+        }
+    }
+
+    allOff = newAllOff;
+    allOn = newAllOn;
+    if(verbosity>2) Serial.println(String("AllOff = ") + allOff + " AllOn = " + allOn);
+    return retValue;
+}
+
 uint8_t Thyristor::nThyristors = 0;
 Thyristor* Thyristor::thyristors[Thyristor::N] = {nullptr};
 bool Thyristor::newDelayValues = false;
 bool Thyristor::updatingStruct = false;
+bool Thyristor::allOff = true;
+bool Thyristor::allOn = false;
 uint8_t Thyristor::syncPin = 255;
