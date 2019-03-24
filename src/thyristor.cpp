@@ -20,7 +20,7 @@
 #if defined(ESP8266)
 #include "hw_timer_esp8266.h"
 #elif defined(ESP32)
-// no need to include libraries...
+#include "hw_timer_esp32.h"
 #elif defined(AVR)
 #include "hw_timer_avr.h"
 #else
@@ -31,43 +31,6 @@
 //#define CHECK_INT_PERIOD
 // Activate this macro to check if all the light were managed in a semi-period
 //#define CHECK_MANAGED_THYR
-
-#ifdef ESP32
-static hw_timer_t* timer = nullptr;
-
-typedef struct {
-    union {
-        struct {
-            uint32_t reserved0:   10;
-            uint32_t alarm_en:     1;             /*When set  alarm is enabled*/
-            uint32_t level_int_en: 1;             /*When set  level type interrupt will be generated during alarm*/
-            uint32_t edge_int_en:  1;             /*When set  edge type interrupt will be generated during alarm*/
-            uint32_t divider:     16;             /*Timer clock (T0/1_clk) pre-scale value.*/
-            uint32_t autoreload:   1;             /*When set  timer 0/1 auto-reload at alarming is enabled*/
-            uint32_t increase:     1;             /*When set  timer 0/1 time-base counter increment. When cleared timer 0 time-base counter decrement.*/
-            uint32_t enable:       1;             /*When set  timer 0/1 time-base counter is enabled*/
-        };
-        uint32_t val;
-    } config;
-    uint32_t cnt_low;                             /*Register to store timer 0/1 time-base counter current value lower 32 bits.*/
-    uint32_t cnt_high;                            /*Register to store timer 0 time-base counter current value higher 32 bits.*/
-    uint32_t update;                              /*Write any value will trigger a timer 0 time-base counter value update (timer 0 current value will be stored in registers above)*/
-    uint32_t alarm_low;                           /*Timer 0 time-base counter value lower 32 bits that will trigger the alarm*/
-    uint32_t alarm_high;                          /*Timer 0 time-base counter value higher 32 bits that will trigger the alarm*/
-    uint32_t load_low;                            /*Lower 32 bits of the value that will load into timer 0 time-base counter*/
-    uint32_t load_high;                           /*higher 32 bits of the value that will load into timer 0 time-base counter*/
-    uint32_t reload;                              /*Write any value will trigger timer 0 time-base counter reload*/
-} hw_timer_reg_t;
-
-typedef struct hw_timer_s {
-    hw_timer_reg_t * dev;
-    uint8_t num;
-    uint8_t group;
-    uint8_t timer;
-    portMUX_TYPE lock;
-} hw_timer_t;
-
-#endif
 
 // In microseconds
 #ifdef NETWORK_FREQ_50HZ
@@ -148,22 +111,7 @@ void activateThyristors(){
   #if defined(ESP8266)
     timer1_write(US_TO_RTC_TIMER_TICKS(delay));
   #elif defined(ESP32)
-    // Reset timer
-    //timerWrite(timer, 0);
-    timer->dev->load_high = 0;
-    timer->dev->load_low = 0;
-    timer->dev->reload = 1;
-
-    // Set alarm to call onTimer function every second (value in microseconds).
-    // Repeat the alarm (third parameter)
-    //timerAlarmWrite(timer, delay, false);
-    timer->dev->alarm_low = (uint32_t) delay;
-    timer->dev->alarm_high = 0;
-    timer->dev->config.autoreload = 0;
-
-    // Start an alarm
-    //timerAlarmEnable(timer);
-    timer->dev->config.alarm_en = 1;
+    startTimerAndTrigger(delay);
   #elif defined(AVR)
     if(!timerStartAndTrigger(microsecond2Tick(delay))){
       Serial.println("activateThyristors() error timer");
@@ -176,7 +124,7 @@ void activateThyristors(){
     // when timer triggers, the counter stops because it has reach zero
     // and no-autorealod was set (this timer can only down-count).
   #elif defined(ESP32)
-    timer->dev->config.enable = 0;
+    stopTimer();
   #elif defined(AVR)
     // Given actual HAL, AVR counter automatically stops on interrupt
   #endif
@@ -279,23 +227,7 @@ void zero_cross_int(){
   #if defined(ESP8266)
     timer1_write(US_TO_RTC_TIMER_TICKS(pinDelay[thyristorManaged].delay));
   #elif defined(ESP32)
-    // Reset timer
-    //timerWrite(timer, 0);
-    timer->dev->load_high = 0;
-    timer->dev->load_low = 0;
-    timer->dev->reload = 1;
-    timer->dev->config.enable = 1;
-
-    // Set alarm to call onTimer function every second (value in microseconds).
-    // Repeat the alarm (third parameter)
-    //timerAlarmWrite(timer, pinDelay[thyristorManaged].delay, false);
-    timer->dev->alarm_low = (uint32_t) pinDelay[thyristorManaged].delay;
-    timer->dev->alarm_high = 0;
-    timer->dev->config.autoreload = 0;
-
-    // Start an alarm
-    //timerAlarmEnable(timer);
-    timer->dev->config.alarm_en = 1;
+    startTimerAndTrigger(pinDelay[thyristorManaged].delay);
   #elif defined(AVR)
     if(!timerStartAndTrigger(microsecond2Tick(pinDelay[thyristorManaged].delay))){
       Serial.println("zero_cross_int() error timer");
@@ -307,7 +239,7 @@ void zero_cross_int(){
     // when timer triggers, the counter stops because it has reached zero
     // and no-autorealod was set (this timer can only down-count).
   #elif defined(ESP32)
-    timer->dev->config.enable = 0;
+    stopTimer();
   #elif defined(AVR)
     // Given actual HAL, AVR counter automatically stops on interrupt
   #endif
@@ -325,12 +257,7 @@ void Thyristor::begin(){
   T1C = (1 << TCTE) | ((TIM_DIV16 & 3) << TCPD) | ((TIM_EDGE & 1) << TCIT) | ((TIM_SINGLE & 1) << TCAR);
   T1I = 0;
 #elif defined(ESP32)
-  // Use 1st timer of 4 (counted from zero).
-  // Set 80 divider for prescaler (see ESP32 Technical Reference Manual for more
-  // info), count up. The counter starts to increase its value.
-  timer = timerBegin(0, 80, true);
-  // Attach onTimer function to our timer.
-  timerAttachInterrupt(timer, &activateThyristors, true);
+  timerInit(activateThyristors);
 #elif defined(AVR)
   timerSetCallback(activateThyristors);
   timerBegin();
