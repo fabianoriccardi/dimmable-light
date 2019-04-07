@@ -200,20 +200,6 @@ void IRAM_ATTR zero_cross_int(){
 #else
 void zero_cross_int(){
 #endif
-    if(Thyristor::allOff){
-        for(int i=0; i<Thyristor::nThyristors; i++){
-            digitalWrite(pinDelay[i].pin, LOW);
-        }
-        detachInterrupt(digitalPinToInterrupt(Thyristor::syncPin));
-        return;
-    }
-    if(Thyristor::allOn){
-        for(int i=0; i<Thyristor::nThyristors; i++){
-            digitalWrite(pinDelay[i].pin, HIGH);
-        }
-        detachInterrupt(digitalPinToInterrupt(Thyristor::syncPin));
-        return;
-    }
 
   // This is kind of optimization software, but not electrical:
   // This avoid to wait 10micros in a interrupt or setting interrupt 
@@ -266,6 +252,19 @@ void zero_cross_int(){
 
   thyristorManaged = 0;
 
+  if(Thyristor::allMixedOnOff){
+    for(int i=0; i<Thyristor::nThyristors; i++){
+      if(pinDelay[i].delay==semiPeriodLength-endMargin){
+        digitalWrite(pinDelay[i].pin, LOW);
+      }else{
+        digitalWrite(pinDelay[i].pin, HIGH);
+      }
+      thyristorManaged++;
+    }
+    detachInterrupt(digitalPinToInterrupt(Thyristor::syncPin));
+    return;
+  }
+
   // This block of code is inteded to manage the case near to the next semi-period:
   // In this case we should avoid to trigger the timer, because the effective semiperiod 
   // perceived by the esp8266 could be less than 10000microsecond. This could be due to 
@@ -316,7 +315,6 @@ void zero_cross_int(){
 
 void Thyristor::begin(){
   pinMode(digitalPinToInterrupt(syncPin), INPUT);
-  attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, RISING);
 
 #if defined(ESP8266)
   timer1_attachInterrupt(activateThyristors);
@@ -508,13 +506,32 @@ bool Thyristor::areSameValues(uint16_t value){
     return allTheSame;
 }
 
+bool Thyristor::areMixedOnOff(){
+    bool allOnOff = true;
+    int i=0;
+    while(i<nThyristors && allOnOff){
+        if(thyristors[i]->getDelay()!=0 && thyristors[i]->getDelay()!=semiPeriodLength){
+          allOnOff = false;
+        }else{
+          i++;
+        }
+    }
+    return allOnOff;
+}
+
 bool Thyristor::checkAllOnOff(uint16_t newDelay){
     bool retValue = true;
 
     // Temp values those are commited in the end
     bool newAllOff = allOff;
     bool newAllOn = allOn;
+    bool newAllMixedOnOff = allMixedOnOff;
 
+    if(newDelay==0 || newDelay==semiPeriodLength){
+      if(areMixedOnOff()){
+        newAllMixedOnOff = true;
+      }
+    }
     //if newDelay is totally OFF, check if the other values are the same
     if(newDelay == semiPeriodLength){
         newAllOn = false;
@@ -537,19 +554,22 @@ bool Thyristor::checkAllOnOff(uint16_t newDelay){
                 retValue = false;
             }
         }
+    // if newDelay is not optimizable
     }else{
         // Re-enable interrupt
-        if(allOn || allOff){
-            newAllOn = newAllOff = false;
+        if(allMixedOnOff){
+            newAllMixedOnOff = newAllOn = newAllOff = false;
             retValue = true;
         }else{
             retValue = false;
         }
+        newAllMixedOnOff = false;
     }
 
     allOff = newAllOff;
     allOn = newAllOn;
-    if(verbosity>2) Serial.println(String("AllOff = ") + allOff + " AllOn = " + allOn);
+    allMixedOnOff = newAllMixedOnOff;
+    if(verbosity>1) Serial.println(String(allOff) + "/" + allOn + "/" + allMixedOnOff);
     return retValue;
 }
 
@@ -559,4 +579,5 @@ bool Thyristor::newDelayValues = false;
 bool Thyristor::updatingStruct = false;
 bool Thyristor::allOff = true;
 bool Thyristor::allOn = false;
+bool Thyristor::allMixedOnOff = true;
 uint8_t Thyristor::syncPin = 255;
