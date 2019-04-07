@@ -17,6 +17,14 @@ void unrecognized(const char* message){
   serialCmd.clearBuffer();
 }
 
+void stopEffect(){
+  for(int i=0; i<N_LIGHTS; i++){
+    lights[i].setBrightness(0);
+  }
+  effectSelected = -1;
+  effect = nullptr;
+}
+
 void selectEffect(unsigned char effectId){
   if(effectSelected != effectId){
     effectSelected = effectId;
@@ -95,6 +103,7 @@ void setup() {
   Serial.println(String("Number of instantiated lights: ") + DimmableLight::getLightNumber());
 
   int c = 0;
+  serialCmd.addCommand("stop",[](){stopEffect();});
   serialCmd.addCommand("e0",[](){selectEffect(0);});
   serialCmd.addCommand("e1",[](){selectEffect(1);});
   serialCmd.addCommand("e2",[](){selectEffect(2);});

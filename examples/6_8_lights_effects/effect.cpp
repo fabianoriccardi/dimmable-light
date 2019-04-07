@@ -228,6 +228,7 @@ void doInvertedDim(void){
   static bool up = true;
   int oppositeBrightness = -((int)brightnessStep-255);
 
+  Serial.println(String("Dimming at: ") + brightnessStep + " " + oppositeBrightness + "/255");
   for(int i=0; i<N_LIGHTS; i++){
     if(i%2==0){
       lights[i].setBrightness(brightnessStep);
@@ -235,7 +236,6 @@ void doInvertedDim(void){
       lights[i].setBrightness(oppositeBrightness);
     }
   }
-  Serial.println(String("Dimming at: ") + brightnessStep + " " + oppositeBrightness + "/255");
   
   if(brightnessStep==255 && up){
     up=false;
