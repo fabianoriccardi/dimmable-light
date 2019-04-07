@@ -108,6 +108,13 @@ class Thyristor{
      * @return     true if they are equal, false otherwise
      */
     bool areSameValues(uint16_t value);
+
+    /**
+     * Search if all the values are only On and Off.
+     *
+     * @return     true if On/Off, false otherwise
+     */
+    bool areMixedOnOff();
   
   /**
    * Number of instantiated thyristors
@@ -136,6 +143,14 @@ class Thyristor{
    */
   static bool allOff;
   static bool allOn;
+  
+  /**
+   * This variable means that all the lights are completely ON and OFF,
+   * mixed are included. 
+   *  - allOff => allMixedOnOff
+   *  - allOn => allMixedOnOff
+   */
+  static bool allMixedOnOff;
 
   static uint8_t syncPin;
 
@@ -145,7 +160,7 @@ class Thyristor{
    * 2) debug messages
    * 3) info messages
    */
-  static const uint8_t verbosity = 2;
+  static const uint8_t verbosity = 1;
 
   uint8_t pin;
   
