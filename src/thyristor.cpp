@@ -85,7 +85,7 @@ void activateThyristors(){
   // Alternative way to manage the pin, it should become low after the triac started
   //delayMicroseconds(10);
   //digitalWrite(AC_LOADS[phase],LOW);
-  uint8_t firstToBeUpdated=thyristorManaged;
+  const uint8_t firstToBeUpdated=thyristorManaged;
 
   for(; (thyristorManaged<Thyristor::nThyristors-1 && pinDelay[thyristorManaged+1].delay-pinDelay[firstToBeUpdated].delay<mergePeriod) && (pinDelay[thyristorManaged].delay<semiPeriodLength-endMargin); thyristorManaged++){
     digitalWrite(pinDelay[thyristorManaged].pin, HIGH);
@@ -102,7 +102,7 @@ void activateThyristors(){
   uint8_t pulseWidth = 15;
   delayMicroseconds(pulseWidth);
 
-  for(int i=0;i<thyristorManaged;i++){
+  for(int i=firstToBeUpdated;i<thyristorManaged;i++){
     digitalWrite(pinDelay[i].pin, LOW);
   }
 
@@ -183,7 +183,7 @@ void zero_cross_int(){
       pinDelay[i].pin=Thyristor::thyristors[i]->pin;
       // Rounding delays to avoid error and unexpected behaviour due to 
       // non-ideal thyristors and not perfect sine wave 
-      if(Thyristor::thyristors[i]->delay<=startMargin){
+      if(Thyristor::thyristors[i]->delay>0 && Thyristor::thyristors[i]->delay<=startMargin){
         pinDelay[i].delay=startMargin;
       }else if(Thyristor::thyristors[i]->delay>=semiPeriodLength-endMargin){
         pinDelay[i].delay=semiPeriodLength-endMargin;
@@ -211,6 +211,12 @@ void zero_cross_int(){
     }
     detachInterrupt(digitalPinToInterrupt(Thyristor::syncPin));
     return;
+  }
+
+  //Turn on thyristors with 0 delay (always on)
+  while(thyristorManaged<Thyristor::nThyristors && pinDelay[thyristorManaged].delay==0){
+    digitalWrite(pinDelay[thyristorManaged].pin, HIGH);
+    thyristorManaged++;
   }
 
   // This block of code is inteded to manage the case near to the next semi-period:
