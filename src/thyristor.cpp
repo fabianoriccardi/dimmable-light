@@ -28,8 +28,10 @@
 #endif
 
 // Activate this define to enable a check on the period between zero and the next one
-//#define CHECK_INT_PERIOD
-// Activate this macro to check if all the light were managed in a semi-period
+//#define FILTER_INT_PERIOD
+// If the FILTER_INT_PERIOD define is active, you can read on Serial when the AC signal is not clean 
+//#define PRINT_INT_PERIOD
+// Activate this define to check if all the light were managed in a semi-period
 //#define CHECK_MANAGED_THYR
 
 // In microseconds
@@ -70,7 +72,7 @@ static struct PinDelay pinDelay[Thyristor::N];
 /**
  * Number of thyristors already managed in the current semi-wave
  */
-static uint8_t thyristorManaged=0;
+static uint8_t thyristorManaged = 0;
 
 /**
  * Timer routine to turn on one or more thyristors
@@ -131,9 +133,8 @@ void activateThyristors(){
   }
 }
 
-#ifdef CHECK_INT_PERIOD
-bool first=true;
-uint32_t lastTime;
+#ifdef FILTER_INT_PERIOD
+static uint32_t lastTime = 0;
 #endif
 
 /**
@@ -149,25 +150,33 @@ void IRAM_ATTR zero_cross_int(){
 void zero_cross_int(){
 #endif
 
-  // This is kind of optimization software, but not electrical:
-  // This avoid to wait 10micros in a interrupt or setting interrupt 
-  // to turn off the PIN (this last solution could be evaluated...)
-  for(int i=0;i<Thyristor::nThyristors;i++){
-   digitalWrite(pinDelay[i].pin,LOW);
-  }
-
-#ifdef CHECK_INT_PERIOD
-  if(first){
+#ifdef FILTER_INT_PERIOD
+  if(!lastTime){
     lastTime=micros();
-    first=false;
   }else{
     uint32_t now=micros();
-    if(now-lastTime>semiPeriodLength+15||now-lastTime<semiPeriodLength-10){
+#ifdef PRINT_INT_PERIOD
+    const int semiPeriodMargin = 20;
+    if(now-lastTime>semiPeriodLength+semiPeriodMargin||now-lastTime<semiPeriodLength-semiPeriodMargin){
       Serial.println(now-lastTime);
+    }
+#endif
+    // This check filters out spurious interrupts. The effectiveness
+    // of this simple filter could vary depending on network noise.
+    if(now-lastTime<semiPeriodLength-50){
+      return;
     }
     lastTime=now;
   }
 #endif
+
+  // Turn OFF all the thyristors, even if always ON.
+  // This is to speed up transitions between ON to OFF state:
+  // If I don't turn OFF all those thyristors, I must wait
+  // a semiperiod to turn off those one.
+  for(int i=0; i<Thyristor::nThyristors; i++){
+    digitalWrite(pinDelay[i].pin, LOW);
+  }
 
 #ifdef CHECK_MANAGED_THYR
   if(thyristorManaged!=Thyristor::nThyristors){
