@@ -1,4 +1,5 @@
 DimmableLight	KEYWORD1
+DimmableLightLinearized	KEYWORD1
 DimmableLightManager	KEYWORD1
 getBrightness	KEYWORD2
 setBrightness	KEYWORD2

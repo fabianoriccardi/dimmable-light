@@ -5,12 +5,20 @@ void (*effect)() = nullptr;
 uint16_t period = 0;
 uint32_t lastCall = 0;
 
+// A complicated snippet of allow the testing of different
+// classed for different microcontroller
+#if defined(RAW_VALUES)
+extern DimmableLight
+#elif defined(LINEARIZED_VALUES)
+extern DimmableLightLinearized
+#endif
+
 #if defined(ESP8266)
-DimmableLight lights[N_LIGHTS] = {{D1}, {D2}, {D5}, {D6}, {D8}, {D0}, {D3}, {D4}};
+ lights[N_LIGHTS] = {{D1}, {D2}, {D5}, {D6}, {D8}, {D0}, {D3}, {D4}};
 #elif defined(ESP32)
-DimmableLight lights[N_LIGHTS] = {{4}, {16}, {17}, {5}, {18}, {19}, {21}, {22}};
+ lights[N_LIGHTS] = {{4}, {16}, {17}, {5}, {18}, {19}, {21}, {22}};
 #elif defined(AVR) // Arduino
-DimmableLight lights[N_LIGHTS] = {{3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}};
+ lights[N_LIGHTS] = {{3}, {4}, {5}, {6}, {7}, {8}, {9}, {10}};
 #endif
 
 /**
@@ -389,4 +397,29 @@ void doRandomPushExtremeValues(){
   ::period = period;
   lastCall = millis();
   effect = doRandomPushExtremeValues;
+}
+
+void offAllLights(){
+  for(int i=0; i<N_LIGHTS; i++){
+    lights[i].setBrightness(0);
+  }
+}
+
+void initLights(){
+  Serial.print("Init the dimmable light class... ");
+
+#if defined(RAW_VALUES)
+  DimmableLight::setSyncPin(syncPin);
+  DimmableLight::begin();
+#elif defined(LINEARIZED_VALUES)
+  DimmableLightLinearized::setSyncPin(syncPin);
+  DimmableLightLinearized::begin();
+#endif
+  Serial.println("Done!");
+
+#if defined(RAW_VALUES)
+  Serial.println(String("Number of instantiated lights: ") + DimmableLight::getLightNumber());
+#elif defined(LINEARIZED_VALUES)
+  Serial.println(String("Number of instantiated lights: ") + DimmableLightLinearized::getLightNumber());
+#endif
 }

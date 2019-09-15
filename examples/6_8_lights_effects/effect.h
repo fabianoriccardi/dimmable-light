@@ -1,5 +1,14 @@
-#include <Arduino.h>
+// Select ONLY ONE between these 2 options
+#define RAW_VALUES
+//#define LINEARIZED_VALUES
+
+#if defined(RAW_VALUES)
 #include "dimmable_light.h"
+#elif defined(LINEARIZED_VALUES)
+#include "dimmable_light_linearized.h"
+#endif
+
+#include <Arduino.h>
 
 const int N_LIGHTS = 8;
 
@@ -11,12 +20,17 @@ const int syncPin = 23;
 const int syncPin = 2;
 #endif
 
+#if defined(RAW_VALUES)
+extern DimmableLight lights[];
+#elif defined(LINEARIZED_VALUES)
+extern DimmableLightLinearized lights[];
+#endif
+
+
 extern void (*effect)();
 // The period between a call and the next one in millisecond
 extern uint16_t period;
 extern uint32_t lastCall;
-
-extern DimmableLight lights[];
 
 void doEqual();
 void doEqualOnOff();
@@ -31,3 +45,7 @@ void doCircularSwipe();
 void doRandomBri();
 void doRandomBriPeehole();
 void doRandomPushExtremeValues();
+
+void offAllLights();
+
+void initLights();

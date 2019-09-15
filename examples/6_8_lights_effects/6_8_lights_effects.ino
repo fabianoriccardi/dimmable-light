@@ -18,9 +18,8 @@ void unrecognized(const char* message){
 }
 
 void stopEffect(){
-  for(int i=0; i<N_LIGHTS; i++){
-    lights[i].setBrightness(0);
-  }
+  offAllLights();
+  
   effectSelected = -1;
   effect = nullptr;
 }
@@ -94,13 +93,7 @@ void setup() {
   Serial.println();
   Serial.println("Dimmable Light for Arduino: sixth example");
   
-  Serial.print("Init the dimmable light class... ");
-  
-  DimmableLight::setSyncPin(syncPin);
-  DimmableLight::begin();
-  Serial.println("Done!");
-
-  Serial.println(String("Number of instantiated lights: ") + DimmableLight::getLightNumber());
+  initLights();
 
   int c = 0;
   serialCmd.addCommand("stop",[](){stopEffect();});
