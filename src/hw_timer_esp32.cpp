@@ -32,23 +32,29 @@ void timerInit(void (*callback)()){
 }
 
 void IRAM_ATTR startTimerAndTrigger(uint32_t delay){
-    // Reset timer
-    //timerWrite(timer, 0);
+    //timeStop(timer);
+    timer->dev->config.enable = 0;
+
+    // timerWrite(timer, 0);
     timer->dev->load_high = 0;
     timer->dev->load_low = 0;
     timer->dev->reload = 1;
-    timer->dev->config.enable = 1;
 
-    // Set alarm to call onTimer function every second (value in microseconds).
+    // Set alarm to call onTimer function "delay" microsecond.
     // Repeat the alarm (third parameter)
-    //timerAlarmWrite(timer, delay, false);
-    timer->dev->alarm_low = delay;
+    //timerAlarmWrite(timer, delay, true);
     timer->dev->alarm_high = 0;
+    timer->dev->alarm_low = delay;
+    // Reload the counter, but do not stop the counting
     timer->dev->config.autoreload = 0;
 
     // Start an alarm
     //timerAlarmEnable(timer);
     timer->dev->config.alarm_en = 1;
+
+    // Start timer 
+    //timerStart(timer);
+    timer->dev->config.enable = 1;
 }
 
 void IRAM_ATTR stopTimer(){
