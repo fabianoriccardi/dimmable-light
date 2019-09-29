@@ -27,11 +27,18 @@
 #error "only ESP8266 and ESP32 and AVR for Arduino are supported"
 #endif
 
-// Activate this define to enable a check on the period between zero and the next one
+// Check if zero cross interrupts are evenly time-spaced (i.e. no spurious interrupt)
+// If the interrupt is "too" close to the previous one, ignore the current one.
+// To define if two interrupts are too close, look at semiPeriodShrinkMargin and
+// semiPeriodExpandMargin constant
 //#define FILTER_INT_PERIOD
-// If the FILTER_INT_PERIOD define is active, you can read on Serial when the AC signal is not clean 
+
+// If the FILTER_INT_PERIOD is enabled, print on Serial the time passed 
+// from the previous interrupt. when the semi-period length is "wrong"
+// according to semiPeriodShrinkMargin and semiPeriodExpandMargin thresholds.
 //#define PRINT_INT_PERIOD
-// Activate this define to check if all the light were managed in a semi-period
+
+// Check if all the lights were managed in the last semi-period
 //#define CHECK_MANAGED_THYR
 
 // In microseconds
@@ -42,9 +49,11 @@ static const uint16_t semiPeriodLength = 10000;
 static const uint16_t semiPeriodLength = 8333;
 #endif
 
-// The margins are precautions against noise, electrical spikes and frequency skew errors
-// delays after endMargin are always off (hence no useless interrupts). 
-// You could tune this parameter accordingly to your settings (electrical network and MCU).
+// The margins are precautions against noise, electrical spikes and frequency skew errors.
+// Delay values before startMargin turn the thyristor always ON.
+// Delay values after endMargin turn the thyristor always OFF.
+// Tune this parameters accordingly to your setup (electrical network and MCU).
+// Values are expressed in microseconds
 static const uint16_t startMargin = 200;
 static const uint16_t endMargin = 500;
 
@@ -134,6 +143,10 @@ void activateThyristors(){
 }
 
 #ifdef FILTER_INT_PERIOD
+// In microsecond
+const int semiPeriodShrinkMargin = 50;
+const int semiPeriodExpandMargin = 50;
+
 static uint32_t lastTime = 0;
 #endif
 
@@ -156,14 +169,16 @@ void zero_cross_int(){
   }else{
     uint32_t now=micros();
 #ifdef PRINT_INT_PERIOD
-    const int semiPeriodMargin = 20;
-    if(now-lastTime>semiPeriodLength+semiPeriodMargin||now-lastTime<semiPeriodLength-semiPeriodMargin){
-      Serial.println(now-lastTime);
+    if(now-lastTime<semiPeriodLength-semiPeriodShrinkMargin){
+      Serial.println(String('B') + (now-lastTime));
+    }
+    if(now-lastTime>semiPeriodLength+semiPeriodExpandMargin){
+      Serial.println(String('A') + (now-lastTime));
     }
 #endif
-    // This check filters out spurious interrupts. The effectiveness
-    // of this simple filter could vary depending on network noise.
-    if(now-lastTime<semiPeriodLength-50){
+    // Filters out spurious interrupts. The effectiveness of this simple
+    // filter could vary depending on noise on electrical networ.
+    if(now-lastTime<semiPeriodLength-semiPeriodShrinkMargin){
       return;
     }
     lastTime=now;
@@ -218,7 +233,12 @@ void zero_cross_int(){
       }
       thyristorManaged++;
     }
+    
     detachInterrupt(digitalPinToInterrupt(Thyristor::syncPin));
+#ifdef FILTER_INT_PERIOD
+    lastTime = 0;
+#endif
+
     return;
   }
 
