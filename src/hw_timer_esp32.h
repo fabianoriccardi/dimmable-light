@@ -53,7 +53,9 @@ typedef struct hw_timer_s {
     portMUX_TYPE lock;
 } hw_timer_t;
 
-void timerInit(void (*foo)());
+void timerInit(void (*callback)());
+
+void setCallback(void (*callback)());
 
 void startTimerAndTrigger(uint32_t delay);
 

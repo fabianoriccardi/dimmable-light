@@ -31,6 +31,11 @@ void timerInit(void (*callback)()){
     timerAttachInterrupt(timer, callback, true);
 }
 
+void IRAM_ATTR setCallback(void (*callback)()){
+    // Third parameter stands for "edge" (true) and "level" (false)
+    timerAttachInterrupt(timer, callback, true);
+}
+
 void IRAM_ATTR startTimerAndTrigger(uint32_t delay){
     //timeStop(timer);
     timer->dev->config.enable = 0;

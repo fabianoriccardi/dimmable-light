@@ -177,6 +177,7 @@ class Thyristor{
 
   friend void activateThyristors();
   friend void zero_cross_int();
+  friend void turn_off_gates_int();
 };
 
 #endif // END THYRISTOR_H

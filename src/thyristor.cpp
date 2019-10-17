@@ -41,6 +41,11 @@
 // Check if all the lights were managed in the last semi-period
 //#define CHECK_MANAGED_THYR
 
+// Force the signal lenght of thyristor's gate. If not enabled, the signal to gate 
+// is turned off through an interrupt just before the end of the period.
+// Look at gateTurnOffTime constant for more info.
+//#define PREDEFINED_PULSE_LENGTH
+
 // In microseconds
 #ifdef NETWORK_FREQ_50HZ
 static const uint16_t semiPeriodLength = 10000;
@@ -68,6 +73,13 @@ static const uint16_t endMargin = 500;
 // timers on AVR, you should set a bigger mergePeriod (e.g. 100us).
 static const  unsigned int mergePeriod = 20;
 
+// Period (in us) before the end of the semiperiod, when an interrupt is trigged to 
+// turn off each gate signal. Ignore this parameter if you use a predefined pulse length.
+// Look at PREDEFINED_PULSE_LENGTH constant for more info.
+static const uint16_t gateTurnOffTime = 300;
+
+static_assert( endMargin - gateTurnOffTime > mergePeriod, "endMargin must be greater than (gateTurnOffTime + mergePeriod)");
+
 struct PinDelay{
   uint8_t pin;
   uint16_t delay;
@@ -82,6 +94,23 @@ static struct PinDelay pinDelay[Thyristor::N];
  * Number of thyristors already managed in the current semi-wave
  */
 static uint8_t thyristorManaged = 0;
+
+/**
+ * Number of thyristors to be turned off by the end of the period
+ */
+static uint8_t alwaysOnCounter = 0;
+
+#if defined(ESP8266)
+void ICACHE_RAM_ATTR turn_off_gates_int(){
+#elif defined(ESP32)
+void IRAM_ATTR turn_off_gates_int(){
+#else
+void turn_off_gates_int(){
+#endif
+  for(int i=alwaysOnCounter; i<Thyristor::nThyristors; i++){
+    digitalWrite(pinDelay[i].pin, LOW);
+  }
+}
 
 /**
  * Timer routine to turn on one or more thyristors
@@ -111,14 +140,21 @@ void activateThyristors(){
   }
 
   uint8_t pulseWidth = 15;
+#ifdef PREDEFINED_PULSE_LENGTH
   delayMicroseconds(pulseWidth);
 
   for(int i=firstToBeUpdated;i<thyristorManaged;i++){
     digitalWrite(pinDelay[i].pin, LOW);
   }
+#endif
 
   if(thyristorManaged<Thyristor::nThyristors){
+#ifdef PREDEFINED_PULSE_LENGTH
     int delay = pinDelay[thyristorManaged].delay-pinDelay[firstToBeUpdated].delay-pulseWidth;
+#else
+    int delay = pinDelay[thyristorManaged].delay-pinDelay[firstToBeUpdated].delay;
+#endif
+
   #if defined(ESP8266)
     timer1_write(US_TO_RTC_TIMER_TICKS(delay));
   #elif defined(ESP32)
@@ -129,6 +165,8 @@ void activateThyristors(){
     }
   #endif
   }else{
+
+#ifdef PREDEFINED_PULSE_LENGTH
     // If there are not more thyristor to serve, I can stop timer. Energy saving?
   #if defined(ESP8266)
     // Given the Arduino HAL and esp8266 technical reference manual,
@@ -139,6 +177,21 @@ void activateThyristors(){
   #elif defined(AVR)
     // Given actual HAL, AVR counter automatically stops on interrupt
   #endif
+#else
+  uint16_t delay = semiPeriodLength-gateTurnOffTime-pinDelay[firstToBeUpdated].delay;
+  #if defined(ESP8266)
+    timer1_attachInterrupt(turn_off_gates_int);
+    timer1_write(US_TO_RTC_TIMER_TICKS(delay));
+  #elif defined(ESP32)
+    setCallback(turn_off_gates_int);
+    startTimerAndTrigger(delay);
+  #elif defined(AVR)
+    timerSetCallback(turn_off_gates_int);
+    if(!timerStartAndTrigger(microsecond2Tick(delay))){
+      Serial.println("activateThyristors() error timer");
+    }
+  #endif
+#endif
   }
 }
 
@@ -247,6 +300,7 @@ void zero_cross_int(){
     digitalWrite(pinDelay[thyristorManaged].pin, HIGH);
     thyristorManaged++;
   }
+  alwaysOnCounter = thyristorManaged;
 
   // This block of code is inteded to manage the case near to the next semi-period:
   // In this case we should avoid to trigger the timer, because the effective semiperiod 
@@ -259,10 +313,13 @@ void zero_cross_int(){
   // NOTE 2: this improvement should be think even for multiple lamp!
   if(thyristorManaged<Thyristor::nThyristors && pinDelay[thyristorManaged].delay<semiPeriodLength-50){
   #if defined(ESP8266)
+  	timer1_attachInterrupt(activateThyristors);
     timer1_write(US_TO_RTC_TIMER_TICKS(pinDelay[thyristorManaged].delay));
   #elif defined(ESP32)
+    setCallback(activateThyristors);
     startTimerAndTrigger(pinDelay[thyristorManaged].delay);
   #elif defined(AVR)
+    timerSetCallback(activateThyristors);
     if(!timerStartAndTrigger(microsecond2Tick(pinDelay[thyristorManaged].delay))){
       Serial.println("zero_cross_int() error timer");
     }
