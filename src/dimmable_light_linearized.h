@@ -61,9 +61,7 @@ class DimmableLightLinearized{
                -0.12471*bri
                +8.3201    
 #endif
-
       tempBrightness *= 1000;
-      Serial.println(String("in:") + bri + " out:" + tempBrightness);
 
       thyristor.setDelay(tempBrightness);
     };

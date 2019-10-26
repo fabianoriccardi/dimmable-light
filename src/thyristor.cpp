@@ -80,6 +80,12 @@ static const uint16_t gateTurnOffTime = 300;
 
 static_assert( endMargin - gateTurnOffTime > mergePeriod, "endMargin must be greater than (gateTurnOffTime + mergePeriod)");
 
+#ifdef PREDEFINED_PULSE_LENGTH
+// Length of pulse of sync gate. this parameter is not applied if thyristor is fully on or off
+static uint8_t pulseWidth = 15;
+#endif
+
+
 struct PinDelay{
   uint8_t pin;
   uint16_t delay;
@@ -87,16 +93,18 @@ struct PinDelay{
 
 /**
  * Temporary struct to provide the interrupt a memory concurrent-safe
+ * NOTE: this structure is manipulated by interrupt routine
  */
 static struct PinDelay pinDelay[Thyristor::N];
 
 /**
- * Number of thyristors already managed in the current semi-wave
+ * Number of thyristors already managed in the current semi-period
  */
 static uint8_t thyristorManaged = 0;
 
 /**
- * Number of thyristors to be turned off by the end of the period
+ * Number of thyristors FULLY on. The remaining ones must be turned
+ * to be turned off by turn_off_gates_int at the end of the semi-period.
  */
 static uint8_t alwaysOnCounter = 0;
 
@@ -122,9 +130,7 @@ void IRAM_ATTR activateThyristors(){
 #else
 void activateThyristors(){
 #endif
-  // Alternative way to manage the pin, it should become low after the triac started
-  //delayMicroseconds(10);
-  //digitalWrite(AC_LOADS[phase],LOW);
+
   const uint8_t firstToBeUpdated=thyristorManaged;
 
   for(; (thyristorManaged<Thyristor::nThyristors-1 && pinDelay[thyristorManaged+1].delay-pinDelay[firstToBeUpdated].delay<mergePeriod) && (pinDelay[thyristorManaged].delay<semiPeriodLength-endMargin); thyristorManaged++){
@@ -139,7 +145,6 @@ void activateThyristors(){
     thyristorManaged++;
   }
 
-  uint8_t pulseWidth = 15;
 #ifdef PREDEFINED_PULSE_LENGTH
   delayMicroseconds(pulseWidth);
 
@@ -178,6 +183,7 @@ void activateThyristors(){
     // Given actual HAL, AVR counter automatically stops on interrupt
   #endif
 #else
+  // If there are not more thyristors to serve, set timer to turn off gates' signal
   uint16_t delay = semiPeriodLength-gateTurnOffTime-pinDelay[firstToBeUpdated].delay;
   #if defined(ESP8266)
     timer1_attachInterrupt(turn_off_gates_int);
@@ -405,7 +411,6 @@ void Thyristor::setDelay(uint16_t newDelay){
       thyristors[target]=this;
       this->posIntoArray=target;
     }
-
   }else if(newDelay<delay){
     if(verbosity>2) Serial.println("\traising the light..");
     bool done=false;
@@ -456,8 +461,6 @@ void Thyristor::setDelay(uint16_t newDelay){
       Serial.println(thyristors[i]->delay);
     }
   }
-
-  //Serial.println(String("Brightness (in ms to wait): ") + delay);
 }
 
 /**
@@ -492,14 +495,9 @@ Thyristor::Thyristor(int pin)
     }
 
     newDelayValues=true;
-    
-    // NO because this struct is updated by the routine!
-//    pinDelay[posIntoArray].pin;
-//    pinDelay[posIntoArray].delay=semiPeriodLength;
-    
     updatingStruct=false;
   }else{
-    // return error or exception
+    // TODO return error or exception
   }
 }
 
@@ -507,8 +505,7 @@ Thyristor::~Thyristor(){
   // Recompact the array
   updatingStruct=true;
   nThyristors--;
-  //remove the light from the static pinDelay array
-  Serial.println("I should implement the array shrinking");
+  // TODO remove light from the static pinDelay array, and shrink the array
   updatingStruct=false;
 }
 

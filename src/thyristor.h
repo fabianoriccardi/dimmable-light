@@ -92,8 +92,8 @@ class Thyristor{
   private:
     /**
      * Check if all thyristors are on or off. The result of this comparison 
-     * is stored in allOff and allOn variables. This methos must be called 
-     * every time a thyristor's delay is updated.
+     * is stored in allOff, allOn and allMixedOnOff variables. This methods
+     * must be called every time a thyristor's delay is updated.
      *
      * @param[in]  newDelay the new delay just set
      * @return true if interrupt for zero cross detection should be enabled,
@@ -152,6 +152,9 @@ class Thyristor{
    */
   static bool allMixedOnOff;
 
+  /**
+   * Pin receiving the external Zero Cross signal.
+   */
   static uint8_t syncPin;
 
   /**
