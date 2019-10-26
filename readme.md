@@ -39,11 +39,14 @@ On ESP8266 the library makes use of hardware timer (Timer 1), hence it can creat
 ## To-Do
 Release 1.3:
 
-- [ ] Enable/Disable zero cross interrupt method
-- [ ] Main refactor and give a clear definition of timer behaviour for all platform (providing a clear schema)
-- [ ] if all lights are set off by the user, autmatically disable zero cross iterrupt 
-- [x] support for 60Hz electrical network
+- if all lights are fully set ON or OFF (even mixed btween ON and OFF), zero cross interrupt get disabled
+- support for 60Hz electrical network
+- DimmableLightLinearized class, to control linearly the power delivered to the loads (DimmableLightLinearized control linearly the activation time)
 
 Release 1.4:
 
+- [ ] Main refactor
 - [ ] Support to SAMD21
+- [ ] Method to Enable/Disable zero cross interrupt method
+- [ ] Documentation (Github Wiki)
+
