@@ -22,10 +22,10 @@ The main APIs are accessible through DimmableLight class. First, you must instan
 
 If you encounter flickering problem due to noise on eletrical network, you can try to enable (uncommenting) *FILTER_INT_PERIOD* define at the begin of thyristor.cpp file.
 
-If you have strong memory constrain, you can drop the functionalities provided by file dimmable_light_manager.h/cpp (i.e. you can delete those files).
+If you have strong memory constrain, you can drop the functionalities provided by *dimmable_light_manager.h/cpp* (i.e. you can delete those files).
 
 ## Examples
-There are 6 examples, enumerated from the simplest to the most complete. The 5th shows a bunch of effect applied to 8 lights. [Here](https://youtu.be/DRJcCIZw_Mw) you can find a brief video showing the 9th and 11th effect. This code make use of [this boards](https://www.ebay.it/itm/8CH-AC-LED-BULB-DIMMER-SSR-RELAY-110V-220V-SMART-HOME-ARDUINO-RASPBERRY/122631760038), but you can easily replace it with others (cheaper).
+There are 6 examples, enumerated from the simplest to the most complete. The 5th shows a bunch of effects applied to 8 lights. [Here](https://youtu.be/DRJcCIZw_Mw) you can find a brief video showing the 9th and 11th effect. This code makes use of [this board](https://www.ebay.it/itm/8CH-AC-LED-BULB-DIMMER-SSR-RELAY-110V-220V-SMART-HOME-ARDUINO-RASPBERRY/122631760038), but you can easily replace it with equivalent one.
 In these images you can see the full hardware setting:
 !["Lamps"](https://i.ibb.co/zVBRB9k/IMG-4045.jpg "Lamps")
 8 incandescence bulbs.
@@ -37,13 +37,6 @@ Wemos D1 mini (v2.3.0) and a board equipped with 8 dimmers.
 On ESP8266 the library makes use of hardware timer (Timer 1), hence it can create conflicts with other functionalities such as PWM, Tone and so on.
 
 ## To-Do
-Release 1.3:
-
-- if all lights are fully set ON or OFF (even mixed btween ON and OFF), zero cross interrupt get disabled
-- support for 60Hz electrical network
-- DimmableLightLinearized class, to control linearly the power delivered to the loads (DimmableLightLinearized control linearly the activation time)
-
-Release 1.4:
 
 - [ ] Main refactor
 - [ ] Support to SAMD21
