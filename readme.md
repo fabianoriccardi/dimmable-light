@@ -5,6 +5,7 @@ A simple library to manage thyristors (aka dimmer or triac) easily in Arduino en
 1. Control indipendently many thyristors at the same time
 2. Support to multiple platforms (ESP8266/ESP32/AVR/...)
 3. Raise interrupts only if strictly necessary (i.e. when the applicance has to turn on, no useless periodic interrupts)
+4. Control effective delivered power to appliances, not just thyristor's activation time
 
 ## Motivations
 This library was born from the curiosity to learn how hardware timer works on ESP8266 (precision and flexibility) and to control old-fashioned incandescence lights.
@@ -25,7 +26,9 @@ If you encounter flickering problem due to noise on eletrical network, you can t
 If you have strong memory constrain, you can drop the functionalities provided by *dimmable_light_manager.h/cpp* (i.e. you can delete those files).
 
 ## Examples
-There are 6 examples, enumerated from the simplest to the most complete. The 5th shows a bunch of effects applied to 8 lights. [Here](https://youtu.be/DRJcCIZw_Mw) you can find a brief video showing the 9th and 11th effect. This code makes use of [this board](https://www.ebay.it/itm/8CH-AC-LED-BULB-DIMMER-SSR-RELAY-110V-220V-SMART-HOME-ARDUINO-RASPBERRY/122631760038), but you can easily replace it with equivalent one.
+Along with the library there are 7 examples. If you are a beginner you should start from the first one. Note that examples 3 and 5 work only for esp8266 and esp32 mcu because their dependency on Ticker library. Example number 7 shows how to linearly control dimmer setting the effective energy delivered instead activation time.
+
+The 6th is the most interesting because it provide a good set of effects, selectable from serial port. This example requires 8 dimmers, each one to control a bulb. [Here](https://youtu.be/DRJcCIZw_Mw) you can find a brief video showing the 9th and 11th effect. I had used [this board](https://www.ebay.it/itm/8CH-AC-LED-BULB-DIMMER-SSR-RELAY-110V-220V-SMART-HOME-ARDUINO-RASPBERRY/122631760038), but you can easily replace it with equivalent one.
 In these images you can see the full hardware setting:
 !["Lamps"](https://i.ibb.co/zVBRB9k/IMG-4045.jpg "Lamps")
 8 incandescence bulbs.
@@ -39,7 +42,7 @@ On ESP8266 the library makes use of hardware timer (Timer 1), hence it can creat
 ## To-Do
 
 - [ ] Main refactor
-- [ ] Support to SAMD21
+- [x] Support to SAMD21
 - [ ] Method to Enable/Disable zero cross interrupt method
 - [ ] Documentation (Github Wiki)
 
