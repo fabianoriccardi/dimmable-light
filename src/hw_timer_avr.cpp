@@ -18,9 +18,9 @@
  ***************************************************************************/
 #ifdef AVR
 
+#include "hw_timer_avr.h"
 #include <util/atomic.h>
 #include <Arduino.h>
-#include "hw_timer_avr.h"
 
 /**
  * This parameter controls the timer used by dimmers. Timer0 is used by 

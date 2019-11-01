@@ -18,42 +18,39 @@
  ***************************************************************************/
 
 /***********************************************************************************
- * Here there is specific AVR code. AVR is usually programmed at very low level
- * than respect ESP8266/ESP32, so this file is needed to provide a minimalistic
- * "HAL" to simplify timer usage.
+ * Here there is specific SAMD code. SAMD21 is usually programmed at register level
+ * so this file is needed to provide a minimalistic "HAL" to simplify timer usage.
  ***********************************************************************************/
-#ifdef AVR
+#ifdef ARDUINO_ARCH_SAMD
 
-#ifndef HW_TIMER_ARDUINO_H
-#define HW_TIMER_ARDUINO_H
+#ifndef HW_TIMER_SAMD_H
+#define HW_TIMER_SAMD_H
 
 #include <stdint.h>
 
 /**
- * convert microsecond to tick, max micro is 32767, otherwize it returns 0.
+ * Convert from microsecond to tick.
+ * Max microseconds value is 10000, for higher values it returns 0.
  */
 uint16_t microsecond2Tick(uint16_t micro);
 
 /**
- * Configure the timer to be started by timerStart()
+ * Initialize the timer.
  */
 void timerBegin();
 
 /**
  * Set callback function on timer triggers
  */
-void timerSetCallback(void (*f)());
+void timerSetCallback(void (*callback)());
 
 /**
- * Let's start the timer: it triggers after x ticks,
- * then it stops. 
- * tick length depends on MCU clock and prescaler, please use 
- * microsecond2Tick(..) to feed timerStart(..).
+ * Start the timer to trigger after the specified number of ticks.
  * 
  * NOTE: 0 or 1 values are not accepted
  */
-bool timerStartAndTrigger(uint16_t tick);
+void timerStart(uint16_t tick);
 
-#endif // HW_TIMER_ARDUINO_H
+#endif // HW_TIMER_SAMD_H
 
-#endif // END AVR
+#endif // ARDUINO_ARCH_SAMD

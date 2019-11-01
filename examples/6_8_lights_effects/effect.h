@@ -18,6 +18,8 @@ const int syncPin = D7;
 const int syncPin = 23;
 #elif defined(AVR)
 const int syncPin = 2;
+#elif defined(ARDUINO_ARCH_SAMD)
+const int syncPin = 2;
 #endif
 
 #if defined(RAW_VALUES)

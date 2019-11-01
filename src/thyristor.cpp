@@ -17,14 +17,17 @@
  *   along with this program; if not, see <http://www.gnu.org/licenses/>   *
  ***************************************************************************/
 #include "thyristor.h"
-#if defined(ESP8266)
+
+#if defined(ARDUINO_ARCH_ESP8266)
 #include "hw_timer_esp8266.h"
-#elif defined(ESP32)
+#elif defined(ARDUINO_ARCH_ESP32)
 #include "hw_timer_esp32.h"
-#elif defined(AVR)
+#elif defined(ARDUINO_ARCH_AVR)
 #include "hw_timer_avr.h"
+#elif defined(ARDUINO_ARCH_SAMD)
+#include "hw_timer_samd.h"
 #else
-#error "only ESP8266 and ESP32 and AVR for Arduino are supported"
+#error "only ESP8266, ESP32, AVR, SAMD architectures are supported"
 #endif
 
 // Check if zero cross interrupts are evenly time-spaced (i.e. no spurious interrupt)
@@ -108,9 +111,9 @@ static uint8_t thyristorManaged = 0;
  */
 static uint8_t alwaysOnCounter = 0;
 
-#if defined(ESP8266)
+#if defined(ARDUINO_ARCH_ESP8266)
 void ICACHE_RAM_ATTR turn_off_gates_int(){
-#elif defined(ESP32)
+#elif defined(ARDUINO_ARCH_ESP32)
 void IRAM_ATTR turn_off_gates_int(){
 #else
 void turn_off_gates_int(){
@@ -123,9 +126,9 @@ void turn_off_gates_int(){
 /**
  * Timer routine to turn on one or more thyristors
  */
-#if defined(ESP8266)
+#if defined(ARDUINO_ARCH_ESP8266)
 void ICACHE_RAM_ATTR activateThyristors(){
-#elif defined(ESP32)
+#elif defined(ARDUINO_ARCH_ESP32)
 void IRAM_ATTR activateThyristors(){
 #else
 void activateThyristors(){
@@ -160,42 +163,47 @@ void activateThyristors(){
     int delay = pinDelay[thyristorManaged].delay-pinDelay[firstToBeUpdated].delay;
 #endif
 
-  #if defined(ESP8266)
+  #if defined(ARDUINO_ARCH_ESP8266)
     timer1_write(US_TO_RTC_TIMER_TICKS(delay));
-  #elif defined(ESP32)
+  #elif defined(ARDUINO_ARCH_ESP32)
     startTimerAndTrigger(delay);
-  #elif defined(AVR)
+  #elif defined(ARDUINO_ARCH_AVR)
     if(!timerStartAndTrigger(microsecond2Tick(delay))){
       Serial.println("activateThyristors() error timer");
     }
+  #elif defined(ARDUINO_ARCH_SAMD)
+    timerStart(microsecond2Tick(delay));
   #endif
   }else{
 
 #ifdef PREDEFINED_PULSE_LENGTH
     // If there are not more thyristor to serve, I can stop timer. Energy saving?
-  #if defined(ESP8266)
+  #if defined(ARDUINO_ARCH_ESP8266)
     // Given the Arduino HAL and esp8266 technical reference manual,
     // when timer triggers, the counter stops because it has reach zero
     // and no-autorealod was set (this timer can only down-count).
-  #elif defined(ESP32)
+  #elif defined(ARDUINO_ARCH_ESP32)
     stopTimer();
-  #elif defined(AVR)
-    // Given actual HAL, AVR counter automatically stops on interrupt
+  #elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_SAMD)
+    // Given actual HAL, AVR and SAMD counter automatically stops on interrupt
   #endif
 #else
   // If there are not more thyristors to serve, set timer to turn off gates' signal
   uint16_t delay = semiPeriodLength-gateTurnOffTime-pinDelay[firstToBeUpdated].delay;
-  #if defined(ESP8266)
+  #if defined(ARDUINO_ARCH_ESP8266)
     timer1_attachInterrupt(turn_off_gates_int);
     timer1_write(US_TO_RTC_TIMER_TICKS(delay));
-  #elif defined(ESP32)
+  #elif defined(ARDUINO_ARCH_ESP32)
     setCallback(turn_off_gates_int);
     startTimerAndTrigger(delay);
-  #elif defined(AVR)
+  #elif defined(ARDUINO_ARCH_AVR)
     timerSetCallback(turn_off_gates_int);
     if(!timerStartAndTrigger(microsecond2Tick(delay))){
       Serial.println("activateThyristors() error timer");
     }
+  #elif defined(ARDUINO_ARCH_SAMD)
+    timerSetCallback(turn_off_gates_int);
+    timerStart(microsecond2Tick(delay));
   #endif
 #endif
   }
@@ -214,9 +222,9 @@ static uint32_t lastTime = 0;
  * This function will be called multiple times per semi-period (in case of multi 
  * lamps with different at least a different delay value).
  */
-#if defined(ESP8266)
+#if defined(ARDUINO_ARCH_ESP8266)
 void ICACHE_RAM_ATTR zero_cross_int(){
-#elif defined(ESP32)
+#elif defined(ARDUINO_ARCH_ESP32)
 void IRAM_ATTR zero_cross_int(){
 #else
 void zero_cross_int(){
@@ -318,27 +326,30 @@ void zero_cross_int(){
   // so a provvisory solution if to set the relative callback to NULL!
   // NOTE 2: this improvement should be think even for multiple lamp!
   if(thyristorManaged<Thyristor::nThyristors && pinDelay[thyristorManaged].delay<semiPeriodLength-50){
-  #if defined(ESP8266)
+  #if defined(ARDUINO_ARCH_ESP8266)
   	timer1_attachInterrupt(activateThyristors);
     timer1_write(US_TO_RTC_TIMER_TICKS(pinDelay[thyristorManaged].delay));
-  #elif defined(ESP32)
+  #elif defined(ARDUINO_ARCH_ESP32)
     setCallback(activateThyristors);
     startTimerAndTrigger(pinDelay[thyristorManaged].delay);
-  #elif defined(AVR)
+  #elif defined(ARDUINO_ARCH_AVR)
     timerSetCallback(activateThyristors);
     if(!timerStartAndTrigger(microsecond2Tick(pinDelay[thyristorManaged].delay))){
       Serial.println("zero_cross_int() error timer");
     }
+  #elif defined(ARDUINO_ARCH_SAMD)
+    timerSetCallback(activateThyristors);
+    timerStart(microsecond2Tick(pinDelay[thyristorManaged].delay));
   #endif
   }else{
-  #if defined(ESP8266)
+  #if defined(ARDUINO_ARCH_ESP8266)
     // Given the Arduino HAL and esp8266 technical reference manual,
     // when timer triggers, the counter stops because it has reached zero
     // and no-autorealod was set (this timer can only down-count).
-  #elif defined(ESP32)
+  #elif defined(ARDUINO_ARCH_ESP32)
     stopTimer();
-  #elif defined(AVR)
-    // Given actual HAL, AVR counter automatically stops on interrupt
+  #elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_SAMD)
+    // Given actual HAL, AVR and SAMD counter automatically stops on interrupt
   #endif
   }
 }
@@ -346,15 +357,15 @@ void zero_cross_int(){
 void Thyristor::begin(){
   pinMode(digitalPinToInterrupt(syncPin), INPUT);
 
-#if defined(ESP8266)
+#if defined(ARDUINO_ARCH_ESP8266)
   timer1_attachInterrupt(activateThyristors);
   // These 2 registers assignements are the "unrolling" of:
   // timer1_enable(TIM_DIV16, TIM_EDGE, TIM_SINGLE);
   T1C = (1 << TCTE) | ((TIM_DIV16 & 3) << TCPD) | ((TIM_EDGE & 1) << TCIT) | ((TIM_SINGLE & 1) << TCAR);
   T1I = 0;
-#elif defined(ESP32)
+#elif defined(ARDUINO_ARCH_ESP32)
   timerInit(activateThyristors);
-#elif defined(AVR)
+#elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_SAMD)
   timerSetCallback(activateThyristors);
   timerBegin();
 #endif
