@@ -5,13 +5,16 @@
 
 const int N = 3;
 
-#if defined(ESP8266)
+#if defined(ARDUINO_ARCH_ESP8266)
 const int syncPin = D7;
 const int pins[N] = {D1, D2, D5};
-#elif defined(ESP32)
+#elif defined(ARDUINO_ARCH_ESP32)
 const int syncPin = 23;
 const int pins[N] = {4, 16, 17};
-#elif defined(AVR)
+#elif defined(ARDUINO_ARCH_AVR)
+const int syncPin = 2;
+const int pins[N] = {3, 4, 5};
+#elif defined(ARDUINO_ARCH_SAMD)
 const int syncPin = 2;
 const int pins[N] = {3, 4, 5};
 #endif

@@ -19,7 +19,11 @@
 #ifndef DIMMABLE_LIGHT_MANAGER_H
 #define DIMMABLE_LIGHT_MANAGER_H
 
-#if defined(ESP8266) || defined(ESP32)
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_SAMD)
+// Unfortunately Arduino defines max/min macros, those create conflicts with the one
+// defined by C++/STL environment
+#undef max
+#undef min
 #include <unordered_map>
 #elif defined(AVR)
 #include <ArduinoSTL.h>
@@ -62,7 +66,7 @@ public:
   }
   
 private:
-#if defined(ESP8266) || defined(ESP32)
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_SAMD)
   std::unordered_map<std::string, DimmableLight*> dla;
 #elif defined(AVR)
   std::map<std::string, DimmableLight*> dla;

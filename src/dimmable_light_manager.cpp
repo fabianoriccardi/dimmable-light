@@ -20,7 +20,7 @@
 
 bool DimmableLightManager::add(String lightName, uint8_t pin){
   const char* temp=lightName.c_str();
-#if defined(ESP8266) || defined(ESP32)
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_SAMD)
   std::unordered_map<std::string, DimmableLight*>::const_iterator it=dla.find(temp);
 #elif defined(AVR)
   std::map<std::string, DimmableLight*>::const_iterator it=dla.find(temp);
@@ -36,7 +36,7 @@ bool DimmableLightManager::add(String lightName, uint8_t pin){
 
 DimmableLight* DimmableLightManager::get(String lightName){
   const char* temp=lightName.c_str();
-#if defined(ESP8266) || defined(ESP32)
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_SAMD)
   std::unordered_map<std::string,DimmableLight*>::const_iterator it=dla.find(temp);
 #elif defined(AVR)
   std::map<std::string,DimmableLight*>::const_iterator it=dla.find(temp);
@@ -49,7 +49,7 @@ DimmableLight* DimmableLightManager::get(String lightName){
 }
 
 std::pair<String, DimmableLight*> DimmableLightManager::get(){
-#if defined(ESP8266) || defined(ESP32)
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_SAMD)
   static std::unordered_map<std::string,DimmableLight*>::const_iterator it=dla.begin();
 #elif defined(AVR)
   static std::map<std::string,DimmableLight*>::const_iterator it=dla.begin();
