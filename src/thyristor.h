@@ -91,30 +91,21 @@ class Thyristor{
   static const uint8_t N = 8;
   private:
     /**
-     * Check if all thyristors are on or off. The result of this comparison 
-     * is stored in allOff, allOn and allMixedOnOff variables. This methods
-     * must be called every time a thyristor's delay is updated.
+     * Tell if interrupt must be RE-enabled. This metohd affect alllMixedOnOff variable.
+     * This methods must be called every time a thyristor's delay is updated.
      *
      * @param[in]  newDelay the new delay just set
-     * @return true if interrupt for zero cross detection should be enabled,
+     * @return true if interrupt for zero cross detection should be re-enabled,
      * false do nothing
      */
-    bool checkAllOnOff(uint16_t newDelay);
-
-    /**
-     * Search if the delays set are equal among them. (This method supports
-     * checkAllOnOff method).
-     *
-     * @return     true if they are equal, false otherwise
-     */
-    bool areSameValues(uint16_t value);
+    bool mustInterruptBeReEnabled(uint16_t newDelay);
 
     /**
      * Search if all the values are only On and Off.
      *
      * @return     true if On/Off, false otherwise
      */
-    bool areMixedOnOff();
+    bool areThyristorsOnOff();
   
   /**
    * Number of instantiated thyristors
@@ -136,21 +127,14 @@ class Thyristor{
    * Condition variable is not used because interrupt cannot be stopped.
    */
   static bool updatingStruct;
-
-  /**
-   * Variables to store if the entire set of thyristors is off/on.
-   * This is the base for interrupt optimization.
-   */
-  static bool allOff;
-  static bool allOn;
   
   /**
-   * This variable means that all the lights are completely ON and OFF,
-   * mixed are included. 
-   *  - allOff => allMixedOnOff
-   *  - allOn => allMixedOnOff
+   * This variable tells if the thyristors are completely ON and OFF,
+   * mixed configuration are included. If one thyristor has a value between
+   * (0; semiPeriodLength), this variable is false. If true, this implies that
+   * zero cross interrupt must be enabled to manage the thyristor activation.
    */
-  static bool allMixedOnOff;
+  static bool allThyristorsOnOff;
 
   /**
    * Pin receiving the external Zero Cross signal.

@@ -101,6 +101,11 @@ struct PinDelay{
 static struct PinDelay pinDelay[Thyristor::N];
 
 /**
+ * Tell if zero cross interrupt is enabled
+ */ 
+static bool interruptEnabled = false;
+
+/**
  * Number of thyristors already managed in the current semi-period
  */
 static uint8_t thyristorManaged = 0;
@@ -291,7 +296,7 @@ void zero_cross_int(){
 
   thyristorManaged = 0;
 
-  if(Thyristor::allMixedOnOff){
+  if(Thyristor::allThyristorsOnOff){
     for(int i=0; i<Thyristor::nThyristors; i++){
       if(pinDelay[i].delay==semiPeriodLength-endMargin){
         digitalWrite(pinDelay[i].pin, LOW);
@@ -301,7 +306,9 @@ void zero_cross_int(){
       thyristorManaged++;
     }
     
+    interruptEnabled = false;
     detachInterrupt(digitalPinToInterrupt(Thyristor::syncPin));
+
 #ifdef FILTER_INT_PERIOD
     lastTime = 0;
 #endif
@@ -453,16 +460,19 @@ void Thyristor::setDelay(uint16_t newDelay){
       this->posIntoArray=target;
     }
   }else{
-    if(verbosity>2) Serial.println("No need to perform the exchange, the delay is the same!");
+    if(verbosity>2) Serial.println("Warning: you are setting the same delay as the previous one!");
+    updatingStruct = false;
+    return;
   }
 
   delay=newDelay;
-  bool enableInt = checkAllOnOff(newDelay);
+  bool enableInt = mustInterruptBeReEnabled(newDelay);
   newDelayValues=true;
   updatingStruct=false;
   if(enableInt){
     if(verbosity>2) Serial.println("Re-enabling interrupt");
-    attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, RISING);        
+    interruptEnabled = true;
+    attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, RISING);   
   }
   
   if(verbosity>2){
@@ -520,20 +530,7 @@ Thyristor::~Thyristor(){
   updatingStruct=false;
 }
 
-bool Thyristor::areSameValues(uint16_t value){
-    bool allTheSame = true;
-    int i=0;
-    while(i<nThyristors && allTheSame){
-        if(thyristors[i]->getDelay() != value){
-            allTheSame = false;
-        }else{
-            i++;
-        }
-    }
-    return allTheSame;
-}
-
-bool Thyristor::areMixedOnOff(){
+bool Thyristor::areThyristorsOnOff(){
     bool allOnOff = true;
     int i=0;
     while(i<nThyristors && allOnOff){
@@ -546,65 +543,27 @@ bool Thyristor::areMixedOnOff(){
     return allOnOff;
 }
 
-bool Thyristor::checkAllOnOff(uint16_t newDelay){
-    bool retValue = true;
+bool Thyristor::mustInterruptBeReEnabled(uint16_t newDelay){
+    bool interruptMustBeEnabled = true;
 
-    // Temp values those are commited in the end
-    bool newAllOff = allOff;
-    bool newAllOn = allOn;
-    bool newAllMixedOnOff = allMixedOnOff;
+    // Temp values those are "commited" at the end of this method
+    bool newAllThyristorsOnOff = allThyristorsOnOff;
 
-    if(newDelay==0 || newDelay==semiPeriodLength){
-      if(areMixedOnOff()){
-        newAllMixedOnOff = true;
-      }
-    }
-    //if newDelay is totally OFF, check if the other values are the same
-    if(newDelay == semiPeriodLength){
-        newAllOn = false;
-        if(areSameValues(newDelay)){
-            newAllOff = true;
-            if(allOn){
-                retValue = true;
-            }else{
-                retValue = false;
-            }
-        }
-    //if newDelay is totally ON, check if the other values are the same
-    }else if(newDelay == 0){
-        newAllOff = false;
-        if(areSameValues(newDelay)){
-            newAllOn = true;
-            if(allOff){
-                retValue = true;
-            }else{
-                retValue = false;
-            }
-        }
-    // if newDelay is not optimizable
+    if(newDelay == semiPeriodLength || newDelay == 0){
+        newAllThyristorsOnOff = areThyristorsOnOff();
     }else{
-        // Re-enable interrupt
-        if(allMixedOnOff){
-            newAllMixedOnOff = newAllOn = newAllOff = false;
-            retValue = true;
-        }else{
-            retValue = false;
-        }
-        newAllMixedOnOff = false;
+        // if newDelay is not optimizable i.e. a value between (0; semiPeriodLength)
+        newAllThyristorsOnOff = false;
     }
 
-    allOff = newAllOff;
-    allOn = newAllOn;
-    allMixedOnOff = newAllMixedOnOff;
-    if(verbosity>1) Serial.println(String(allOff) + "/" + allOn + "/" + allMixedOnOff);
-    return retValue;
+    allThyristorsOnOff = newAllThyristorsOnOff;
+    if(verbosity>1) Serial.println(String("allThyristorsOnOff: ") + allThyristorsOnOff);
+    return !interruptEnabled && interruptMustBeEnabled;
 }
 
 uint8_t Thyristor::nThyristors = 0;
 Thyristor* Thyristor::thyristors[Thyristor::N] = {nullptr};
 bool Thyristor::newDelayValues = false;
 bool Thyristor::updatingStruct = false;
-bool Thyristor::allOff = true;
-bool Thyristor::allOn = false;
-bool Thyristor::allMixedOnOff = true;
+bool Thyristor::allThyristorsOnOff = true;
 uint8_t Thyristor::syncPin = 255;
