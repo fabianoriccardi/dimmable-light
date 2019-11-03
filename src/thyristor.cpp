@@ -101,6 +101,11 @@ struct PinDelay{
 static struct PinDelay pinDelay[Thyristor::N];
 
 /**
+ * Summary about thyristors state used by interrupt (concurrent-safe)
+ */
+static bool _allThyristorsOnOff = true;
+
+/**
  * Tell if zero cross interrupt is enabled
  */ 
 static bool interruptEnabled = false;
@@ -287,16 +292,12 @@ void zero_cross_int(){
         pinDelay[i].delay=Thyristor::thyristors[i]->delay;
       }
     }
-    // for(int i=0;i<Thyristor::nThyristors;i++){
-    //   Serial.print(String("int: ") + pinDelay[i].pin);
-    //   Serial.print(" ");
-    //   Serial.println(pinDelay[i].delay);
-    // }   
+    _allThyristorsOnOff = Thyristor::allThyristorsOnOff;
   }
 
   thyristorManaged = 0;
 
-  if(Thyristor::allThyristorsOnOff){
+  if(_allThyristorsOnOff){
     for(int i=0; i<Thyristor::nThyristors; i++){
       if(pinDelay[i].delay==semiPeriodLength-endMargin){
         digitalWrite(pinDelay[i].pin, LOW);
