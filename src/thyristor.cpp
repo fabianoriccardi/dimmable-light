@@ -137,11 +137,11 @@ void turn_off_gates_int(){
  * Timer routine to turn on one or more thyristors
  */
 #if defined(ARDUINO_ARCH_ESP8266)
-void ICACHE_RAM_ATTR activateThyristors(){
+void ICACHE_RAM_ATTR activate_thyristors(){
 #elif defined(ARDUINO_ARCH_ESP32)
-void IRAM_ATTR activateThyristors(){
+void IRAM_ATTR activate_thyristors(){
 #else
-void activateThyristors(){
+void activate_thyristors(){
 #endif
 
   const uint8_t firstToBeUpdated=thyristorManaged;
@@ -179,7 +179,7 @@ void activateThyristors(){
     startTimerAndTrigger(delay);
   #elif defined(ARDUINO_ARCH_AVR)
     if(!timerStartAndTrigger(microsecond2Tick(delay))){
-      Serial.println("activateThyristors() error timer");
+      Serial.println("activate_thyristors() error timer");
     }
   #elif defined(ARDUINO_ARCH_SAMD)
     timerStart(microsecond2Tick(delay));
@@ -209,7 +209,7 @@ void activateThyristors(){
   #elif defined(ARDUINO_ARCH_AVR)
     timerSetCallback(turn_off_gates_int);
     if(!timerStartAndTrigger(microsecond2Tick(delay))){
-      Serial.println("activateThyristors() error timer");
+      Serial.println("activate_thyristors() error timer");
     }
   #elif defined(ARDUINO_ARCH_SAMD)
     timerSetCallback(turn_off_gates_int);
@@ -335,18 +335,18 @@ void zero_cross_int(){
   // NOTE 2: this improvement should be think even for multiple lamp!
   if(thyristorManaged<Thyristor::nThyristors && pinDelay[thyristorManaged].delay<semiPeriodLength-50){
   #if defined(ARDUINO_ARCH_ESP8266)
-  	timer1_attachInterrupt(activateThyristors);
+  	timer1_attachInterrupt(activate_thyristors);
     timer1_write(US_TO_RTC_TIMER_TICKS(pinDelay[thyristorManaged].delay));
   #elif defined(ARDUINO_ARCH_ESP32)
-    setCallback(activateThyristors);
+    setCallback(activate_thyristors);
     startTimerAndTrigger(pinDelay[thyristorManaged].delay);
   #elif defined(ARDUINO_ARCH_AVR)
-    timerSetCallback(activateThyristors);
+    timerSetCallback(activate_thyristors);
     if(!timerStartAndTrigger(microsecond2Tick(pinDelay[thyristorManaged].delay))){
       Serial.println("zero_cross_int() error timer");
     }
   #elif defined(ARDUINO_ARCH_SAMD)
-    timerSetCallback(activateThyristors);
+    timerSetCallback(activate_thyristors);
     timerStart(microsecond2Tick(pinDelay[thyristorManaged].delay));
   #endif
   }else{
@@ -366,15 +366,15 @@ void Thyristor::begin(){
   pinMode(digitalPinToInterrupt(syncPin), INPUT);
 
 #if defined(ARDUINO_ARCH_ESP8266)
-  timer1_attachInterrupt(activateThyristors);
+  timer1_attachInterrupt(activate_thyristors);
   // These 2 registers assignements are the "unrolling" of:
   // timer1_enable(TIM_DIV16, TIM_EDGE, TIM_SINGLE);
   T1C = (1 << TCTE) | ((TIM_DIV16 & 3) << TCPD) | ((TIM_EDGE & 1) << TCIT) | ((TIM_SINGLE & 1) << TCAR);
   T1I = 0;
 #elif defined(ARDUINO_ARCH_ESP32)
-  timerInit(activateThyristors);
+  timerInit(activate_thyristors);
 #elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_SAMD)
-  timerSetCallback(activateThyristors);
+  timerSetCallback(activate_thyristors);
   timerBegin();
 #endif
 }

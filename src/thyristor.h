@@ -162,7 +162,7 @@ class Thyristor{
    */
   uint16_t delay;
 
-  friend void activateThyristors();
+  friend void activate_thyristors();
   friend void zero_cross_int();
   friend void turn_off_gates_int();
 };
