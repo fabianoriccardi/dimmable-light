@@ -41,8 +41,4 @@ On ESP8266 the library makes use of hardware timer (Timer 1), hence it can creat
 
 ## To-Do
 
-- [ ] Main refactor
-- [x] Support to SAMD21
-- [ ] Method to Enable/Disable zero cross interrupt method
-- [ ] Documentation (Github Wiki)
-
+- [ ] comprehensive documentation on Github Wiki
