@@ -1,11 +1,29 @@
 # Dimmable Light for Arduino
-A simple library to manage thyristors (aka dimmer or triac) easily in Arduino environment. 
+A library to manage thyristors (aka dimmer or triac) and phase-fired control (aka phase-cutting control) in Arduino environment. 
 
 ## Features
+The main features of this library:
+
 1. Control indipendently many thyristors at the same time
-2. Support to multiple platforms (ESP8266/ESP32/AVR/...)
+2. Support to multiple platforms (ESP8266/ESP32/AVR/SAMD)
 3. Raise interrupts only if strictly necessary (i.e. when the applicance has to turn on, no useless periodic interrupts)
 4. Control effective delivered power to appliances, not just thyristor's activation time
+
+Here a complete comparison among the most similar libraries:
+
+|                                   	| Dimmable Light for Arduino                           	| [RobotDynOfficial/RDBDimmer](https://github.com/RobotDynOfficial/RBDDimmer)                                           	| [circuitar/Dimmer](https://github.com/circuitar/Dimmer)                         	|
+|-----------------------------------	|---------------------------------------------	|-----------------------------------------------------	|----------------------------------	|
+| Multiple dimmers                  	| yes                                         	| yes                                                 	| yes                              	|
+| Supported Frequencies                   	| 50/60Hz                                	| 50Hz                                           	| 50/60Hz                        	|
+| Supported architecture            	| AVR, SAMD, ESP8266, ESP32                   	| AVR, SAMD, ESP8266, ESP32, STM32F1, STM32F4, SAM 	| AVR                              	|
+| Control *effective* delivered power 	| yes, dynamic calculation                    	| no                                                  	| yes, static lookup table 	|
+| Embedded automations          	| no                                          	| yes, automatic fade to new value                   	| yes, swipe effect                	|
+| Optional zero-crossing mode | no                                          	| no                                                  	| yes                              	|
+| Resolution                        	| up to 1us                                   	| 1/100 of semi-period energy                           	| 1/100 of semi-period length            	|
+| Smart Interrupt Management        	| yes, automatically activated only if needed 	| no                                                  	| no                               	|
+| Number of interrupts per semi-period (1)        	| number of instantiated dimmers + 1 	| 100                                                  	| 100                               	|
+
+(1) In the worst case, with default settings 
 
 ## Motivations
 This library was born from the curiosity to learn how hardware timer works on ESP8266 (precision and flexibility) and to control old-fashioned incandescence lights.
@@ -25,20 +43,16 @@ If you encounter flickering problem due to noise on eletrical network, you can t
 
 If you have strong memory constrain, you can drop the functionalities provided by *dimmable_light_manager.h/cpp* (i.e. you can delete those files).
 
+For more details check the [Wiki](https://github.com/fabiuz7/Dimmable-Light-Arduino/wiki).
+
 ## Examples
 Along with the library there are 7 examples. If you are a beginner you should start from the first one. Note that examples 3 and 5 work only for esp8266 and esp32 mcu because their dependency on Ticker library. Example number 7 shows how to linearly control dimmer setting the effective energy delivered instead activation time.
 
 The 6th is the most interesting because it provide a good set of effects, selectable from serial port. This example requires 8 dimmers, each one to control a bulb. [Here](https://youtu.be/DRJcCIZw_Mw) you can find a brief video showing the 9th and 11th effect. I had used [this board](https://www.ebay.it/itm/8CH-AC-LED-BULB-DIMMER-SSR-RELAY-110V-220V-SMART-HOME-ARDUINO-RASPBERRY/122631760038), but you can easily replace it with equivalent one.
 In these images you can see the full hardware setting:
+
 !["Lamps"](https://i.ibb.co/zVBRB9k/IMG-4045.jpg "Lamps")
 8 incandescence bulbs.
 
 !["Boards"](https://i.ibb.co/YN2Fktn/IMG-4041.jpg "Boards")
 Wemos D1 mini (v2.3.0) and a board equipped with 8 dimmers.
-
-## Limitations
-On ESP8266 the library makes use of hardware timer (Timer 1), hence it can create conflicts with other functionalities such as PWM, Tone and so on.
-
-## To-Do
-
-- [ ] comprehensive documentation on Github Wiki
