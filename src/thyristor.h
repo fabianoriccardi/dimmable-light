@@ -66,6 +66,11 @@ class Thyristor{
       setDelay(0);
     }
 
+    /**
+     * Get detected frequency.
+     */
+    float getFrequency();
+
     ~Thyristor();
 
   /**

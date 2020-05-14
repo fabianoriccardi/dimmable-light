@@ -17,6 +17,7 @@
  *   along with this program; if not, see <http://www.gnu.org/licenses/>   *
  ***************************************************************************/
 #include "thyristor.h"
+#include "circular_queue.h"
 
 #if defined(ARDUINO_ARCH_ESP8266)
 #include "hw_timer_esp8266.h"
@@ -34,14 +35,19 @@
 // If the interrupt is "too" close to the previous one, ignore the current one.
 // To define if two interrupts are too close, look at semiPeriodShrinkMargin and
 // semiPeriodExpandMargin constant
-//#define FILTER_INT_PERIOD
+#define FILTER_INT_PERIOD
 
+#define AUTO_DETECT_FREQUENCY
+
+// FOR DEBUG PURPOSE ONLY: 
 // If the FILTER_INT_PERIOD is enabled, print on Serial the time passed 
 // from the previous interrupt. when the semi-period length is "wrong"
 // according to semiPeriodShrinkMargin and semiPeriodExpandMargin thresholds.
 //#define PRINT_INT_PERIOD
 
-// Check if all the lights were managed in the last semi-period
+// FOR DEBUG PURPOSE ONLY:
+// check if all the lights were managed in the last semi-period.
+// If not, a char is printed on serial.
 //#define CHECK_MANAGED_THYR
 
 // Force the signal lenght of thyristor's gate. If not enabled, the signal to gate 
@@ -55,6 +61,9 @@ static const uint16_t semiPeriodLength = 10000;
 #endif
 #ifdef NETWORK_FREQ_60HZ
 static const uint16_t semiPeriodLength = 8333;
+#endif
+#ifdef AUTO_DETECT_FREQUENCY
+//static uint16_t semiPeriodLength = 0;
 #endif
 
 // The margins are precautions against noise, electrical spikes and frequency skew errors.
@@ -134,7 +143,9 @@ void turn_off_gates_int(){
 }
 
 /**
- * Timer routine to turn on one or more thyristors
+ * Timer routine to turn on one or more thyristors.
+ * This function will be called multiple times per semi-period (in case of multi 
+ * lamps with different at least a different delay value).
  */
 #if defined(ARDUINO_ARCH_ESP8266)
 void ICACHE_RAM_ATTR activate_thyristors(){
@@ -221,17 +232,17 @@ void activate_thyristors(){
 
 #ifdef FILTER_INT_PERIOD
 // In microsecond
-const int semiPeriodShrinkMargin = 50;
-const int semiPeriodExpandMargin = 50;
+const static int semiPeriodShrinkMargin = 50;
+const static int semiPeriodExpandMargin = 50;
 
 static uint32_t lastTime = 0;
 #endif
 
-/**
- * This function manage the triac/dimmer in a single semi-period (that is 10ms @50Hz)
- * This function will be called multiple times per semi-period (in case of multi 
- * lamps with different at least a different delay value).
- */
+// Circular Queu to store the moving average
+static CircularQueue<uint32_t, 5> queue;
+static uint32_t total = 0;
+
+
 #if defined(ARDUINO_ARCH_ESP8266)
 void ICACHE_RAM_ATTR zero_cross_int(){
 #elif defined(ARDUINO_ARCH_ESP32)
@@ -240,25 +251,43 @@ void IRAM_ATTR zero_cross_int(){
 void zero_cross_int(){
 #endif
 
-#ifdef FILTER_INT_PERIOD
+#if defined(FILTER_INT_PERIOD) || defined(AUTO_DETECT_FREQUENCY)
   if(!lastTime){
-    lastTime=micros();
+    lastTime = micros();
   }else{
-    uint32_t now=micros();
-#ifdef PRINT_INT_PERIOD
-    if(now-lastTime<semiPeriodLength-semiPeriodShrinkMargin){
-      Serial.println(String('B') + (now-lastTime));
+    uint32_t now = micros();
+
+    // "diff" is correct even when rolling back, because all of them are unsigned
+    uint32_t diff = now - lastTime;
+
+    // if diff is very very greater than the theoretical value, the electrical signal
+    // can be considered as lost for a while.
+    // I decided to use "16" because is a power of 2, very fast to be computed.
+    if(diff > semiPeriodLength * 16){
+      queue.reset();
+      total = 0;
     }
-    if(now-lastTime>semiPeriodLength+semiPeriodExpandMargin){
-      Serial.println(String('A') + (now-lastTime));
+
+#ifdef PRINT_INT_PERIOD
+    if(diff < semiPeriodLength - semiPeriodShrinkMargin){
+      Serial.println(String('B') + diff);
+    }
+    if(diff > semiPeriodLength + semiPeriodExpandMargin){
+      Serial.println(String('A') + diff);
     }
 #endif
     // Filters out spurious interrupts. The effectiveness of this simple
     // filter could vary depending on noise on electrical networ.
-    if(now-lastTime<semiPeriodLength-semiPeriodShrinkMargin){
+    if(diff < semiPeriodLength - semiPeriodShrinkMargin){
       return;
     }
-    lastTime=now;
+
+    // If filtering has passed, I can update the moving average
+    uint32_t valueToRemove = queue.insert(diff);
+    total += diff;
+    total -= valueToRemove;
+
+    lastTime = now;
   }
 #endif
 
@@ -483,6 +512,36 @@ void Thyristor::setDelay(uint16_t newDelay){
       Serial.println(thyristors[i]->delay);
     }
   }
+}
+
+float Thyristor::getFrequency(){
+  
+
+  uint32_t now = micros();
+
+  noInterrupts();
+  // "diff" is correct even when rolling back, because all of them are unsigned
+  uint32_t diff = now - lastTime;
+
+
+  // if diff is very very greater than the theoretical value, the electrical signal
+  // can be considered as lost for a while.
+  // I decided to use "16" because is a power of 2, very fast to be computed.
+  if(diff > semiPeriodLength * 16){
+    queue.reset();
+    total = 0;
+  }
+
+  int c = queue.getCount();
+  interrupts();
+  
+  if(total > 0) {
+    // *1000000: us
+    // /2: from semiperiod to full period
+    float result = c * 1000000 / 2 / ((float)(total));
+    return result;
+  }
+  return 0;
 }
 
 /**

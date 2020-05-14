@@ -65,6 +65,10 @@ class DimmableLight{
 		  setBrightness(0);
   	}
 
+    float getFrequency(){
+      return thyristor.getFrequency();
+    }
+
   	~DimmableLight(){
       nLights--;
     }
