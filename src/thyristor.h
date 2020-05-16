@@ -38,22 +38,28 @@
 
 
 /**
- * This is the developer-oriented Thyristor class. 
+ * This is the core class of this library, to be used to get the finest control
+ * on thyristors. 
  * 
- * NOTE Class Design Principle: The concept of Thyristor is agnostic 
- * with respect to appliance controlled, hence measurement unit 
- * to regulate the power should be also appliance-agnostic. Moreover,
- * I decided to separate the code in 2 level of classes: 
+ * NOTE: Design Principle for this library: The concept of Thyristor is agnostic 
+ * to controlled appliance, hence measurement unit to control them should be also
+ * appliance-agnostic. However, this will lead to more abstract code,
+ * an undesiderable effect especially in contextes such as Arduino,
+ * oriented to be as user-friendly as possible.
+ * 
+ * For these reason, I decided to separate the library in 2 main level of classes: 
  * a low level one (appliance-agnostic), and a higher level one for final 
- * user (a nice appliance-dependent Wrapper, e.g. Dimmable Light). Hence, 
- * about this class:
- * 1) the control method is called setDelay(..) and not, for example, setPower(..), 
- *      setBrightness(..),... giving a precise idea of what's happening in 
- *      electrical world.
- * 2) time in microsecond (allowing a fine control, often exceeding the real need),
- *      to match the notion of time given by setDelay()
+ * user (a nicer appliance-dependent wrapper, e.g. Dimmable Light).
+ * 
+ * About this class, the "core" of the library, the name of the method 
+ * to control a dimmer is setDelay(..) and not, for example, setPower(..),
+ * setBrightness(..),... This gives a precise idea of what's
+ * happening in electrical world, that is controlling the activation time
+ * of the thyristor.
+ * Secondly, the measurement unit is expressed in microsecond, 
+ * allowing the finest and feasible control reachable with old and cheap
+ * MCUs such as Arduino Uno (often still exceeding the real need).
  */
-
 class Thyristor{
 public:
   Thyristor(int pin);
@@ -120,8 +126,26 @@ public:
 #ifdef MONITOR_FREQUENCY
   /**
    * Get the detected frequency on the electrical network, constantly updated.
+   * Return 0 if there is no signal or while sampling the first periods.
+   * 
+   * NOTE: when (re)starting, it will take a while before returning a value different from 0.
    */
   static float getDetectedFrequency();
+
+  /**
+   * Check if frequency monitor is always enabled.
+   */
+  static bool isFrequencyMonitorAlwaysOn(){
+    return frequencyMonitorAlwaysEnabled;
+  }
+
+  /**
+   * Control if the monitoring can be automatically stopped when 
+   * all lights are on and off. True to force the constant monitoring,
+   * false to allow automatic stop. By default the monitoring is always active.
+   *
+   */
+  static void frequencyMonitorAlwaysOn(bool enable);
 #endif
 
   static const uint8_t N = 8;
@@ -160,7 +184,11 @@ private:
 
   /**
    * Variable to avoid concurrency problem between interrupt and threads.
-   * Condition variable is not used because interrupt cannot be stopped.
+   * In particular, this variable is used to prevent the copy of the memory used by
+   * the array of struct during reordering (interrupt can continue because it
+   * keeps its own copy of the array).
+   * A condition variable does not make sense because interrupt routine cannot be 
+   * stopped.
    */
   static bool updatingStruct;
   
@@ -184,6 +212,12 @@ private:
    * 3) info messages
    */
   static const uint8_t verbosity = 1;
+
+  /**
+   * True means the is always listeing, false means
+   * auto-stop when all lights are on/off.
+   */
+  static bool frequencyMonitorAlwaysEnabled;
 
   /**
    * Pin used to control thyristor's gate.

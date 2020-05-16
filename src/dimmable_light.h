@@ -88,6 +88,14 @@ public:
   static float getDetectedFrequency(){
     return Thyristor::getDetectedFrequency();
   }
+
+  static bool isFrequencyMonitorAlwaysOn(){
+    return Thyristor::isFrequencyMonitorAlwaysOn();
+  }
+
+  static void frequencyMonitorAlwaysOn(bool enable){
+    Thyristor::frequencyMonitorAlwaysOn(enable);
+  }
 #endif
 
   ~DimmableLight(){

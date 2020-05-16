@@ -114,7 +114,7 @@ static struct PinDelay pinDelay[Thyristor::N];
 static bool _allThyristorsOnOff = true;
 
 /**
- * Tell if zero cross interrupt is enabled
+ * Tell if zero cross interrupt is enabled.
  */ 
 static bool interruptEnabled = false;
 
@@ -269,16 +269,6 @@ void zero_cross_int(){
     // "diff" is correct even when timer rolls back, because these values are unsigned
     uint32_t diff = now - lastTime;
 
-#ifdef MONITOR_FREQUENCY
-    // if diff is very very greater than the theoretical value, the electrical signal
-    // can be considered as lost for a while.
-    // I decided to use "16" because is a power of 2, very fast to be computed.
-    if(diff > semiPeriodLength * 16){
-      queue.reset();
-      total = 0;
-    }
-#endif
-
 #ifdef PRINT_INT_PERIOD
     if(diff < semiPeriodLength - semiPeriodShrinkMargin){
       Serial.println(String('B') + diff);
@@ -297,10 +287,19 @@ void zero_cross_int(){
 #endif
 
 #ifdef MONITOR_FREQUENCY
-    // If filtering has passed, I can update the moving average
-    uint32_t valueToRemove = queue.insert(diff);
-    total += diff;
-    total -= valueToRemove;
+    // if diff is very very greater than the theoretical value, the electrical signal
+    // can be considered as lost for a while and I must reset my moving average.
+    // I decided to use "16" because is a power of 2, very fast to be computed.
+    if(diff > semiPeriodLength * 16){
+      queue.reset();
+      total = 0;
+    } else {
+      // If filtering has passed, I can update the moving average
+      uint32_t valueToRemove = queue.insert(diff);
+      total += diff;
+      total -= valueToRemove;
+      Serial.print("c");
+    }
 #endif
 
     lastTime = now;
@@ -353,12 +352,23 @@ void zero_cross_int(){
       thyristorManaged++;
     }
 
-#if !defined(MONITOR_FREQUENCY)
+#if defined(MONITOR_FREQUENCY)
+    if(!Thyristor::frequencyMonitorAlwaysEnabled){
+      interruptEnabled = false;
+      detachInterrupt(digitalPinToInterrupt(Thyristor::syncPin));
+      
+      queue.reset();
+      total = 0;
+
+      lastTime = 0;
+    }
+#elif defined(FILTER_INT_MONITOR)
+    lastTime = 0;
     interruptEnabled = false;
     detachInterrupt(digitalPinToInterrupt(Thyristor::syncPin));
-#ifdef FILTER_INT_PERIOD
-    lastTime = 0;
-#endif
+#else
+    interruptEnabled = false;
+    detachInterrupt(digitalPinToInterrupt(Thyristor::syncPin));
 #endif
 
     return;
@@ -555,30 +565,51 @@ void Thyristor::setFrequency(float frequency){
 
 #ifdef MONITOR_FREQUENCY
 float Thyristor::getDetectedFrequency(){
-  uint32_t now = micros();
+  int c;
+  uint32_t tot;
+  {
+    // Stop interrupt to freeze variables modified or accessed in the interrupt
+    noInterrupts();
 
-  noInterrupts();
-  // "diff" is correct even when rolling back, because all of them are unsigned
-  uint32_t diff = now - lastTime;
+    // "diff" is correct even when rolling back, because all of them are unsigned
+    uint32_t diff = micros() - lastTime;
 
-  // if diff is very very greater than the theoretical value, the electrical signal
-  // can be considered as lost for a while.
-  // I decided to use "16" because is a power of 2, very fast to be computed.
-  if(diff > semiPeriodLength * 16){
-    queue.reset();
-    total = 0;
+    // if diff is very very greater than the theoretical value, the electrical signal
+    // can be considered as lost for a while.
+    // I decided to use "16" because is a power of 2, very fast to be computed.
+    if(diff > semiPeriodLength * 16){
+      queue.reset();
+      total = 0;
+    }
+
+    c = queue.getCount();
+    tot = total;
+    interrupts();
   }
-
-  int c = queue.getCount();
-  interrupts();
   
-  if(total > 0) {
+  // We need at least a sample to return a value differnt from 0
+  if(tot > 0) {
     // *1000000: us
     // /2: from semiperiod to full period
-    float result = c * 1000000 / 2 / ((float)(total));
+    float result = c * 1000000 / 2 / ((float)(tot));
     return result;
   }
   return 0;
+}
+
+void Thyristor::frequencyMonitorAlwaysOn(bool enable){
+  {
+    // Stop interrupt to freeze variables modified or accessed in the interrupt
+    noInterrupts();
+    
+    if(enable && !interruptEnabled){
+      interruptEnabled = true;
+      attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, RISING);
+    }
+    frequencyMonitorAlwaysEnabled = enable;
+
+    interrupts();
+  }
 }
 #endif
 
@@ -659,3 +690,4 @@ bool Thyristor::newDelayValues = false;
 bool Thyristor::updatingStruct = false;
 bool Thyristor::allThyristorsOnOff = true;
 uint8_t Thyristor::syncPin = 255;
+bool Thyristor:: frequencyMonitorAlwaysEnabled = true;
