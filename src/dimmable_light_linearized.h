@@ -59,7 +59,7 @@ class DimmableLightLinearized{
                -1.9126e-05*pow(bri,3)
                +0.0021225*pow(bri,2)
                -0.12471*bri
-               +8.3201    
+               +8.3201;    
 #endif
       tempBrightness *= 1000;
 
