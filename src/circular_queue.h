@@ -1,7 +1,10 @@
+#ifndef CIRCULAR_QUEUE_H
+#define CIRCULAR_QUEUE_H
+
 /*
  * Circular queue it can only be filled.
  * Older values are automatically overwritten.
- By default all the value are set to zeros.
+ * By default all the value are set to zeros.
  */
 template<typename T, int N>
 class CircularQueue {
@@ -49,3 +52,5 @@ private:
     // Number of elements currently stored
     int n;
 };
+
+#endif // END CIRCULAR_QUEUE_H

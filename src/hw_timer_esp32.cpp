@@ -20,13 +20,15 @@
 
 #include "hw_timer_esp32.h"
 
+#define TIMER_ID 0
+
 static hw_timer_t* timer = nullptr;
 
 void timerInit(void (*callback)()){
     // Use 1st timer of 4 (counted from zero).
     // Set 80 divider for prescaler (see ESP32 Technical Reference Manual for more
     // info), count up. The counter starts to increase its value.
-    timer = timerBegin(0, 80, true);
+    timer = timerBegin(TIMER_ID, 80, true);
     // Attach onTimer function to our timer.
     timerAttachInterrupt(timer, callback, true);
 }

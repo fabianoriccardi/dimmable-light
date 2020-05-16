@@ -19,8 +19,8 @@
 #ifndef DIMMABLE_LIGHT_LINEARIZED_H
 #define DIMMABLE_LIGHT_LINEARIZED_H
 
-#include "Arduino.h"
 #include "thyristor.h"
+#include <Arduino.h>
 
 /**
  * This is the user-oriented DimmableLightLinearized class, 
@@ -31,90 +31,129 @@
  * The computation induced by this class may affect the performance of your MCU.
  */
 class DimmableLightLinearized{
-  public:
-  	DimmableLightLinearized(int pin)
-                  :thyristor(pin),brightness(0){
-      if(nLights<N){   
-        nLights++;
-      }else{
-        Serial.println("Max lights number reached, the light is not created!");
-        // return error or exception
-      }
+public:
+  DimmableLightLinearized(int pin): thyristor(pin), brightness(0){
+    if(nLights<N){   
+      nLights++;
+    }else{
+      Serial.println("Max lights number reached, the light is not created!");
+      // return error or exception
     }
+  }
 
   	/**
    	 * Set the brightness, 0 to turn off the lamp
    	 */
   	void setBrightness(uint8_t bri){
-#ifdef NETWORK_FREQ_50HZ
-      double tempBrightness = -1.5034e-10*pow(bri,5)
+#ifdef NETWORK_FREQ_FIXED_50HZ
+    double tempBrightness = -1.5034e-10*pow(bri,5)
+              +9.5843e-08*pow(bri,4)
+              -2.2953e-05*pow(bri,3)
+              +0.0025471*pow(bri,2)
+              -0.14965*bri
+              +9.9846;
+#elif defined(NETWORK_FREQ_FIXED_60HZ)
+    double tempBrightness = -1.2528e-10*pow(bri,5)
+              +7.9866e-08*pow(bri,4)
+              -1.9126e-05*pow(bri,3)
+              +0.0021225*pow(bri,2)
+              -0.12471*bri
+              +8.3201;    
+#elif defined(NETWORK_FREQ_RUNTIME)
+  double tempBrightness;
+  if(Thyristor::getFrequency()== 50){
+    tempBrightness = -1.5034e-10*pow(bri,5)
                +9.5843e-08*pow(bri,4)
                -2.2953e-05*pow(bri,3)
                +0.0025471*pow(bri,2)
                -0.14965*bri
                +9.9846;
-#elif defined(NETWORK_FREQ_60HZ)
-      double tempBrightness = -1.2528e-10*pow(bri,5)
+  } else if(Thyristor::getFrequency()== 60){
+    tempBrightness = -1.2528e-10*pow(bri,5)
                +7.9866e-08*pow(bri,4)
                -1.9126e-05*pow(bri,3)
                +0.0021225*pow(bri,2)
                -0.12471*bri
-               +8.3201;    
-#endif
-      tempBrightness *= 1000;
-
-      thyristor.setDelay(tempBrightness);
-    };
-
-  	/**
-  	 * Return the current brightness
-  	 */
-  	uint8_t getBrightness(){
-  		return brightness;
-  	}
-
-  	/**
-   	 * Turn off the light
-   	 */
-  	void turnOff(){
-		  setBrightness(0);
-  	}
-
-  	~DimmableLightLinearized(){
-      nLights--;
+               +8.3201;  
+  } else {
+    // Only on and off
+    if(bri > 0){
+      thyristor.turnOn();
+    } else {
+      thyristor.turnOff();
     }
+    return;
+  }
+#endif
+    tempBrightness *= 1000;
+
+    thyristor.setDelay(tempBrightness);
+  };
 
   /**
-   * Set the timer and the interrupt routine
-   * Actually this function doesn't do nothing the first light is created 
+   * Return the current brightness.
+   */
+  uint8_t getBrightness() const{
+    return brightness;
+  }
+
+  /**
+   * Turn off the light.
+   */
+  void turnOff(){
+    setBrightness(0);
+  }
+
+  static float getFrequency(){
+    return Thyristor::getFrequency();
+  }
+
+#ifdef NETWORK_FREQ_RUNTIME
+  static void setFrequency(float frequency){
+    Thyristor::setFrequency(frequency);
+  }
+#endif
+
+#ifdef MONITOR_FREQUENCY
+  static float getDetectedFrequency(){
+    return Thyristor::getDetectedFrequency();
+  }
+#endif
+
+  ~DimmableLightLinearized(){
+    nLights--;
+  }
+
+  /**
+   * Setup the timer and the interrupt routine.
    */
   static void begin(){
     Thyristor::begin();
   }
 
   /**
-   * Set the pin dedicated to receive the AC zero cross signal
+   * Set the pin dedicated to receive the AC zero cross signal.
    */
   static void setSyncPin(uint8_t pin){
     Thyristor::setSyncPin(pin);
   }
 
   /**
-   * Return the number of instantiated lights
+   * Return the number of instantiated lights.
    */
   static uint8_t getLightNumber(){
     return nLights;
   };
 
-	private:
+private:
   static const uint8_t N = 8;
 	static uint8_t nLights;
 
   Thyristor thyristor;
 	
 	/**
-	 * Store the relative power delivered to your device
-	 * Values range is [0;255]
+	 * Store the time to wait until turn on the light
+	 * 0-->255. That's is 1 unit is approx 40us@50Hz.
 	 */
 	uint8_t brightness;
 };

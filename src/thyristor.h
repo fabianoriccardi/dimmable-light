@@ -19,7 +19,23 @@
 #ifndef THYRISTOR_H
 #define THYRISTOR_H
 
-#include "Arduino.h"
+#include <stdint.h>
+
+/**
+ * These defines affect the declaration of this class and the relative wrappers.
+ */
+
+// Set the frequecy selection way. The first 2 are fixed at compile time,
+// while the third method allows you set whichever value at runtime.
+// If FIXED, setFrequency() is not available.
+#define NETWORK_FREQ_FIXED_50HZ
+//#define NETWORK_FREQ_FIXED_60HZ
+//#define NETWORK_FREQ_RUNTIME
+
+// If enabled, a constant monitoring of the electrical network frequency is performed.
+// If not enabled, getDetectedFrequency() is not available.
+//#define MONITOR_FREQUENCY
+
 
 /**
  * This is the developer-oriented Thyristor class. 
@@ -38,87 +54,102 @@
  *      to match the notion of time given by setDelay()
  */
 
-#define NETWORK_FREQ_50HZ
-//#define NETWORK_FREQ_60HZ
-
 class Thyristor{
-  public:
-    Thyristor(int pin);
-    Thyristor(Thyristor const &) = delete; 
-    void operator=(Thyristor const &t) = delete;
-
-    /**
-     * Set the delay, 10000 (ms, with 50Hz voltage) to turn off the thyristor
-     */
-    void setDelay(uint16_t d);
-
-    /**
-     * Return the current delay
-     */
-    uint16_t getDelay(){
-      return delay;
-    }
-
-    /**
-     * Turn off the thyristor
-     */
-    void turnOff(){
-      setDelay(0);
-    }
-
-    /**
-     * Get detected frequency.
-     */
-    float getFrequency();
-
-    ~Thyristor();
+public:
+  Thyristor(int pin);
+  Thyristor(Thyristor const &) = delete; 
+  void operator=(Thyristor const &t) = delete;
 
   /**
-   * Set the timer and the interrupt routine
-   * Actually this function doesn't do nothing the first thryristor is created 
+   * Set the delay, 10000 (ms, with 50Hz voltage) to turn off the thyristor
+   */
+  void setDelay(uint16_t delay);
+
+  /**
+   * Return the current delay.
+   */
+  uint16_t getDelay() const{
+    return delay;
+  }
+
+  /**
+   * Turn on the thyristor at full power.
+   */
+  void turnOn();
+
+  /**
+   * Turn off the thyristor.
+   */
+  void turnOff(){
+    setDelay(0);
+  }
+
+  ~Thyristor();
+
+  /**
+   * Setup timer and interrupt routine.
    */
   static void begin();
 
   /**
-   * Return the number of instantiated lights
+   * Return the number of instantiated thyristors.
    */
   static uint8_t getThyristorNumber(){
     return nThyristors;
   };
 
   /**
-   * Set the pin dedicated to receive the AC zero cross signal
+   * Set the pin dedicated to receive the AC zero cross signal.
    */
   static void setSyncPin(uint8_t pin){
     syncPin = pin;
   }
 
-  static const uint8_t N = 8;
-  private:
-    /**
-     * Tell if interrupt must be RE-enabled. This metohd affect alllMixedOnOff variable.
-     * This methods must be called every time a thyristor's delay is updated.
-     *
-     * @param[in]  newDelay the new delay just set
-     * @return true if interrupt for zero cross detection should be re-enabled,
-     * false do nothing
-     */
-    bool mustInterruptBeReEnabled(uint16_t newDelay);
+  /**
+   * Get frequency.
+   */
+  static float getFrequency();
 
-    /**
-     * Search if all the values are only On and Off.
-     *
-     * @return     true if On/Off, false otherwise
-     */
-    bool areThyristorsOnOff();
+#ifdef NETWORK_FREQ_RUNTIME
+  /**
+   * Set target frequency.
+   */
+  static void setFrequency(float frequency);
+#endif
+
+#ifdef MONITOR_FREQUENCY
+  /**
+   * Get the detected frequency on the electrical network, constantly updated.
+   */
+  static float getDetectedFrequency();
+#endif
+
+  static const uint8_t N = 8;
+
+private:
+  /**
+   * Tell if interrupt must be re-enabled. This metohd affect allMixedOnOff variable.
+   * This methods must be called every time a thyristor's delay is updated.
+   *
+   * NewDelay the new delay just set of this thyristor.
+   * Return true if interrupt for zero cross detection should be re-enabled,
+   * false do nothing.
+   */
+  bool mustInterruptBeReEnabled(uint16_t newDelay);
+
+  /**
+   * Search if all the values are only on and off.
+   * Return true if all are on/off, false otherwise.
+   */
+  bool areThyristorsOnOff();
   
   /**
-   * Number of instantiated thyristors
+   * Number of instantiated thyristors.
    */
   static uint8_t nThyristors;
 
   /**
-   * Vector of instatiated thyristors
+   * Vector of instatiated thyristors.
    */
   static Thyristor* thyristors[];
 
@@ -148,12 +179,15 @@ class Thyristor{
 
   /**
    * 0) no messages
-   * 1) error messages: they could cause mcu crash
+   * 1) error messages
    * 2) debug messages
    * 3) info messages
    */
   static const uint8_t verbosity = 1;
 
+  /**
+   * Pin used to control thyristor's gate.
+   */ 
   uint8_t pin;
   
   /**
@@ -163,7 +197,7 @@ class Thyristor{
   uint8_t posIntoArray;
   
   /**
-   * delay to wait before turn on the thryristor
+   * Time to wait before turning on the thryristor.
    */
   uint16_t delay;
 

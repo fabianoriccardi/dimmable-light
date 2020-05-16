@@ -18,6 +18,7 @@
  ***************************************************************************/
 #include "thyristor.h"
 #include "circular_queue.h"
+#include <Arduino.h>
 
 #if defined(ARDUINO_ARCH_ESP8266)
 #include "hw_timer_esp8266.h"
@@ -37,8 +38,6 @@
 // semiPeriodExpandMargin constant
 #define FILTER_INT_PERIOD
 
-#define AUTO_DETECT_FREQUENCY
-
 // FOR DEBUG PURPOSE ONLY: 
 // If the FILTER_INT_PERIOD is enabled, print on Serial the time passed 
 // from the previous interrupt. when the semi-period length is "wrong"
@@ -56,14 +55,14 @@
 //#define PREDEFINED_PULSE_LENGTH
 
 // In microseconds
-#ifdef NETWORK_FREQ_50HZ
+#ifdef NETWORK_FREQ_FIXED_50HZ
 static const uint16_t semiPeriodLength = 10000;
 #endif
-#ifdef NETWORK_FREQ_60HZ
+#ifdef NETWORK_FREQ_FIXED_60HZ
 static const uint16_t semiPeriodLength = 8333;
 #endif
-#ifdef AUTO_DETECT_FREQUENCY
-//static uint16_t semiPeriodLength = 0;
+#ifdef NETWORK_FREQ_RUNTIME
+static uint16_t semiPeriodLength = 0;
 #endif
 
 // The margins are precautions against noise, electrical spikes and frequency skew errors.
@@ -251,7 +250,7 @@ void IRAM_ATTR zero_cross_int(){
 void zero_cross_int(){
 #endif
 
-#if defined(FILTER_INT_PERIOD) || defined(AUTO_DETECT_FREQUENCY)
+#if defined(FILTER_INT_PERIOD) || defined(MONITOR_FREQUENCY)
   if(!lastTime){
     lastTime = micros();
   }else{
@@ -391,23 +390,6 @@ void zero_cross_int(){
   }
 }
 
-void Thyristor::begin(){
-  pinMode(digitalPinToInterrupt(syncPin), INPUT);
-
-#if defined(ARDUINO_ARCH_ESP8266)
-  timer1_attachInterrupt(activate_thyristors);
-  // These 2 registers assignements are the "unrolling" of:
-  // timer1_enable(TIM_DIV16, TIM_EDGE, TIM_SINGLE);
-  T1C = (1 << TCTE) | ((TIM_DIV16 & 3) << TCPD) | ((TIM_EDGE & 1) << TCIT) | ((TIM_SINGLE & 1) << TCAR);
-  T1I = 0;
-#elif defined(ARDUINO_ARCH_ESP32)
-  timerInit(activate_thyristors);
-#elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_SAMD)
-  timerSetCallback(activate_thyristors);
-  timerBegin();
-#endif
-}
-
 void Thyristor::setDelay(uint16_t newDelay){
   if(verbosity>2){
     for(int i=0;i<Thyristor::nThyristors;i++){
@@ -514,9 +496,39 @@ void Thyristor::setDelay(uint16_t newDelay){
   }
 }
 
-float Thyristor::getFrequency(){
-  
+void Thyristor::turnOn(){
+  setDelay(semiPeriodLength);
+}
 
+void Thyristor::begin(){
+  pinMode(digitalPinToInterrupt(syncPin), INPUT);
+
+#if defined(ARDUINO_ARCH_ESP8266)
+  timer1_attachInterrupt(activate_thyristors);
+  // These 2 registers assignements are the "unrolling" of:
+  // timer1_enable(TIM_DIV16, TIM_EDGE, TIM_SINGLE);
+  T1C = (1 << TCTE) | ((TIM_DIV16 & 3) << TCPD) | ((TIM_EDGE & 1) << TCIT) | ((TIM_SINGLE & 1) << TCAR);
+  T1I = 0;
+#elif defined(ARDUINO_ARCH_ESP32)
+  timerInit(activate_thyristors);
+#elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_SAMD)
+  timerSetCallback(activate_thyristors);
+  timerBegin();
+#endif
+}
+
+float Thyristor::getFrequency(){
+  return 1000000 / 2 / ((float)(semiPeriodLength));
+}
+
+#ifdef NETWORK_FREQ_RUNTIME
+void Thyristor::setFrequency(float frequency){
+  semiPeriodLength = 1 /  (2 * frequency);
+}
+#endif
+
+#ifdef MONITOR_FREQUENCY
+float Thyristor::getDetectedFrequency(){
   uint32_t now = micros();
 
   noInterrupts();
@@ -543,12 +555,8 @@ float Thyristor::getFrequency(){
   }
   return 0;
 }
+#endif
 
-/**
- * @brief      No reorder, init all the light at the begin of your sketch
- *
- * @param[in]  pin   The pin
- */
 Thyristor::Thyristor(int pin)
                 :pin(pin),delay(semiPeriodLength){
   if(nThyristors<N){
@@ -560,7 +568,7 @@ Thyristor::Thyristor(int pin)
     nThyristors++;
     thyristors[posIntoArray]=this;
     
-    //Full reorder of the array
+    // Full reorder of the array
     for(int i=0;i<nThyristors;i++){
       for(int j=i+1;j<nThyristors-1;j++){
         if(thyristors[i]->delay>thyristors[j]->delay){
