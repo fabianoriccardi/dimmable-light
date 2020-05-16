@@ -36,7 +36,7 @@
 // If the interrupt is "too" close to the previous one, ignore the current one.
 // To define if two interrupts are too close, look at semiPeriodShrinkMargin and
 // semiPeriodExpandMargin constant
-#define FILTER_INT_PERIOD
+//#define FILTER_INT_PERIOD
 
 // FOR DEBUG PURPOSE ONLY: 
 // If the FILTER_INT_PERIOD is enabled, print on Serial the time passed 
@@ -82,7 +82,7 @@ static const uint16_t endMargin = 500;
 // are not negligible, so I decided to set threshold lower that 20microsecond (note that 
 // ESP8266 API documentation suggests to set timer on >10us). If you would to use 8bit 
 // timers on AVR, you should set a bigger mergePeriod (e.g. 100us).
-static const  unsigned int mergePeriod = 20;
+static const uint16_t mergePeriod = 20;
 
 // Period (in us) before the end of the semiperiod, when an interrupt is trigged to 
 // turn off each gate signal. Ignore this parameter if you use a predefined pulse length.
@@ -156,7 +156,14 @@ void activate_thyristors(){
 
   const uint8_t firstToBeUpdated=thyristorManaged;
 
-  for(; (thyristorManaged<Thyristor::nThyristors-1 && pinDelay[thyristorManaged+1].delay-pinDelay[firstToBeUpdated].delay<mergePeriod) && (pinDelay[thyristorManaged].delay<semiPeriodLength-endMargin); thyristorManaged++){
+  for(;
+      // The last thyristor is managed outside the loop
+      thyristorManaged<Thyristor::nThyristors-1 &&
+      // Consider the "near" thyristors
+      pinDelay[thyristorManaged+1].delay-pinDelay[firstToBeUpdated].delay<mergePeriod && 
+      // Exclude the one who must remain totally off
+      pinDelay[thyristorManaged].delay<semiPeriodLength-endMargin;
+    thyristorManaged++){
     digitalWrite(pinDelay[thyristorManaged].pin, HIGH);
   }
   digitalWrite(pinDelay[thyristorManaged].pin, HIGH);
@@ -233,14 +240,17 @@ void activate_thyristors(){
 // In microsecond
 const static int semiPeriodShrinkMargin = 50;
 const static int semiPeriodExpandMargin = 50;
+#endif
 
+#if defined(FILTER_INT_PERIOD) || defined(MONITOR_FREQUENCY)
 static uint32_t lastTime = 0;
 #endif
 
-// Circular Queu to store the moving average
+#ifdef MONITOR_FREQUENCY
+// Circular Queue to store the value to compute the moving average
 static CircularQueue<uint32_t, 5> queue;
 static uint32_t total = 0;
-
+#endif
 
 #if defined(ARDUINO_ARCH_ESP8266)
 void ICACHE_RAM_ATTR zero_cross_int(){
@@ -256,9 +266,10 @@ void zero_cross_int(){
   }else{
     uint32_t now = micros();
 
-    // "diff" is correct even when rolling back, because all of them are unsigned
+    // "diff" is correct even when timer rolls back, because these values are unsigned
     uint32_t diff = now - lastTime;
 
+#ifdef MONITOR_FREQUENCY
     // if diff is very very greater than the theoretical value, the electrical signal
     // can be considered as lost for a while.
     // I decided to use "16" because is a power of 2, very fast to be computed.
@@ -266,6 +277,7 @@ void zero_cross_int(){
       queue.reset();
       total = 0;
     }
+#endif
 
 #ifdef PRINT_INT_PERIOD
     if(diff < semiPeriodLength - semiPeriodShrinkMargin){
@@ -275,16 +287,21 @@ void zero_cross_int(){
       Serial.println(String('A') + diff);
     }
 #endif
+
+#ifdef FILTER_INT_PERIOD
     // Filters out spurious interrupts. The effectiveness of this simple
     // filter could vary depending on noise on electrical networ.
     if(diff < semiPeriodLength - semiPeriodShrinkMargin){
       return;
     }
+#endif
 
+#ifdef MONITOR_FREQUENCY
     // If filtering has passed, I can update the moving average
     uint32_t valueToRemove = queue.insert(diff);
     total += diff;
     total -= valueToRemove;
+#endif
 
     lastTime = now;
   }
@@ -325,6 +342,7 @@ void zero_cross_int(){
 
   thyristorManaged = 0;
 
+  // if all are on and off, I can disable the zero cross interrupt
   if(_allThyristorsOnOff){
     for(int i=0; i<Thyristor::nThyristors; i++){
       if(pinDelay[i].delay==semiPeriodLength-endMargin){
@@ -334,12 +352,13 @@ void zero_cross_int(){
       }
       thyristorManaged++;
     }
-    
+
+#if !defined(MONITOR_FREQUENCY)
     interruptEnabled = false;
     detachInterrupt(digitalPinToInterrupt(Thyristor::syncPin));
-
 #ifdef FILTER_INT_PERIOD
     lastTime = 0;
+#endif
 #endif
 
     return;
@@ -484,7 +503,7 @@ void Thyristor::setDelay(uint16_t newDelay){
   if(enableInt){
     if(verbosity>2) Serial.println("Re-enabling interrupt");
     interruptEnabled = true;
-    attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, RISING);   
+    attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, RISING);
   }
   
   if(verbosity>2){
@@ -515,6 +534,13 @@ void Thyristor::begin(){
   timerSetCallback(activate_thyristors);
   timerBegin();
 #endif
+
+#ifdef MONITOR_FREQUENCY
+  // Starts immediatly to sense the electrical network
+
+  interruptEnabled = true;
+  attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, RISING);
+#endif
 }
 
 float Thyristor::getFrequency(){
@@ -534,7 +560,6 @@ float Thyristor::getDetectedFrequency(){
   noInterrupts();
   // "diff" is correct even when rolling back, because all of them are unsigned
   uint32_t diff = now - lastTime;
-
 
   // if diff is very very greater than the theoretical value, the electrical signal
   // can be considered as lost for a while.
@@ -557,8 +582,7 @@ float Thyristor::getDetectedFrequency(){
 }
 #endif
 
-Thyristor::Thyristor(int pin)
-                :pin(pin),delay(semiPeriodLength){
+Thyristor::Thyristor(int pin): pin(pin), delay(semiPeriodLength){
   if(nThyristors<N){
     pinMode(pin,OUTPUT);
     
