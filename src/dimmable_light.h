@@ -48,7 +48,7 @@ public:
 #elif defined(NETWORK_FREQ_FIXED_60HZ)
     uint16_t newDelay=8333-(uint16_t)(((uint32_t)bri*8333)/255);
 #elif defined(NETWORK_FREQ_RUNTIME)
-    uint16_t newDelay=Thyristor::getFrequency()-(uint16_t)(((uint32_t)bri*Thyristor::getFrequency())/255);
+    uint16_t newDelay=Thyristor::getSemiPeriod()-(uint16_t)(((uint32_t)bri*Thyristor::getSemiPeriod())/255);
 #endif
     thyristor.setDelay(newDelay);
   };

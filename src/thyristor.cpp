@@ -290,7 +290,7 @@ void zero_cross_int(){
     // if diff is very very greater than the theoretical value, the electrical signal
     // can be considered as lost for a while and I must reset my moving average.
     // I decided to use "16" because is a power of 2, very fast to be computed.
-    if(diff > semiPeriodLength * 16){
+    if(semiPeriodLength && diff > semiPeriodLength * 16){
       queue.reset();
       total = 0;
     } else {
@@ -298,7 +298,6 @@ void zero_cross_int(){
       uint32_t valueToRemove = queue.insert(diff);
       total += diff;
       total -= valueToRemove;
-      Serial.print("c");
     }
 #endif
 
@@ -554,12 +553,28 @@ void Thyristor::begin(){
 }
 
 float Thyristor::getFrequency(){
-  return 1000000 / 2 / ((float)(semiPeriodLength));
+  if(semiPeriodLength == 0) {
+    return 0;
+  }
+  return 1000000 / 2 / (float)(semiPeriodLength);
+}
+
+uint16_t Thyristor::getSemiPeriod(){
+  return semiPeriodLength;
 }
 
 #ifdef NETWORK_FREQ_RUNTIME
 void Thyristor::setFrequency(float frequency){
-  semiPeriodLength = 1 /  (2 * frequency);
+  if(frequency < 0){
+    return;
+  }
+
+  if(frequency == 0){
+    semiPeriodLength = 0;
+    return;
+  }
+  
+  semiPeriodLength = 1000000 /  2 / frequency;
 }
 #endif
 
@@ -577,7 +592,7 @@ float Thyristor::getDetectedFrequency(){
     // if diff is very very greater than the theoretical value, the electrical signal
     // can be considered as lost for a while.
     // I decided to use "16" because is a power of 2, very fast to be computed.
-    if(diff > semiPeriodLength * 16){
+    if(semiPeriodLength && diff > semiPeriodLength * 16){
       queue.reset();
       total = 0;
     }

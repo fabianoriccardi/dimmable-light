@@ -116,9 +116,15 @@ public:
    */
   static float getFrequency();
 
+  /**
+   * Get the semiperiod.
+   */
+  static uint16_t getSemiPeriod();
+
 #ifdef NETWORK_FREQ_RUNTIME
   /**
-   * Set target frequency.
+   * Set target frequency. Negative values are ignored;
+   * zero set the semi-period to 0.
    */
   static void setFrequency(float frequency);
 #endif
