@@ -1,16 +1,13 @@
 /**
- * In this example you will see a number of effects on different indipendent 
- * dimmable lights. To switch between effect, (un)comment the proper line
- * in the setup function.
- * 
- * NOTE1: do not connect sync or gate with D3 - GPIO0,  D4 - GPIO2
- * they are needed to switch between different boot modes.
+ * In this example you can see a number of effects on different indipendent 
+ * dimmable lights. To switch among the available effects, (un)comment the
+ * proper line in the setup() function.
  *
- * NOTE2: only for ESP8266 and ESP32 due to Ticker.h dependency
+ * NOTE: compiles only for ESP8266 and ESP32 because the Ticker.h dependency
  */
  
 #include <Ticker.h>
-#include "dimmable_light.h"
+#include <dimmable_light.h>
 
 const int syncPin = D7;
 DimmableLight l1(D1);
@@ -28,7 +25,7 @@ void setup() {
   Serial.println("Dimmable Light for Arduino: third example");
   Serial.println();
   
-  Serial.print("Init the dimmable light class... ");
+  Serial.print("Initializing the dimmable light class... ");
   DimmableLight::setSyncPin(syncPin);
   DimmableLight::begin();
   Serial.println("Done!");
@@ -281,7 +278,7 @@ unsigned int tap(unsigned int value,unsigned int max){
  */
 uint8_t conversion(uint16_t value){
   int simmetricValue=0;
-  if(value>=0 && value<=255){
+  if(value<=255){
     simmetricValue = value;
   }
   if(value>=256 && value<=511){
@@ -295,7 +292,7 @@ uint8_t conversionPow(uint16_t value){
   if(value>=256 && value<=511){
     simmetricValue = -value+511;
   }
-  if(value>=0 && value<=255){
+  if(value<=255){
     simmetricValue=value;
   }
   

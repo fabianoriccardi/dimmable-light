@@ -1,7 +1,9 @@
 /**
- * A simple example to show DimmableLightManager api's.
+ * A simple example to show the usage of DimmableLightManager class.
+ * This class helps you to give a name to each light, and using it 
+ * to control a light.
  */
-#include "dimmable_light_manager.h"
+#include <dimmable_light_manager.h>
 
 const int N = 3;
 
@@ -27,7 +29,7 @@ void setup() {
   Serial.println();
   Serial.println("Dimmable Light for Arduino: fourth example");
   
-  Serial.println("Init the dimmable light class... ");
+  Serial.println("Initializing the dimmable light class... ");
   
   // Add all the lights you need
   for(int i=0; i<N; i++){

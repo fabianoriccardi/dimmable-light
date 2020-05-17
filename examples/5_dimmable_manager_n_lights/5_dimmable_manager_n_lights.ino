@@ -1,17 +1,17 @@
 /**
- * This advanced example aims to show how to use the Dimmable Light Manager,
- * combined with Ticker.h library.
+ * This advanced example shows how to use the DimmableLightManager
+ * combined with Ticker class.
  *  
  * In this case the friendly names are "light1", "light2" and so on...
  * Once your setup is ready (light, thyristor, wemos flashed with this sketch), 
  * you should see a very simple effect: all the light will fade from 
  * dark to maximum brightness simultaneously.
  * 
- * NOTE: only for ESP8266 and ESP32 due to Ticker.h dependency
+ * NOTE: compiles only for ESP8266 and ESP32 because the Ticker.h dependency
  */
 
 #include <Ticker.h>
-#include "dimmable_light_manager.h"
+#include <dimmable_light_manager.h>
 
 #define N 5
 
@@ -64,7 +64,7 @@ void setup() {
   Serial.println();
   Serial.println("Dimmable Light for Arduino: fifth example");
   
-  Serial.println("Init the dimmable light class... ");
+  Serial.println("Initializing the dimmable light class... ");
   
   // Add all the lights you need
   for(int i=0; i<N; i++){

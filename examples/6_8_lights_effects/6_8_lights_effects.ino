@@ -1,8 +1,8 @@
 /**
- * Some effects to test and demonstrate the potentiality of DimmableLight.
- * Upload the code and select one effect writing code effect through the serial port.
- * The available code range between e0 and e12. Remember to select CRLF 
- * line ending in serial console.
+ * This examples has some effects to test and demonstrate the potentiality of DimmableLight.
+ * Once you can uploaded this sketch, you can select one effect through the serial port. Just 
+ * type the code's effect (values among ["e0"-"e12"]; "stop" to stop the current effect).
+ * Remember to select CRLF line ending in serial console.
  * 
  * NOTE: install https://github.com/kroimon/Arduino-SerialCommand
  */
@@ -95,7 +95,6 @@ void setup() {
   
   initLights();
 
-  int c = 0;
   serialCmd.addCommand("stop",[](){stopEffect();});
   serialCmd.addCommand("e0",[](){selectEffect(0);});
   serialCmd.addCommand("e1",[](){selectEffect(1);});

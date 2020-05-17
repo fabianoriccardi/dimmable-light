@@ -25,15 +25,18 @@
  * These defines affect the declaration of this class and the relative wrappers.
  */
 
-// Set the frequecy selection way. The first 2 are fixed at compile time,
-// while the third method allows you set whichever value at runtime.
-// If FIXED, setFrequency() is not available.
+// Set how the network frequency is selected.
+// The first 2 options fix the frequency to the common values (respectively to
+// 50 and 60Hz) at compile time.
+// The third option allows you change network frequency at runtime. This method
+// enables the setFrequency() method. The main drawback is that it is a bit more 
+// inefficient w.r.t the "fixed frequency" alternatives.
+// Select one and ONLY one among the following alternatives:
 #define NETWORK_FREQ_FIXED_50HZ
 //#define NETWORK_FREQ_FIXED_60HZ
 //#define NETWORK_FREQ_RUNTIME
 
-// If enabled, a constant monitoring of the electrical network frequency is performed.
-// If not enabled, getDetectedFrequency() is not available.
+// If enabled, you can monitor the actual frequency of the electrical network.
 //#define MONITOR_FREQUENCY
 
 

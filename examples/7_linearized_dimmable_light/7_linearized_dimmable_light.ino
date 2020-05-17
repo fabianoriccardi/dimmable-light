@@ -4,7 +4,7 @@
  *  - light, the pin which is connected to the thyristor
  */ 
 
-#include "dimmable_light_linearized.h"
+#include <dimmable_light_linearized.h>
 
 const int syncPin = D7;
 const int thyristorPin = D5;
@@ -20,7 +20,7 @@ void setup() {
   Serial.println();
   Serial.println("Dimmable Light for Arduino: first example");
   
-  Serial.print("Init the dimmable light class... ");
+  Serial.print("Initializing the dimmable light class... ");
   DimmableLightLinearized::setSyncPin(syncPin);
   // VERY IMPORTANT: Call this method to start internal light routine
   DimmableLightLinearized::begin();

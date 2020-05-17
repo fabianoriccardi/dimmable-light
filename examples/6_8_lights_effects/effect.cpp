@@ -13,6 +13,7 @@ extern DimmableLight
 extern DimmableLightLinearized
 #endif
 
+
 #if defined(ESP8266)
  lights[N_LIGHTS] = {{D1}, {D2}, {D5}, {D6}, {D8}, {D0}, {D3}, {D4}};
 #elif defined(ESP32)
@@ -280,7 +281,7 @@ unsigned int tap(unsigned int value,unsigned int max){
  */
 uint8_t conversion(uint16_t value){
   int simmetricValue=0;
-  if(value>=0 && value<=255){
+  if(value<=255){
     simmetricValue = value;
   }
   if(value>=256 && value<=511){
@@ -294,7 +295,7 @@ uint8_t conversionPow(uint16_t value){
   if(value>=256 && value<=511){
     simmetricValue = -value+511;
   }
-  if(value>=0 && value<=255){
+  if(value<=255){
     simmetricValue=value;
   }
   
@@ -408,7 +409,7 @@ void offAllLights(){
 }
 
 void initLights(){
-  Serial.print("Init the dimmable light class... ");
+  Serial.print("Initializing the dimmable light class... ");
 
 #if defined(RAW_VALUES)
   DimmableLight::setSyncPin(syncPin);

@@ -3,12 +3,12 @@
 //#define LINEARIZED_VALUES
 
 #if defined(RAW_VALUES)
-#include "dimmable_light.h"
+#include <dimmable_light.h>
 #elif defined(LINEARIZED_VALUES)
-#include "dimmable_light_linearized.h"
+#include <dimmable_light_linearized.h>
 #endif
 
-#include <Arduino.h>
+#include <stdint.h>
 
 const int N_LIGHTS = 8;
 
