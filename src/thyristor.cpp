@@ -702,9 +702,8 @@ bool Thyristor::mustInterruptBeReEnabled(uint16_t newDelay){
   /**
    * Set the gate turn off time
    */
-  uint16_t Thyristor::setGateTurnOffTime(uint16_t timeOff){
+  void Thyristor::setGateTurnOffTime(uint16_t timeOff){
     gateTurnOffTime = timeOff;
-    return gateTurnOffTime;
   }
 
 
