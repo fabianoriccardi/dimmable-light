@@ -145,6 +145,27 @@ public:
   static void setSyncPin(uint8_t pin){
     Thyristor::setSyncPin(pin);
   }
+  
+  /**
+   * Set the pin direction (FALLING, RISING, CHANGE)
+   */
+  static void setSyncDir(uint8_t dir){
+    Thyristor::setSyncDir(dir);
+  }
+  
+  /**
+   * Set the pin direction (FALLING, RISING, CHANGE)
+   */
+  static void setSyncPullup(bool pullup){
+    Thyristor::setSyncPullup(pullup);
+  }
+  
+  /**
+   * Set the gate turn off time
+   */
+  static void setGateTurnOffTime(uint16_t turnOffTime){
+    Thyristor::setGateTurnOffTime(turnOffTime);
+  }
 
   /**
    * Return the number of instantiated lights.
