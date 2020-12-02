@@ -87,13 +87,13 @@ static const uint16_t mergePeriod = 20;
 // Period (in us) before the end of the semiperiod, when an interrupt is trigged to 
 // turn off each gate signal. Ignore this parameter if you use a predefined pulse length.
 // Look at PREDEFINED_PULSE_LENGTH constant for more info.
-static const uint16_t gateTurnOffTime = 300;
+static uint16_t gateTurnOffTime = 300;
 
-static_assert( endMargin - gateTurnOffTime > mergePeriod, "endMargin must be greater than (gateTurnOffTime + mergePeriod)");
+//static_assert( endMargin - gateTurnOffTime > mergePeriod, "endMargin must be greater than (gateTurnOffTime + mergePeriod)");
 
 #ifdef PREDEFINED_PULSE_LENGTH
 // Length of pulse of sync gate. this parameter is not applied if thyristor is fully on or off
-static uint8_t pulseWidth = 15;
+static uint8_t pulseWidth = 100;
 #endif
 
 
@@ -512,7 +512,7 @@ void Thyristor::setDelay(uint16_t newDelay){
   if(enableInt){
     if(verbosity>2) Serial.println("Re-enabling interrupt");
     interruptEnabled = true;
-    attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, RISING);
+    attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, syncDir);
   }
   
   if(verbosity>2){
@@ -529,7 +529,7 @@ void Thyristor::turnOn(){
 }
 
 void Thyristor::begin(){
-  pinMode(digitalPinToInterrupt(syncPin), INPUT);
+  pinMode(syncPin, syncPullup ? INPUT_PULLUP : INPUT);
 
 #if defined(ARDUINO_ARCH_ESP8266)
   timer1_attachInterrupt(activate_thyristors);
@@ -548,7 +548,7 @@ void Thyristor::begin(){
   // Starts immediatly to sense the electrical network
 
   interruptEnabled = true;
-  attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, RISING);
+  attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, syncDir);
 #endif
 }
 
@@ -619,7 +619,7 @@ void Thyristor::frequencyMonitorAlwaysOn(bool enable){
     
     if(enable && !interruptEnabled){
       interruptEnabled = true;
-      attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, RISING);
+      attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, syncDir);
     }
     frequencyMonitorAlwaysEnabled = enable;
 
@@ -699,10 +699,21 @@ bool Thyristor::mustInterruptBeReEnabled(uint16_t newDelay){
     return !interruptEnabled && interruptMustBeEnabled;
 }
 
+  /**
+   * Set the gate turn off time
+   */
+  uint16_t Thyristor::setGateTurnOffTime(uint16_t timeOff){
+    gateTurnOffTime = timeOff;
+    return gateTurnOffTime;
+  }
+
+
 uint8_t Thyristor::nThyristors = 0;
 Thyristor* Thyristor::thyristors[Thyristor::N] = {nullptr};
 bool Thyristor::newDelayValues = false;
 bool Thyristor::updatingStruct = false;
 bool Thyristor::allThyristorsOnOff = true;
 uint8_t Thyristor::syncPin = 255;
-bool Thyristor:: frequencyMonitorAlwaysEnabled = true;
+uint8_t Thyristor::syncDir = RISING;
+bool Thyristor::syncPullup = false;
+bool Thyristor::frequencyMonitorAlwaysEnabled = true;
