@@ -37,7 +37,7 @@
 //#define NETWORK_FREQ_RUNTIME
 
 // If enabled, you can monitor the actual frequency of the electrical network.
-#define MONITOR_FREQUENCY
+//#define MONITOR_FREQUENCY
 
 
 /**
@@ -110,31 +110,28 @@ public:
   /**
    * Set the pin dedicated to receive the AC zero cross signal.
    */
-  static uint8_t setSyncPin(uint8_t pin){
+  static void setSyncPin(uint8_t pin){
     syncPin = pin;
-    return syncPin;
   }
   
   /**
    * Set the pin direction (RISING, FALLING, CHANGE)
    */
-  static uint8_t setSyncDir(uint8_t dir){
+  static void setSyncDir(uint8_t dir){
     syncDir = dir;
-    return syncDir;
   }
   
   /**
    * Set the pin pullup
    */
-  static bool setSyncPullup(bool pullup){
+  static void setSyncPullup(bool pullup){
     syncPullup = pullup;
-    return syncPullup;
   }
   
   /**
    * Set the gate turn off time
    */
-  static uint16_t setGateTurnOffTime(uint16_t timeOff);
+  static void setGateTurnOffTime(uint16_t timeOff);
 
   /**
    * Get frequency.
