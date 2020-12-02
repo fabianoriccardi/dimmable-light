@@ -9,6 +9,13 @@ The main features of this library:
 3. Raise interrupts only if strictly necessary (i.e. when the applicance has to turn on, no useless periodic interrupts)
 4. Control effective delivered power to appliances, not just thyristor's activation time
 
+## Extra Features added
+The extra features of this library:
+1. setSyncDir(uint8_t dir) to adjust the interrupt direction FALLING, RISING, CHANGE
+2. setSyncPullup(bool pullup) to activate internal pull-up resistor on zero-crossing detection
+3. setGateTurnOffTime(uint16_t timeOff) to change the value of the gate turn off time
+
+
 Here a complete comparison among the most similar libraries:
 
 |                                   	| Dimmable Light for Arduino                           	| [RobotDynOfficial/RDBDimmer](https://github.com/RobotDynOfficial/RBDDimmer)                                           	| [circuitar/Dimmer](https://github.com/circuitar/Dimmer)                         	|
