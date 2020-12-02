@@ -52,6 +52,13 @@ If you have strong memory constrain, you can drop the functionalities provided b
 
 For more details check the [Wiki](https://github.com/fabiuz7/Dimmable-Light-Arduino/wiki).
 
+## Extra Features usage
+  DimmableLight::setSyncPin(ZC_PIN);
+  DimmableLight::setSyncDir(FALLING); //Default = RISING
+  DimmableLight::setSyncPullup(true); //Default = false
+  DimmableLight::setGateTurnOffTime(1000); //Default = 300
+  DimmableLight::begin();
+
 ## Examples
 Along with the library there are 7 examples. If you are a beginner you should start from the first one. Note that examples 3 and 5 work only for esp8266 and esp32 mcu because their dependency on Ticker library. Example number 7 shows how to linearly control dimmer setting the effective energy delivered instead activation time.
 
