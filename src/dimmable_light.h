@@ -112,29 +112,29 @@ public:
   /**
    * Set the pin dedicated to receive the AC zero cross signal.
    */
-  static uint8_t setSyncPin(uint8_t pin){
-    return Thyristor::setSyncPin(pin);
+  static void setSyncPin(uint8_t pin){
+    Thyristor::setSyncPin(pin);
   }
   
   /**
    * Set the pin direction (FALLING, RISING, CHANGE)
    */
-  static uint8_t setSyncDir(uint8_t dir){
-    return Thyristor::setSyncDir(dir);
+  static void setSyncDir(uint8_t dir){
+    Thyristor::setSyncDir(dir);
   }
   
   /**
    * Set the pin direction (FALLING, RISING, CHANGE)
    */
-  static bool setSyncPullup(bool pullup){
-    return Thyristor::setSyncPullup(pullup);
+  static void setSyncPullup(bool pullup){
+    Thyristor::setSyncPullup(pullup);
   }
   
   /**
    * Set the gate turn off time
    */
-  static bool setGateTurnOffTime(uint16_t turnOffTime){
-    return Thyristor::setGateTurnOffTime(turnOffTime);
+  static void setGateTurnOffTime(uint16_t turnOffTime){
+    Thyristor::setGateTurnOffTime(turnOffTime);
   }
 
   /**
