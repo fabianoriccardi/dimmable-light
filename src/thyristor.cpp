@@ -93,7 +93,7 @@ static uint16_t gateTurnOffTime = 300;
 
 #ifdef PREDEFINED_PULSE_LENGTH
 // Length of pulse of sync gate. this parameter is not applied if thyristor is fully on or off
-static uint8_t pulseWidth = 100;
+static uint8_t pulseWidth = 15;
 #endif
 
 
