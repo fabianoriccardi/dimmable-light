@@ -32,12 +32,12 @@
 // enables the setFrequency() method. The main drawback is that it is a bit more 
 // inefficient w.r.t the "fixed frequency" alternatives.
 // Select one and ONLY one among the following alternatives:
-#define NETWORK_FREQ_FIXED_50HZ
-//#define NETWORK_FREQ_FIXED_60HZ
+//#define NETWORK_FREQ_FIXED_50HZ
+#define NETWORK_FREQ_FIXED_60HZ
 //#define NETWORK_FREQ_RUNTIME
 
 // If enabled, you can monitor the actual frequency of the electrical network.
-//#define MONITOR_FREQUENCY
+#define MONITOR_FREQUENCY
 
 
 /**
@@ -110,9 +110,31 @@ public:
   /**
    * Set the pin dedicated to receive the AC zero cross signal.
    */
-  static void setSyncPin(uint8_t pin){
+  static uint8_t setSyncPin(uint8_t pin){
     syncPin = pin;
+    return syncPin;
   }
+  
+  /**
+   * Set the pin direction (RISING, FALLING, CHANGE)
+   */
+  static uint8_t setSyncDir(uint8_t dir){
+    syncDir = dir;
+    return syncDir;
+  }
+  
+  /**
+   * Set the pin pullup
+   */
+  static bool setSyncPullup(bool pullup){
+    syncPullup = pullup;
+    return syncPullup;
+  }
+  
+  /**
+   * Set the gate turn off time
+   */
+  static uint16_t setGateTurnOffTime(uint16_t timeOff);
 
   /**
    * Get frequency.
@@ -158,6 +180,8 @@ public:
 #endif
 
   static const uint8_t N = 8;
+  
+  
 
 private:
   /**
@@ -213,6 +237,16 @@ private:
    * Pin receiving the external Zero Cross signal.
    */
   static uint8_t syncPin;
+  
+  /**
+   * Pin direction (FALLING, RISING, CHANGE).
+   */
+  static uint8_t syncDir;
+  
+  /**
+   * Pin pullup active.
+   */
+  static bool syncPullup;
 
   /**
    * 0) no messages
