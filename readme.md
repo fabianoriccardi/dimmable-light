@@ -11,7 +11,7 @@ The main features of this library:
 
 Here a complete comparison among the most similar libraries:
 
-|                                   	| Dimmable Light for Arduino                           	| [RobotDynOfficial/RDBDimmer](https://github.com/RobotDynOfficial/RBDDimmer)                                           	| [circuitar/Dimmer](https://github.com/circuitar/Dimmer)                         	| [AJMansfield/TriacDimmer](https://github.com/AJMansfield/TriacDimmer)
+|                                   	| Dimmable Light for Arduino                           	| [RobotDynOfficial/RDBDimmer](https://github.com/RobotDynOfficial/RBDDimmer)                                           	| [circuitar/Dimmer](https://github.com/circuitar/Dimmer)                         	| [AJMansfield/TriacDimmer](https://github.com/AJMansfield/TriacDimmer) |
 |-----------------------------------	|---------------------------------------------	|-----------------------------------------------------	|----------------------------------	|----------------------------------	|
 | Multiple dimmers                  	| yes                                         	| yes                                                 	| yes                              	| 2 |
 | Supported Frequencies                   	| 50/60Hz                                	| 50Hz                                           	| 50/60Hz                        	| 50/60Hz |
