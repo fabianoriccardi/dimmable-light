@@ -30,6 +30,7 @@
 #include <map>
 #endif
 
+#include <string>
 #include <dimmable_light.h>
 
 /**
