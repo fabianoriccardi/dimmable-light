@@ -130,7 +130,7 @@ static uint8_t thyristorManaged = 0;
 static uint8_t alwaysOnCounter = 0;
 
 #if defined(ARDUINO_ARCH_ESP8266)
-void ICACHE_RAM_ATTR turn_off_gates_int(){
+void IRAM_ATTR turn_off_gates_int(){
 #elif defined(ARDUINO_ARCH_ESP32)
 void IRAM_ATTR turn_off_gates_int(){
 #else
@@ -147,7 +147,7 @@ void turn_off_gates_int(){
  * lamps with different at least a different delay value).
  */
 #if defined(ARDUINO_ARCH_ESP8266)
-void ICACHE_RAM_ATTR activate_thyristors(){
+void IRAM_ATTR activate_thyristors(){
 #elif defined(ARDUINO_ARCH_ESP32)
 void IRAM_ATTR activate_thyristors(){
 #else
@@ -253,7 +253,7 @@ static uint32_t total = 0;
 #endif
 
 #if defined(ARDUINO_ARCH_ESP8266)
-void ICACHE_RAM_ATTR zero_cross_int(){
+void IRAM_ATTR zero_cross_int(){
 #elif defined(ARDUINO_ARCH_ESP32)
 void IRAM_ATTR zero_cross_int(){
 #else
