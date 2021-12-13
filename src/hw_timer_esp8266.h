@@ -17,6 +17,18 @@ extern "C" {
 #define FRC1_ENABLE_TIMER  BIT7
 #define FRC1_AUTO_LOAD  BIT6
 
+#ifdef IRAM_ATTR
+    #define HW_TIMER_IRAM_ATTR IRAM_ATTR
+#else
+    #define HW_TIMER_IRAM_ATTR ICACHE_RAM_ATTR
+#endif
+
+#ifdef TIMER_REG_WRITE
+    #define HW_TIMER_REG_WRITE TIMER_REG_WRITE
+#else
+    #define HW_TIMER_REG_WRITE RTC_REG_WRITE
+#endif
+
 //TIMER PREDIVED MODE
 typedef enum {
     DIVDED_BY_1 = 0,    //timer clock
