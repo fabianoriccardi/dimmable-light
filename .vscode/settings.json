@@ -1,0 +1,7 @@
+{
+    "editor.formatOnSave": false,
+    "editor.detectIndentation": true,
+    "editor.rulers": [
+        100
+    ]
+}
