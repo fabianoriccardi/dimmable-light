@@ -1,5 +1,7 @@
 # Dimmable Light for Arduino
 
+[![arduino-library-badge](https://www.ardu-badge.com/badge/Dimmable%20Light%20for%20Arduino.svg?)](https://www.ardu-badge.com/Dimmable%20Light%20for%20Arduino) ![Compile Library Examples](https://github.com/fabianoriccardi/dimmable-light/actions/workflows/LibraryBuild.yml/badge.svg)
+
 A library to manage thyristors (aka dimmer or triac) and phase-fired control (aka phase-cutting control) in Arduino environment.
 
 ## Motivations
