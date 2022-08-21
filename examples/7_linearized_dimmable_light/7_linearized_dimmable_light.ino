@@ -6,13 +6,13 @@
 
 #include <dimmable_light_linearized.h>
 
-const int syncPin = D7;
-const int thyristorPin = D5;
+const int syncPin = 13;
+const int thyristorPin = 14;
 
 DimmableLightLinearized light(thyristorPin);
 
 // Delay between a brightness changement in millisecond
-int period = 50;
+const int period = 50;
 
 void setup() {
   Serial.begin(115200);

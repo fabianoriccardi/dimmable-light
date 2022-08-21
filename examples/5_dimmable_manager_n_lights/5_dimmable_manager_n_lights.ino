@@ -15,12 +15,12 @@
 
 #define N 5
 
-const int syncPin = D7;
-int pins[N] = {D1, D2, D5, D6, D8};
+const int syncPin = 13;
+int pins[N] = {5, 4, 14, 12, 15};
 
-// This param modifies the effect speed. The value is the perios between a 
-// brightnes and the next one, in seconds
-float period = 0.05;
+// This param modifies the effect speed. The value is the period between a 
+// brightness value and the next one, in seconds
+const float period = 0.05;
 
 Ticker dim;
 

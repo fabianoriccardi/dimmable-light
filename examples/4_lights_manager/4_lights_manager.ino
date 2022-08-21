@@ -8,8 +8,8 @@
 const int N = 3;
 
 #if defined(ARDUINO_ARCH_ESP8266)
-const int syncPin = D7;
-const int pins[N] = {D1, D2, D5};
+const int syncPin = 13;
+const int pins[N] = {5, 4, 14};
 #elif defined(ARDUINO_ARCH_ESP32)
 const int syncPin = 23;
 const int pins[N] = {4, 16, 17};

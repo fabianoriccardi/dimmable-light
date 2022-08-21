@@ -1,13 +1,14 @@
 /**
- * This examples has some effects to test and demonstrate the potentiality of DimmableLight.
+ * This examples provides some effects to test and demonstrate the potentiality of DimmableLight.
  * Once you can uploaded this sketch, you can select one effect through the serial port. Just 
- * type the code's effect (values among ["e0"-"e12"]; "stop" to stop the current effect).
- * Remember to select CRLF line ending in serial console.
+ * type the code's effect (values among ["e0"-"e12"]) and "stop" to stop the current effect.
+ * Remember to select CRLF line ending in Arduino IDE serial console.
  * 
  * NOTE: install https://github.com/kroimon/Arduino-SerialCommand
  */
-#include <SerialCommand.h>
 #include "effect.h"
+
+#include <SerialCommand.h>
 
 SerialCommand serialCmd;
 
@@ -74,8 +75,8 @@ void selectEffect(unsigned char effectId){
           doRandomBri();
           break;
         case 11:
-          Serial.println("##New Effect Selected## Random Bri Peehole");
-          doRandomBriPeehole();
+          Serial.println("##New Effect Selected## Random Bri Peephole");
+          doRandomBriPeephole();
           break;
         case 12:
           Serial.println("##New Effect Selected## Random Push Extreme Values");

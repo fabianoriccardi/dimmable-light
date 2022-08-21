@@ -1,7 +1,6 @@
 /**
  * This examples shows how to dinamically set the network frequency,
- * so your device can work both on 50Hz and 60Hz networks without 
- * changing firmware.
+ * so your device can adapt to 50Hz or 60Hz without changing firmware.
  * 
  * You just need to activate the library, then wait a while to sample
  * the actual frequency and then set the correct frequency. Since the
@@ -15,13 +14,13 @@
  */
 #include <dimmable_light.h>
 
-const int syncPin = D7;
-const int thyristorPin = D5;
+const int syncPin = 13;
+const int thyristorPin = 14;
 
 DimmableLight light(thyristorPin);
 
-// Delay between brightness increments, in millisecond
-int period = 50;
+// Delay between brightness increments, in milliseconds
+const int period = 50;
 
 void setup() {
   Serial.begin(115200);
@@ -61,6 +60,6 @@ void loop() {
     delay(period);
   }
   
-  // Remember that under the hood the actual frequency is continuously updated
+  // Remember that the frequency is continuously updated
   Serial.println(String("Updated frequency: ") + DimmableLight::getDetectedFrequency());
 }

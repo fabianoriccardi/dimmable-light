@@ -7,13 +7,13 @@
 
 #include <dimmable_light.h>
 
-const int syncPin = D7;
-const int thyristorPin = D5;
+const int syncPin = 13;
+const int thyristorPin = 14;
 
 DimmableLight light(thyristorPin);
 
-// Delay between brightness increments, in millisecond
-int period = 50;
+// Delay between brightness increments, in milliseconds
+const int period = 50;
 
 void setup() {
   Serial.begin(115200);

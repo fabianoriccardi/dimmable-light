@@ -3,10 +3,11 @@
 void (*effect)() = nullptr;
 // The period between a call and the next one in millisecond
 uint16_t period = 0;
+
 uint32_t lastCall = 0;
 
-// A complicated snippet of allow the testing of different
-// classed for different microcontroller
+// A complicated way to define objects to allow the testing of different
+// classes on different microcontrollers
 #if defined(RAW_VALUES)
 extern DimmableLight
 #elif defined(LINEARIZED_VALUES)
@@ -15,7 +16,7 @@ extern DimmableLightLinearized
 
 
 #if defined(ESP8266)
- lights[N_LIGHTS] = {{D1}, {D2}, {D5}, {D6}, {D8}, {D0}, {D3}, {D4}};
+ lights[N_LIGHTS] = {{5}, {4}, {14}, {12}, {15}, {16}, {0}, {2}};
 #elif defined(ESP32)
  lights[N_LIGHTS] = {{4}, {16}, {17}, {5}, {18}, {19}, {21}, {22}};
 #elif defined(AVR) // Arduino
@@ -25,7 +26,7 @@ extern DimmableLightLinearized
 #endif
 
 /**
- * Do some specific step, all the lights follow the same pattern
+ * Set particular values of brightness to every light.
  */
 void doEqual(){
   const unsigned int period = 3000;
@@ -47,7 +48,7 @@ void doEqual(){
 }
 
 /**
- * Turn on/off all the bulbs simultaneously
+ * Turn on and off simultaneously all the bulbs.
  */
 void doEqualOnOff(){
   const unsigned int period = 3000;
@@ -69,7 +70,7 @@ void doEqualOnOff(){
 }
 
 /**
- * Switch lights between specific steps
+ * Set brightness to specific values.
  */
 void doDimSpecificStep(void){
   const unsigned int period = 3000;
@@ -93,7 +94,7 @@ void doDimSpecificStep(void){
 }
 
 /**
- * Test a mixture between on-off-middle
+ * Test a mixture between on, off and middle brightness.
  */
 void doRangeLimit(void){
   const unsigned int period = 5000;
@@ -117,7 +118,7 @@ void doRangeLimit(void){
 }
 
 /**
- * Test the eyes limit switching between near values
+ * Test your eyes sensitivity by switching between near values. Will you see any difference?
  */
 void doNearValues(void){
   const unsigned int period = 3000;
@@ -143,8 +144,8 @@ void doNearValues(void){
 }
 
 /**
- * The 1st the 5th are turned off; the 3rd is fixed to half; and the 2nd and 4th dim
- * on the contrary than respect each other.
+ * The 1st the 5th are turned off, the 3rd is fixed to half brightness, and the 2nd and 4th sweep
+ * in the opposite direction w.r.t. each other.
  */
 void doDimMixed(void){
   const unsigned int period = 50;
@@ -180,7 +181,7 @@ void doDimMixed(void){
 }
 
 /**
- * All the lights dim simultaneously in the same way.
+ * All the lights simultaneously fade in and out.
  */
 void doDimSweepEqual(void){
   const unsigned int period = 50;
@@ -231,7 +232,7 @@ void doOnOffSweep(){
 }
 
 /**
- * The group formed by even bulbs dim on the contrary to the odd group.
+ * The group formed by even bulbs sweep in the opposite direction w.r.t. the odd group.
  */
 void doInvertedDim(void){
   const unsigned int period = 50;
@@ -266,8 +267,7 @@ void doInvertedDim(void){
 }
 
 /**
- * This retun the module of a number (optimized)
- * Min 0 (included), max is escluded)
+ * Return the module of a non-negative number (optimized).
  */
 unsigned int tap(unsigned int value,unsigned int max){
   if(value<max){
@@ -277,7 +277,7 @@ unsigned int tap(unsigned int value,unsigned int max){
 }
 
 /**
- * Input a number between 0 and 512, return a triangular function [0;255]
+ * Given a number in range [0; 512), return a triangular function [0;255].
  */
 uint8_t conversion(uint16_t value){
   int simmetricValue=0;
@@ -290,6 +290,9 @@ uint8_t conversion(uint16_t value){
   return simmetricValue;
 }
 
+/**
+ * Given a number in range [0; 512), return a "pow-ed" triangular function [0;255].
+ */
 uint8_t conversionPow(uint16_t value){
   int simmetricValue=0;
   if(value>=256 && value<=511){
@@ -310,7 +313,7 @@ uint8_t conversionPow(uint16_t value){
 }
 
 /**
- * Turn on the light with (255/nLights) steps offset between consecutive lights
+ * Turn on the light with (255/nLights) steps offset between consecutive lights.
  */
 void doCircularSwipe(void){
   const unsigned int period = 50;
@@ -348,7 +351,7 @@ void doRandomBri(){
 /**
  * The variance of random number is restricted around the mean value step after step
  */
-void doRandomBriPeehole(){
+void doRandomBriPeephole(){
   const unsigned int period = 700;
   const uint16_t briStep = 10;
   const uint16_t totStep = 16;
@@ -375,7 +378,7 @@ void doRandomBriPeehole(){
 
   ::period = period;
   lastCall = millis();
-  effect = doRandomBriPeehole;
+  effect = doRandomBriPeephole;
 }
 
 /**

@@ -1,20 +1,19 @@
 /**
- * In this example you can see a number of effects on different indipendent 
- * dimmable lights. To switch among the available effects, (un)comment the
- * proper line in the setup() function.
+ * In this example you can see a number of effects on indipendent lights.
+ * To switch among the available effects, (un)comment the proper line in the setup() function.
  *
- * NOTE: compiles only for ESP8266 and ESP32 because the Ticker.h dependency
+ * NOTE: compiles only for ESP8266 and ESP32 because the Ticker.h dependency.
  */
  
 #include <Ticker.h>
 #include <dimmable_light.h>
 
-const int syncPin = D7;
-DimmableLight l1(D1);
-DimmableLight l2(D2);
-DimmableLight l3(D5);
-DimmableLight l4(D6);
-DimmableLight l5(D8);
+const int syncPin = 13;
+DimmableLight l1(5);
+DimmableLight l2(4);
+DimmableLight l3(14);
+DimmableLight l4(12);
+DimmableLight l5(15);
 
 Ticker dim;
 
@@ -32,7 +31,7 @@ void setup() {
 
   Serial.println(String("Number of instantiated lights: ") + DimmableLight::getLightNumber());
 
-  // Uncomment one and only one among the following line to see an effect
+  // Uncomment one and only one among the following lines to see an effect
   //doEqual();
   //doEqualOnOff();
   //doDimSpecificStep();
@@ -45,7 +44,7 @@ void setup() {
 }
 
 /**
- * Do some specific step, all the lights follow the same pattern
+ * Set particular values of brightness to every light.
  */
 void doEqual(){
   const float period = 3;
@@ -66,7 +65,7 @@ void doEqual(){
 }
 
 /**
- * Turn on/off all the bulbs simultaneously
+ * Turn on and off simultaneously all the bulbs.
  */
 void doEqualOnOff(){
   const float period = 3;
@@ -87,7 +86,7 @@ void doEqualOnOff(){
 }
 
 /**
- * Switch lights between specific steps
+ * Set brightness to specific values.
  */
 void doDimSpecificStep(void){
   const float period = 3;
@@ -108,7 +107,7 @@ void doDimSpecificStep(void){
 }
 
 /**
- * Test a mixture between on-off-middle
+ * Test a mixture between on, off and middle brightness.
  */
 void doRangeLimit(void){
   const float period = 5;
@@ -129,7 +128,7 @@ void doRangeLimit(void){
 }
 
 /**
- * Test the eyes limit switching between near values
+ * Test your eyes sensitivity by switching between near values. Will you see any difference?
  */
 void doNearValues(void){
   const float period = 4;
@@ -150,8 +149,8 @@ void doNearValues(void){
 }
 
 /**
- * The 1st the 5th are turned off; the 3rd is fixed to half; and the 2nd and 4th dim
- * on the contrary than respect each other.
+ * The 1st the 5th are turned off, the 3rd is fixed to half brightness, and the 2nd and 4th sweep
+ * in the opposite direction w.r.t. each other.
  */
 void doDimMixed(void){
   const float period = 0.05;
@@ -183,7 +182,7 @@ void doDimMixed(void){
 }
 
 /**
- * All the lights dim simultaneously in the same way.
+ * All the lights simultaneously fade in and out.
  */
 void doDimSweepEqual(void){
   const float period = 0.05;
@@ -211,7 +210,7 @@ void doDimSweepEqual(void){
 }
 
 /**
- * The group formed by even bulbs dim on the contrary to the odd group.
+ * The group formed by even bulbs sweep in the opposite direction w.r.t. the odd group.
  */
 void doInvertedDim(void){
   const float period = 0.05;
@@ -241,7 +240,7 @@ void doInvertedDim(void){
 }
 
 /**
- * Turn on the light with (255/nLights) steps offset between consecutive lights
+ * Turn on the light with (255/nLights) steps offset between consecutive lights.
  */
 void doCircularSwipe(void){
   const float period = 0.01;
@@ -263,8 +262,7 @@ void doCircularSwipe(void){
 }
 
 /**
- * This retun the module of a number (optimized)
- * Min 0 (included), max is escluded)
+ * Return the module of a non-negative number (optimized).
  */
 unsigned int tap(unsigned int value,unsigned int max){
   if(value<max){
@@ -274,7 +272,7 @@ unsigned int tap(unsigned int value,unsigned int max){
 }
 
 /**
- * Input a number between 0 and 512, return a triangular function [0;255]
+ * Given a number in range [0; 512), return a triangular function [0;255].
  */
 uint8_t conversion(uint16_t value){
   int simmetricValue=0;
@@ -287,6 +285,9 @@ uint8_t conversion(uint16_t value){
   return simmetricValue;
 }
 
+/**
+ * Given a number in range [0; 512), return a "pow-ed" triangular function [0;255].
+ */
 uint8_t conversionPow(uint16_t value){
   int simmetricValue=0;
   if(value>=256 && value<=511){
