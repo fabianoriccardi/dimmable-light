@@ -44,6 +44,8 @@ Here a comparison against 2 similar and popular libraries:
 You need Arduino IDE and the appropriate board packages. On AVR boards such as Arduino/Genuino Uno, you also need [ArduinoSTL](https://github.com/mike-matera/ArduinoSTL) (available on Arduino Library Manager).
 If you want to compile the 6th example (the most complete), you also need [ArduinoSerialCommand](https://github.com/kroimon/Arduino-SerialCommand) library.
 
+> :warning: *for AVR core*: use AVR Core v1.8.2 or lower. This is because an incompatibility between ArduinoSTL and new versions of AVR core, hopefully it will be soon solved.
+
 ## Installation
 
 The latest version of Dimmable Light for Arduino is available on Arduino Library Manager and on [PlatformIO registry](https://registry.platformio.org/libraries/fabianoriccardi/Dimmable%20Light%20for%20Arduino).

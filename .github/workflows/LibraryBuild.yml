@@ -55,7 +55,7 @@ jobs:
             arduino-boards-fqbn: esp32:esp32:esp32
 
           - config-name: arduino-uno
-            arduino-platform: arduino:avr@1.8.5
+            arduino-platform: arduino:avr@1.8.2
             arduino-boards-fqbn: arduino:avr:uno
             sketches-exclude: 3_dimmable_light_5_light, 5_dimmable_manager_n_lights
             required-libraries: ArduinoSTL
