@@ -19,7 +19,6 @@ jobs:
     env:
       # Comma separated list without double quotes around the list
       REQUIRED_LIBRARIES:
-        https://github.com/kroimon/Arduino-SerialCommand
 
     strategy:
       # The Matrix contains all the configuration to be tested. For each configuration, all the examples are tested
@@ -59,6 +58,7 @@ jobs:
             arduino-platform: arduino:avr@1.8.5
             arduino-boards-fqbn: arduino:avr:uno
             sketches-exclude: 3_dimmable_light_5_light, 5_dimmable_manager_n_lights
+            required-libraries: ArduinoSTL
 
       # Do not cancel all jobs / architectures if one job fails
       fail-fast: false
@@ -91,3 +91,4 @@ jobs:
           arduino-platform: ${{ matrix.arduino-platform }}
           platform-url: ${{ matrix.platform-url }}
           sketches-exclude: ${{ matrix.sketches-exclude }} 8_set_frequency_automatically
+          required-libraries: ${{ matrix.required-libraries }}
