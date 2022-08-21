@@ -39,30 +39,26 @@ jobs:
             # like clock frequency or partition scheme
             # Type "arduino-cli board listall" to view the available boards
             arduino-boards-fqbn: esp8266:esp8266:d1_mini
-            sketches-exclude: 8_set_frequency_automatically
 
           - config-name: esp8266-v3
             platform-url: https://arduino.esp8266.com/stable/package_esp8266com_index.json
             arduino-platform: esp8266:esp8266@3.0.2
             arduino-boards-fqbn: esp8266:esp8266:d1_mini
-            sketches-exclude: 8_set_frequency_automatically
 
-#          - config-name: esp32-v1
-#            platform-url: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-#            arduino-platform: esp32:esp32@1.0.6
-#            arduino-boards-fqbn: esp32:esp32:esp32
-#            sketches-exclude: 8_set_frequency_automatically
+          - config-name: esp32-v1
+            platform-url: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+            arduino-platform: esp32:esp32@1.0.6
+            arduino-boards-fqbn: esp32:esp32:esp32
 
-#          - config-name: esp32-v2
-#            platform-url: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-#            arduino-platform: esp32:esp32@2.0.4
-#            arduino-boards-fqbn: esp32:esp32:esp32
-#            sketches-exclude: 8_set_frequency_automatically
+          - config-name: esp32-v2
+            platform-url: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+            arduino-platform: esp32:esp32@2.0.4
+            arduino-boards-fqbn: esp32:esp32:esp32
 
-#          - config-name: arduino-uno
-#            arduino-platform: arduino:avr@1.8.5
-#            arduino-boards-fqbn: arduino:avr:uno
-#            sketches-exclude: 3_dimmable_light_5_light, 5_dimmable_manager_n_lights, 8_set_frequency_automatically
+          - config-name: arduino-uno
+            arduino-platform: arduino:avr@1.8.5
+            arduino-boards-fqbn: arduino:avr:uno
+            sketches-exclude: 3_dimmable_light_5_light, 5_dimmable_manager_n_lights
 
       # Do not cancel all jobs / architectures if one job fails
       fail-fast: false
@@ -94,4 +90,4 @@ jobs:
           arduino-board-fqbn: ${{ matrix.arduino-boards-fqbn }}
           arduino-platform: ${{ matrix.arduino-platform }}
           platform-url: ${{ matrix.platform-url }}
-          sketches-exclude: ${{ matrix.sketches-exclude }}
+          sketches-exclude: ${{ matrix.sketches-exclude }} 8_set_frequency_automatically
