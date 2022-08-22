@@ -19,6 +19,8 @@
 #ifndef DIMMABLE_LIGHT_MANAGER_H
 #define DIMMABLE_LIGHT_MANAGER_H
 
+#include "dimmable_light.h"
+
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_SAMD)
 // Unfortunately Arduino defines max/min macros, those create conflicts with the one
 // defined by C++/STL environment
@@ -31,7 +33,6 @@
 #endif
 
 #include <string>
-#include <dimmable_light.h>
 
 /**
  * Class to store the mapping between a DimmableLight object and 
