@@ -2,13 +2,16 @@
 #define CIRCULAR_QUEUE_H
 
 /*
- * Circular queue it can only be filled.
- * Older values are automatically overwritten.
- * By default all the value are set to zeros.
+ * A minimal static circular queue.
+ * It supports only insertion, and older values are automatically overwritten.
  */
 template<typename T, int N>
 class CircularQueue {
 public:
+    /**
+     * Construct a new Circular Queue object filling it with zeros or 
+     * using the default constructor of type T.
+     */
     CircularQueue(): arr{0}, index(0), n(0) {};
     
     /**
@@ -28,6 +31,9 @@ public:
       return ret;
     };
 
+    /**
+     * Empty the queue.
+     */
     void reset() {
       for(int i = 0; i < N; i++) {
         arr[i] = 0;
@@ -39,14 +45,14 @@ public:
     /**
      * Return the number of stored elements.
      */
-    int getCount() {
+    int getCount() const {
       return n;
     };
 
 private:
     T arr[N];
 
-    // Current position of lement to be inserted
+    // The position for the next element to be inserted
     int index;
 
     // Number of elements currently stored
