@@ -36,7 +36,7 @@
 //#define NETWORK_FREQ_FIXED_60HZ
 //#define NETWORK_FREQ_RUNTIME
 
-// Set the default value if not option is selected
+// Set the default value if no option is selected
 #if !defined(NETWORK_FREQ_FIXED_50HZ) && !defined(NETWORK_FREQ_FIXED_60HZ) && !defined(NETWORK_FREQ_RUNTIME)
 #define NETWORK_FREQ_FIXED_50HZ
 #endif
