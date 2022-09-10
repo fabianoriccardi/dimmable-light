@@ -92,4 +92,4 @@ jobs:
           platform-url: ${{ matrix.platform-url }}
           sketches-exclude: ${{ matrix.sketches-exclude }}
           required-libraries: ${{ matrix.required-libraries }}
-          build-properties: '{ "8_set_frequency_automatically": "-DNETWORK_FREQ_RUNTIME -DMONITOR_FREQUENCY"}''
+          build-properties: '{ "8_set_frequency_automatically": "-DNETWORK_FREQ_RUNTIME -DMONITOR_FREQUENCY"}'
