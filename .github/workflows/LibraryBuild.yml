@@ -26,7 +26,7 @@ jobs:
 
         # define each specific configuration
         include:
-          build-properties:
+          - build-properties:
             8_set_frequency_automatically:
               -DNETWORK_FREQ_RUNTIME -DMONITOR_FREQUENCY
           
