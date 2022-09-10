@@ -26,7 +26,10 @@ jobs:
 
         # define each specific configuration
         include:
-
+          build-properties:
+            8_set_frequency_automatically:
+              -DNETWORK_FREQ_RUNTIME -DMONITOR_FREQUENCY
+          
           # if the current configuration contains the parameter "config-name" and it is equal to "esp8266-v2",
           # add the following parameters to this configuration. If board-type is never matched, 
           # a new singular configuration is created
@@ -90,5 +93,5 @@ jobs:
           arduino-board-fqbn: ${{ matrix.arduino-boards-fqbn }}
           arduino-platform: ${{ matrix.arduino-platform }}
           platform-url: ${{ matrix.platform-url }}
-          sketches-exclude: ${{ matrix.sketches-exclude }} 8_set_frequency_automatically
+          sketches-exclude: ${{ matrix.sketches-exclude }}
           required-libraries: ${{ matrix.required-libraries }}
