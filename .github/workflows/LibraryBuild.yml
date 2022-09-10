@@ -102,3 +102,4 @@ jobs:
           platform-url: ${{ matrix.platform-url }}
           sketches-exclude: ${{ matrix.sketches-exclude }}
           required-libraries: ${{ matrix.required-libraries }}
+          build-properties: ${{ toJson(matrix.build-properties) }}
