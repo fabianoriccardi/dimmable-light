@@ -60,6 +60,11 @@ jobs:
             sketches-exclude: 3_dimmable_light_5_light, 5_dimmable_manager_n_lights
             required-libraries: ArduinoSTL
 
+          - config-name: arduino-nano-33-iot
+            arduino-platform: arduino:samd@1.8.13
+            arduino-boards-fqbn: arduino:samd:nano_33_iot
+            sketches-exclude: 3_dimmable_light_5_light, 5_dimmable_manager_n_lights
+
       # Do not cancel all jobs / architectures if one job fails
       fail-fast: false
 
