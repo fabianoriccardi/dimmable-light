@@ -47,6 +47,7 @@ void doCircularSwipe();
 void doRandomBri();
 void doRandomBriPeephole();
 void doRandomPushExtremeValues();
+void doCircularSwipeRegular();
 
 void offAllLights();
 

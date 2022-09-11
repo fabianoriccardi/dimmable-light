@@ -248,11 +248,11 @@ void doCircularSwipe(void){
   static uint16_t brightnessStep = 255;
 
   // Alternatively, you can use the function conversionPow(..) instead conversion(..)
-  l1.setBrightness(conversion(tap(brightnessStep+0,512)));
-  l2.setBrightness(conversion(tap(brightnessStep+51*1,512)));
-  l3.setBrightness(conversion(tap(brightnessStep+51*2,512)));
-  l4.setBrightness(conversion(tap(brightnessStep+51*3,512)));
-  l5.setBrightness(conversion(tap(brightnessStep+51*4,512)));
+  l1.setBrightness(triangularFunction(module(brightnessStep+0,512)));
+  l2.setBrightness(triangularFunction(module(brightnessStep+51*1,512)));
+  l3.setBrightness(triangularFunction(module(brightnessStep+51*2,512)));
+  l4.setBrightness(triangularFunction(module(brightnessStep+51*3,512)));
+  l5.setBrightness(triangularFunction(module(brightnessStep+51*4,512)));
 
   brightnessStep++;
   if(brightnessStep==512){
@@ -264,7 +264,7 @@ void doCircularSwipe(void){
 /**
  * Return the module of a non-negative number (optimized).
  */
-unsigned int tap(unsigned int value,unsigned int max){
+unsigned int module(unsigned int value,unsigned int max){
   if(value<max){
     return value;
   }
@@ -274,7 +274,7 @@ unsigned int tap(unsigned int value,unsigned int max){
 /**
  * Given a number in range [0; 512), return a triangular function [0;255].
  */
-uint8_t conversion(uint16_t value){
+uint8_t triangularFunction(uint16_t value){
   int simmetricValue=0;
   if(value<=255){
     simmetricValue = value;

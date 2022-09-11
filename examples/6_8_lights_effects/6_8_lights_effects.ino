@@ -82,6 +82,10 @@ void selectEffect(unsigned char effectId){
           Serial.println("##New Effect Selected## Random Push Extreme Values");
           doRandomPushExtremeValues();
           break;
+        case 13:
+          Serial.println("##New Effect Selected## Circular Swipe Regular");
+          doCircularSwipeRegular();
+          break;
         default:
           Serial.println("Effect ID not implemented");
     }
@@ -110,10 +114,11 @@ void setup() {
   serialCmd.addCommand("e10",[](){selectEffect(10);});
   serialCmd.addCommand("e11",[](){selectEffect(11);});
   serialCmd.addCommand("e12",[](){selectEffect(12);});
+  serialCmd.addCommand("e13",[](){selectEffect(13);});
   
   serialCmd.setDefaultHandler(unrecognized);
 
-  Serial.println("Select one effect ranging between e0 and e12");
+  Serial.println("Select one effect ranging between e0 and e13");
 }
 
 void loop(){

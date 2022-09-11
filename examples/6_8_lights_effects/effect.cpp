@@ -269,7 +269,7 @@ void doInvertedDim(void){
 /**
  * Return the module of a non-negative number (optimized).
  */
-unsigned int tap(unsigned int value,unsigned int max){
+unsigned int module(unsigned int value,unsigned int max){
   if(value<max){
     return value;
   }
@@ -277,9 +277,9 @@ unsigned int tap(unsigned int value,unsigned int max){
 }
 
 /**
- * Given a number in range [0; 512), return a triangular function [0;255].
+ * Given a number in range [0; 512), return a triangular function [0;255], if value is not in this range, return 0.
  */
-uint8_t conversion(uint16_t value){
+uint8_t triangularFunction(uint16_t value){
   int simmetricValue=0;
   if(value<=255){
     simmetricValue = value;
@@ -322,7 +322,8 @@ void doCircularSwipe(void){
 
   // Alternatively, you can use the function conversionPow(..) instead conversion(..)
   for(int i=0; i<N_LIGHTS; i++){
-    lights[i].setBrightness(conversion(tap(brightnessStep+32*i,512)));
+    int brightness = triangularFunction(module(brightnessStep+32*i,512));
+    lights[i].setBrightness(brightness);
   }
 
   brightnessStep++;
@@ -403,6 +404,35 @@ void doRandomPushExtremeValues(){
   ::period = period;
   lastCall = millis();
   effect = doRandomPushExtremeValues;
+}
+
+/**
+ * Perform a brightness sweep all over the lights with a delay between each light of DELAY steps. 
+ * This effect is perfectly smooth and simmetric w.r.t. doCircularSwipe().
+ */
+void doCircularSwipeRegular(void){
+  const unsigned int period = 40;
+  const int HALF_PERIOD = 255;
+  const int DELAY = 96;
+  
+  static int brightnessStep = 0;
+
+  for(int i=0; i<N_LIGHTS; i++){
+    unsigned int x = brightnessStep - DELAY * i < 0 ? 0 : brightnessStep - DELAY * i;
+    unsigned int brightness = triangularFunction(module(x, DELAY*N_LIGHTS));
+    lights[i].setBrightness(brightness);
+  }
+
+  brightnessStep++;
+
+  // Avoid any long-term overflow
+  if(brightnessStep>=HALF_PERIOD+2*DELAY*N_LIGHTS){
+    brightnessStep=HALF_PERIOD+DELAY*N_LIGHTS;
+  }
+
+  ::period = period;
+  lastCall = millis();
+  effect = doCircularSwipeRegular;
 }
 
 void offAllLights(){
