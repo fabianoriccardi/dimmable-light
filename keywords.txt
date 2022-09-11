@@ -8,4 +8,7 @@ get	KEYWORD2
 add	KEYWORD2
 getCount	KEYWORD2
 turnOff	KEYWORD2
+turnOn	KEYWORD2
 setSyncPin	KEYWORD2
+getFrequency	KEYWORD2
+getLightNumber	KEYWORD2

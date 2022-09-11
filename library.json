@@ -5,7 +5,7 @@
     "name": "Fabiano Riccardi",
     "email": "fabiano.riccardi@outlook.com"
   },
-  "description": "This library allows you to command electrical appliances through dimmer (also known as thyristor)",
+  "description": "This library allows to easily control dimmers (also known as thyristors).",
   "keywords": [
     "dimmer",
     "triac",
@@ -13,7 +13,7 @@
     "timer",
     "light",
     "arduino-library",
-    "Phase-fired control"
+    "phase-fired control"
   ],
   "repository": {
     "type": "git",
@@ -29,13 +29,15 @@
     "atmelavr",
     "atmelsam"
   ],
-  "dependencies":[
+  "dependencies": [
     {
       "owner": "mike-matera",
       "name": "ArduinoSTL",
       "version": "^1.3.3",
-      "platforms": ["atmelavr"]
-  }
+      "platforms": [
+        "atmelavr"
+      ]
+    }
   ],
   "examples": [
     {
