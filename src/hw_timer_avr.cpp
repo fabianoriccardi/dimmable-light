@@ -1,7 +1,8 @@
 /***************************************************************************
- *   Copyright (C) 2018, 2019 by Fabiano Riccardi                          *
+ *   This file is part of Dimmable Light for Arduino, a library to         *
+ *   control dimmers.                                                      *
  *                                                                         *
- *   This file is part of Dimmable Light for Arduino                       *
+ *   Copyright (C) 2018-2022  Fabiano Riccardi                             *
  *                                                                         *
  *   Dimmable Light for Arduino is free software; you can redistribute     *
  *   it and/or modify it under the terms of the GNU Lesser General Public  *
