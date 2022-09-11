@@ -24,12 +24,12 @@
 #include <Arduino.h>
 
 /**
- * This parameter controls the timer used by dimmers. Timer0 is used by 
- * Arduino core, so you shouldn't use it. Moreover, Timer0 and Timer2 are 
+ * This parameter controls the timer used by dimmers. Timer0 is used by
+ * Arduino core, so you shouldn't use it. Moreover, Timer0 and Timer2 are
  * just 8bit: this affects the dimmer's resolution control. From my experience,
  * 8 bits are not so much to have smooth control on incandescence bulbs,
  * I would suggest you to use other timers (16bits).
- * 
+ *
  * TIMER_ID ranges [1;5] (on arduino mega)
  */
 #define TIMER_ID 1
@@ -40,129 +40,123 @@
 #define N_BIT_TIMER 16
 #endif
 
-//Some helpful macros to support different timers
-#define _TCCRxA(X) TCCR ## X ## A
-#define TCCRxA(X) _TCCRxA(X)
-#define _TCCRxB(X) TCCR ## X ## B
-#define TCCRxB(X) _TCCRxB(X)
-#define _TIMSKx(X) TIMSK ## X
-#define TIMSKx(X) _TIMSKx(X)
-#define _OCIExA(X) OCIE ## X ## A
-#define OCIExA(X) _OCIExA(X)
-#define _TCNTxL(X) TCNT ## X ## L
-#define TCNTxL(X) _TCNTxL(X)
-#define _TCNTxH(X) TCNT ## X ## H
-#define TCNTxH(X) _TCNTxH(X)
-#define _TCNTx(X) TCNT ## X
-#define TCNTx(X) _TCNTx(X)
-#define _OCRxAH(X) OCR ## X ## AH
-#define OCRxAH(X) _OCRxAH(X)
-#define _OCRxAL(X) OCR ## X ## AL
-#define OCRxAL(X) _OCRxAL(X)
-#define _OCRxA(X) OCR ## X ## A
-#define OCRxA(X) _OCRxA(X)
+// Some helpful macros to support different timers
+#define _TCCRxA(X)             TCCR##X##A
+#define TCCRxA(X)              _TCCRxA(X)
+#define _TCCRxB(X)             TCCR##X##B
+#define TCCRxB(X)              _TCCRxB(X)
+#define _TIMSKx(X)             TIMSK##X
+#define TIMSKx(X)              _TIMSKx(X)
+#define _OCIExA(X)             OCIE##X##A
+#define OCIExA(X)              _OCIExA(X)
+#define _TCNTxL(X)             TCNT##X##L
+#define TCNTxL(X)              _TCNTxL(X)
+#define _TCNTxH(X)             TCNT##X##H
+#define TCNTxH(X)              _TCNTxH(X)
+#define _TCNTx(X)              TCNT##X
+#define TCNTx(X)               _TCNTx(X)
+#define _OCRxAH(X)             OCR##X##AH
+#define OCRxAH(X)              _OCRxAH(X)
+#define _OCRxAL(X)             OCR##X##AL
+#define OCRxAL(X)              _OCRxAL(X)
+#define _OCRxA(X)              OCR##X##A
+#define OCRxA(X)               _OCRxA(X)
 
-#define _TIMER_COMPA_VECTOR(X) TIMER ## X ## _COMPA_vect
-#define TIMER_COMPA_VECTOR(X) _TIMER_COMPA_VECTOR(X)
-
+#define _TIMER_COMPA_VECTOR(X) TIMER##X##_COMPA_vect
+#define TIMER_COMPA_VECTOR(X)  _TIMER_COMPA_VECTOR(X)
 
 static void (*timer_callback)() = nullptr;
 
-ISR(TIMER_COMPA_VECTOR(TIMER_ID)){
-    // Stop counter
-    TCCRxB(TIMER_ID) = 0;
-    
-    if(timer_callback != nullptr){
-        timer_callback();
+ISR(TIMER_COMPA_VECTOR(TIMER_ID)) {
+  // Stop counter
+  TCCRxB(TIMER_ID) = 0;
+
+  if (timer_callback != nullptr) { timer_callback(); }
+}
+
+uint16_t microsecond2Tick(uint16_t micro) {
+  // a frequency value to match the conversion in MICROSECONDS
+  static const uint32_t freq = F_CPU / 1000000;
+#if N_BIT_TIMER == 8
+  static const uint16_t prescaler = 1024;
+#elif N_BIT_TIMER == 16
+  static const uint16_t prescaler = 8;
+#endif
+  static_assert((((uint32_t)1 << N_BIT_TIMER) - 1) / ((float)F_CPU / prescaler) * 1000000 > 10000,
+                "the timer configuration has to allows to store a time value greater than 10000 "
+                "(microseconds)");
+  static const uint16_t shifterValue = F_CPU / prescaler < 1000000 ? prescaler / freq : freq / prescaler;
+
+  if (micro >= 32768) { return 0; }
+
+  // Optimized integer division(with rounding) and multiplication.
+  uint16_t ticks;
+  if (F_CPU / prescaler < 1000000) {
+    ticks = micro / (shifterValue / 2);
+    if (ticks & 0x0001) {
+      // it must be ceiled
+      return (ticks >> 1) + 1;
+    } else {
+      // it must be floored
+      return ticks >> 1;
     }
+  } else if (F_CPU / prescaler > 1000000) {
+    return micro * shifterValue;
+  } else {
+    return micro;
+  }
 }
 
-uint16_t microsecond2Tick(uint16_t micro){
-    // a frequency value to match the conversion in MICROSECONDS
-    static const uint32_t freq = F_CPU/1000000;
+void timerBegin() {
+  // clean control registers TCCRxA and TCC2B registers
+  TCCRxA(TIMER_ID) = 0;
+  TCCRxB(TIMER_ID) = 0;
+
+  // Reset the counter
+  // From the AVR datasheet: "To do a 16-bit write, the high byte must be written
+  // before the low byte. For a 16-bit read, the low byte must be read
+  // before the high byte".
 #if N_BIT_TIMER == 8
-    static const uint16_t prescaler = 1024;
+  TCNTx(TIMER_ID) = 0;
 #elif N_BIT_TIMER == 16
-    static const uint16_t prescaler = 8;
+  TCNTxH(TIMER_ID) = 0;
+  TCNTxL(TIMER_ID) = 0;
 #endif
-    static_assert((((uint32_t)1 << N_BIT_TIMER)-1) / ((float)F_CPU / prescaler) * 1000000 > 10000, 
-                    "the timer configuration has to allows to store a time value greater than 10000 (microseconds)");
-    static const uint16_t shifterValue = F_CPU/prescaler<1000000 ? prescaler/freq : freq/prescaler;
 
-    if(micro>=32768){
-        return 0;
-    }
-
-    // Optimized integer division(with rounding) and multiplication.
-    uint16_t ticks;
-    if(F_CPU/prescaler < 1000000){
-        ticks = micro / (shifterValue/2);
-        if(ticks & 0x0001){
-            // it must be ceiled
-            return (ticks>>1) + 1;
-        }else{
-            // it must be floored
-            return ticks>>1;
-        }
-    }else if(F_CPU/prescaler > 1000000){
-        return micro * shifterValue;
-    }else{
-        return micro;
-    }
+  // enable interrupt of Output Compare A
+  TIMSKx(TIMER_ID) = 1 << OCIExA(TIMER_ID);
 }
 
-void timerBegin(){
-    // clean control registers TCCRxA and TCC2B registers
-    TCCRxA(TIMER_ID) = 0;
-    TCCRxB(TIMER_ID) = 0;
-
-    // Reset the counter
-    // From the AVR datasheet: "To do a 16-bit write, the high byte must be written 
-    // before the low byte. For a 16-bit read, the low byte must be read
-    // before the high byte".
-#if N_BIT_TIMER == 8
-    TCNTx(TIMER_ID) = 0;
-#elif N_BIT_TIMER == 16
-    TCNTxH(TIMER_ID) = 0;
-    TCNTxL(TIMER_ID) = 0;
-#endif
-
-    // enable interrupt of Output Compare A
-    TIMSKx(TIMER_ID) = 1<<OCIExA(TIMER_ID);
+void timerSetCallback(void (*f)()) {
+  timer_callback = f;
 }
 
-void timerSetCallback(void (*f)()){
-    timer_callback = f;
+bool timerStartAndTrigger(uint16_t tick) {
+  if (tick <= 1) { return false; }
+
+#if N_BIT_TIMER == 8
+  TCNTx(TIMER_ID) = 0;
+#elif N_BIT_TIMER == 16
+  TCNTxH(TIMER_ID) = 0;
+  TCNTxL(TIMER_ID) = 0;
+#endif
+
+  tick--;
+#if N_BIT_TIMER == 8
+  OCRxA(TIMER_ID) = tick;
+#elif N_BIT_TIMER == 16
+  OCRxAH(TIMER_ID) = tick >> 8;
+  OCRxAL(TIMER_ID) = tick;
+#endif
+
+#if N_BIT_TIMER == 8
+  // 0x07: start counter with prescaler 1024
+  TCCRxB(TIMER_ID) = 0x07;
+#elif N_BIT_TIMER == 16
+  // 0x02: start counter with prescaler 8
+  TCCRxB(TIMER_ID) = 0x02;
+#endif
+  return true;
 }
 
-bool timerStartAndTrigger(uint16_t tick){
-    if(tick<=1){
-        return false;
-    }
-
-#if N_BIT_TIMER == 8
-    TCNTx(TIMER_ID) = 0;
-#elif N_BIT_TIMER == 16
-    TCNTxH(TIMER_ID) = 0;
-    TCNTxL(TIMER_ID) = 0;
-#endif
-
-    tick--;
-#if N_BIT_TIMER == 8
-    OCRxA(TIMER_ID) = tick;
-#elif N_BIT_TIMER == 16
-    OCRxAH(TIMER_ID) = tick>>8;
-    OCRxAL(TIMER_ID) = tick;
-#endif
-    
-#if N_BIT_TIMER == 8
-    // 0x07: start counter with prescaler 1024
-    TCCRxB(TIMER_ID) = 0x07;
-#elif N_BIT_TIMER == 16
-    // 0x02: start counter with prescaler 8
-    TCCRxB(TIMER_ID) = 0x02;
-#endif
-    return true;
-}
-
-#endif // END AVR
+#endif  // END AVR

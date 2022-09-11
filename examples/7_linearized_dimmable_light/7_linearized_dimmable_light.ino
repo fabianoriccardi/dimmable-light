@@ -1,8 +1,8 @@
-/** 
+/**
  * The main parameters to configure this sketch accordingly to your hardware setup are:
  *  - syncPin, that is the pin listening to AC zero cross signal
  *  - light, the pin which is connected to the thyristor
- */ 
+ */
 
 #include <dimmable_light_linearized.h>
 
@@ -16,10 +16,11 @@ const int period = 50;
 
 void setup() {
   Serial.begin(115200);
-  while(!Serial);
+  while (!Serial)
+    ;
   Serial.println();
   Serial.println("Dimmable Light for Arduino: first example");
-  
+
   Serial.print("Initializing the dimmable light class... ");
   DimmableLightLinearized::setSyncPin(syncPin);
   // VERY IMPORTANT: Call this method to start internal light routine
@@ -28,7 +29,7 @@ void setup() {
 }
 
 void loop() {
-  for(int i=0;i<256;i++){
+  for (int i = 0; i < 256; i++) {
     light.setBrightness(i);
     delay(period);
   }

@@ -36,12 +36,11 @@
 #include <string>
 
 /**
- * Class to store the mapping between a DimmableLight object and 
+ * Class to store the mapping between a DimmableLight object and
  * a (friendly) name. This could be useful when developing APIs.
  */
-class DimmableLightManager{
+class DimmableLightManager {
 public:
-  
   /**
    * Create a new light with a given name
    */
@@ -54,20 +53,20 @@ public:
 
   /**
    * Get a light from from the contaniner.
-   * 
+   *
    * This method is "circular", that means once you get the last element
    * the nect call return the first one.
    */
   std::pair<String, DimmableLight*> get();
 
-  int getCount(){
+  int getCount() {
     return dla.size();
   }
 
-  static void begin(){
+  static void begin() {
     DimmableLight::begin();
   }
-  
+
 private:
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_SAMD)
   std::unordered_map<std::string, DimmableLight*> dla;

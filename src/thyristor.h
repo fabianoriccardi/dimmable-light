@@ -30,7 +30,7 @@
 // The first 2 options fix the frequency to the common values (respectively to
 // 50 and 60Hz) at compile time.
 // The third option allows you change network frequency at runtime. This method
-// enables the setFrequency() method. The main drawback is that it is a bit more 
+// enables the setFrequency() method. The main drawback is that it is a bit more
 // inefficient w.r.t the "fixed frequency" alternatives.
 // Select one and ONLY one among the following alternatives:
 //#define NETWORK_FREQ_FIXED_50HZ
@@ -45,34 +45,33 @@
 // If enabled, you can monitor the actual frequency of the electrical network.
 //#define MONITOR_FREQUENCY
 
-
 /**
  * This is the core class of this library, to be used to get the finest control
- * on thyristors. 
- * 
- * NOTE: Design Principle for this library: The concept of Thyristor is agnostic 
+ * on thyristors.
+ *
+ * NOTE: Design Principle for this library: The concept of Thyristor is agnostic
  * to controlled appliance, hence measurement unit to control them should be also
  * appliance-agnostic. However, this will lead to more abstract code,
  * an undesiderable effect especially in contextes such as Arduino,
  * oriented to be as user-friendly as possible.
- * 
- * For these reason, I decided to separate the library in 2 main level of classes: 
- * a low level one (appliance-agnostic), and a higher level one for final 
+ *
+ * For these reason, I decided to separate the library in 2 main level of classes:
+ * a low level one (appliance-agnostic), and a higher level one for final
  * user (a nicer appliance-dependent wrapper, e.g. Dimmable Light).
- * 
- * About this class, the "core" of the library, the name of the method 
+ *
+ * About this class, the "core" of the library, the name of the method
  * to control a dimmer is setDelay(..) and not, for example, setPower(..),
  * setBrightness(..),... This gives a precise idea of what's
  * happening in electrical world, that is controlling the activation time
  * of the thyristor.
- * Secondly, the measurement unit is expressed in microsecond, 
+ * Secondly, the measurement unit is expressed in microsecond,
  * allowing the finest and feasible control reachable with old and cheap
  * MCUs such as Arduino Uno (often still exceeding the real need).
  */
-class Thyristor{
+class Thyristor {
 public:
   Thyristor(int pin);
-  Thyristor(Thyristor const &) = delete; 
+  Thyristor(Thyristor const &) = delete;
   void operator=(Thyristor const &t) = delete;
 
   /**
@@ -83,7 +82,7 @@ public:
   /**
    * Return the current delay.
    */
-  uint16_t getDelay() const{
+  uint16_t getDelay() const {
     return delay;
   }
 
@@ -95,7 +94,7 @@ public:
   /**
    * Turn off the thyristor.
    */
-  void turnOff(){
+  void turnOff() {
     setDelay(0);
   }
 
@@ -109,14 +108,14 @@ public:
   /**
    * Return the number of instantiated thyristors.
    */
-  static uint8_t getThyristorNumber(){
+  static uint8_t getThyristorNumber() {
     return nThyristors;
   };
 
   /**
    * Set the pin dedicated to receive the AC zero cross signal.
    */
-  static void setSyncPin(uint8_t pin){
+  static void setSyncPin(uint8_t pin) {
     syncPin = pin;
   }
 
@@ -142,7 +141,7 @@ public:
   /**
    * Get the detected frequency on the electrical network, constantly updated.
    * Return 0 if there is no signal or while sampling the first periods.
-   * 
+   *
    * NOTE: when (re)starting, it will take a while before returning a value different from 0.
    */
   static float getDetectedFrequency();
@@ -150,12 +149,12 @@ public:
   /**
    * Check if frequency monitor is always enabled.
    */
-  static bool isFrequencyMonitorAlwaysOn(){
+  static bool isFrequencyMonitorAlwaysOn() {
     return frequencyMonitorAlwaysEnabled;
   }
 
   /**
-   * Control if the monitoring can be automatically stopped when 
+   * Control if the monitoring can be automatically stopped when
    * all lights are on and off. True to force the constant monitoring,
    * false to allow automatic stop. By default the monitoring is always active.
    *
@@ -181,7 +180,7 @@ private:
    * Return true if all are on/off, false otherwise.
    */
   bool areThyristorsOnOff();
-  
+
   /**
    * Number of instantiated thyristors.
    */
@@ -190,7 +189,7 @@ private:
   /**
    * Vector of instatiated thyristors.
    */
-  static Thyristor* thyristors[];
+  static Thyristor *thyristors[];
 
   /**
    * Variable to tell to interrupt routine to update its internal structures
@@ -202,11 +201,11 @@ private:
    * In particular, this variable is used to prevent the copy of the memory used by
    * the array of struct during reordering (interrupt can continue because it
    * keeps its own copy of the array).
-   * A condition variable does not make sense because interrupt routine cannot be 
+   * A condition variable does not make sense because interrupt routine cannot be
    * stopped.
    */
   static bool updatingStruct;
-  
+
   /**
    * This variable tells if the thyristors are completely ON and OFF,
    * mixed configuration are included. If one thyristor has a value between
@@ -236,15 +235,15 @@ private:
 
   /**
    * Pin used to control thyristor's gate.
-   */ 
+   */
   uint8_t pin;
-  
+
   /**
-   * Position into the static array, this is used to speed up the research 
+   * Position into the static array, this is used to speed up the research
    * operation while setting the new brightness value.
    */
   uint8_t posIntoArray;
-  
+
   /**
    * Time to wait before turning on the thryristor.
    */
@@ -255,4 +254,4 @@ private:
   friend void turn_off_gates_int();
 };
 
-#endif // END THYRISTOR_H
+#endif  // END THYRISTOR_H

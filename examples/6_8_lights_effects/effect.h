@@ -28,7 +28,6 @@ extern DimmableLight lights[];
 extern DimmableLightLinearized lights[];
 #endif
 
-
 extern void (*effect)();
 // The period between a call and the next one in millisecond
 extern uint16_t period;

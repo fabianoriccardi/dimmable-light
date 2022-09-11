@@ -19,48 +19,46 @@
  ***************************************************************************/
 #include "dimmable_light_manager.h"
 
-bool DimmableLightManager::add(String lightName, uint8_t pin){
-  const char* temp=lightName.c_str();
+bool DimmableLightManager::add(String lightName, uint8_t pin) {
+  const char* temp = lightName.c_str();
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_SAMD)
-  std::unordered_map<std::string, DimmableLight*>::const_iterator it=dla.find(temp);
+  std::unordered_map<std::string, DimmableLight*>::const_iterator it = dla.find(temp);
 #elif defined(AVR)
-  std::map<std::string, DimmableLight*>::const_iterator it=dla.find(temp);
+  std::map<std::string, DimmableLight*>::const_iterator it = dla.find(temp);
 #endif
-  if(it==dla.end()){
-    DimmableLight* pDimLight=new DimmableLight(pin);
-    dla.insert({lightName.c_str(),pDimLight});
+  if (it == dla.end()) {
+    DimmableLight* pDimLight = new DimmableLight(pin);
+    dla.insert({ lightName.c_str(), pDimLight });
     return true;
-  }else{
+  } else {
     return false;
   }
 }
 
-DimmableLight* DimmableLightManager::get(String lightName){
-  const char* temp=lightName.c_str();
+DimmableLight* DimmableLightManager::get(String lightName) {
+  const char* temp = lightName.c_str();
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_SAMD)
-  std::unordered_map<std::string,DimmableLight*>::const_iterator it=dla.find(temp);
+  std::unordered_map<std::string, DimmableLight*>::const_iterator it = dla.find(temp);
 #elif defined(AVR)
-  std::map<std::string,DimmableLight*>::const_iterator it=dla.find(temp);
+  std::map<std::string, DimmableLight*>::const_iterator it = dla.find(temp);
 #endif
-  if(it!=dla.end()){
+  if (it != dla.end()) {
     return (it->second);
-  }else{
+  } else {
     return nullptr;
-   }
+  }
 }
 
-std::pair<String, DimmableLight*> DimmableLightManager::get(){
+std::pair<String, DimmableLight*> DimmableLightManager::get() {
 #if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_SAMD)
-  static std::unordered_map<std::string,DimmableLight*>::const_iterator it=dla.begin();
+  static std::unordered_map<std::string, DimmableLight*>::const_iterator it = dla.begin();
 #elif defined(AVR)
-  static std::map<std::string,DimmableLight*>::const_iterator it=dla.begin();
+  static std::map<std::string, DimmableLight*>::const_iterator it = dla.begin();
 #endif
-  String name=it->first.c_str();
-  std::pair<String, DimmableLight*> res(name,it->second);
+  String name = it->first.c_str();
+  std::pair<String, DimmableLight*> res(name, it->second);
 
   it++;
-  if(it==dla.end()){
-    it=dla.begin();
-  }
+  if (it == dla.end()) { it = dla.begin(); }
   return res;
 }

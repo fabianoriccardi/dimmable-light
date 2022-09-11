@@ -1,6 +1,6 @@
-/** 
+/**
  * An extension of the first example to demonstrate how easy is controlling multiple lights.
- */ 
+ */
 #include <dimmable_light.h>
 
 const int syncPin = 13;
@@ -13,11 +13,12 @@ const int period = 1000;
 
 void setup() {
   Serial.begin(115200);
-  while(!Serial);
+  while (!Serial)
+    ;
   Serial.println();
   Serial.println("Dimmable Light for Arduino: second example");
   Serial.println();
-  
+
   Serial.print("Initializing the dimmable light class... ");
   DimmableLight::setSyncPin(syncPin);
   DimmableLight::begin();

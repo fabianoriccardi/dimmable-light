@@ -47,11 +47,11 @@ void timerSetCallback(void (*callback)());
 
 /**
  * Start the timer to trigger after the specified number of ticks.
- * 
+ *
  * NOTE: 0 or 1 values are not accepted
  */
 void timerStart(uint16_t tick);
 
-#endif // HW_TIMER_SAMD_H
+#endif  // HW_TIMER_SAMD_H
 
-#endif // ARDUINO_ARCH_SAMD
+#endif  // ARDUINO_ARCH_SAMD

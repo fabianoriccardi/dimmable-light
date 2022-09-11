@@ -47,14 +47,14 @@ void timerSetCallback(void (*f)());
 
 /**
  * Let's start the timer: it triggers after x ticks,
- * then it stops. 
- * tick length depends on MCU clock and prescaler, please use 
+ * then it stops.
+ * tick length depends on MCU clock and prescaler, please use
  * microsecond2Tick(..) to feed timerStart(..).
- * 
+ *
  * NOTE: 0 or 1 values are not accepted
  */
 bool timerStartAndTrigger(uint16_t tick);
 
-#endif // HW_TIMER_ARDUINO_H
+#endif  // HW_TIMER_ARDUINO_H
 
-#endif // END AVR
+#endif  // END AVR
