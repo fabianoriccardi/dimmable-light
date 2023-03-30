@@ -27,7 +27,8 @@
     "espressif8266",
     "espressif32",
     "atmelavr",
-    "atmelsam"
+    "atmelsam",
+    "raspberrypi"
   ],
   "dependencies": [
     {

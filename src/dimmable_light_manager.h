@@ -22,7 +22,7 @@
 
 #include "dimmable_light.h"
 
-#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_SAMD)
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_RP2040)
 // Unfortunately Arduino defines max/min macros, those create conflicts with the one
 // defined by C++/STL environment
 #undef max
@@ -68,7 +68,7 @@ public:
   }
 
 private:
-#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_SAMD)
+#if defined(ESP8266) || defined(ESP32) || defined(ARDUINO_ARCH_SAMD) || defined(ARDUINO_ARCH_RP2040)
   std::unordered_map<std::string, DimmableLight*> dla;
 #elif defined(AVR)
   std::map<std::string, DimmableLight*> dla;
