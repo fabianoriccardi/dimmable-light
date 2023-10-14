@@ -24,8 +24,6 @@
 
 void timerInit(void (*callback)());
 
-void setCallback(void (*callback)());
-
 void startTimerAndTrigger(uint32_t delay);
 
 void stopTimer();

@@ -103,6 +103,10 @@ struct PinDelay {
   uint16_t delay;
 };
 
+enum class INT_TYPE { ACTIVATE_THYRISTORS, TURN_OFF_GATES };
+
+static INT_TYPE nextISR = INT_TYPE::ACTIVATE_THYRISTORS;
+
 /**
  * Temporary struct to provide the interrupt a memory concurrent-safe
  * NOTE: this structure is manipulated by interrupt routine
@@ -221,7 +225,8 @@ void activate_thyristors() {
     timer1_attachInterrupt(turn_off_gates_int);
     timer1_write(US_TO_RTC_TIMER_TICKS(delay));
 #elif defined(ARDUINO_ARCH_ESP32)
-    setCallback(turn_off_gates_int);
+    // setCallback(turn_off_gates_int);
+    nextISR = INT_TYPE::TURN_OFF_GATES;
     startTimerAndTrigger(delay);
 #elif defined(ARDUINO_ARCH_AVR)
     timerSetCallback(turn_off_gates_int);
@@ -386,7 +391,8 @@ void zero_cross_int() {
     timer1_attachInterrupt(activate_thyristors);
     timer1_write(US_TO_RTC_TIMER_TICKS(pinDelay[thyristorManaged].delay));
 #elif defined(ARDUINO_ARCH_ESP32)
-    setCallback(activate_thyristors);
+    // setCallback(activate_thyristors);
+    nextISR = INT_TYPE::ACTIVATE_THYRISTORS;
     startTimerAndTrigger(pinDelay[thyristorManaged].delay);
 #elif defined(ARDUINO_ARCH_AVR)
     timerSetCallback(activate_thyristors);
@@ -407,6 +413,20 @@ void zero_cross_int() {
 #elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_SAMD)
     // Given actual HAL, AVR and SAMD counter automatically stops on interrupt
 #endif
+  }
+}
+
+#if defined(ARDUINO_ARCH_ESP8266)
+void HW_TIMER_IRAM_ATTR isr_selector() {
+#elif defined(ARDUINO_ARCH_ESP32)
+void isr_selector() {
+#else
+void isr_selector() {
+#endif
+  if (nextISR == INT_TYPE::ACTIVATE_THYRISTORS) {
+    activate_thyristors();
+  } else if (nextISR == INT_TYPE::TURN_OFF_GATES) {
+    turn_off_gates_int();
   }
 }
 
@@ -533,7 +553,7 @@ void Thyristor::begin() {
   T1C = (1 << TCTE) | ((TIM_DIV16 & 3) << TCPD) | ((TIM_EDGE & 1) << TCIT) | ((TIM_SINGLE & 1) << TCAR);
   T1I = 0;
 #elif defined(ARDUINO_ARCH_ESP32)
-  timerInit(activate_thyristors);
+  timerInit(isr_selector);
 #elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_SAMD)
   timerSetCallback(activate_thyristors);
   timerBegin();
