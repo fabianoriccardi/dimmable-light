@@ -21,7 +21,7 @@
 
 #include "hw_timer_esp32.h"
 
-#define TIMER_ID 0
+const static int TIMER_ID = 0;
 
 static hw_timer_t* timer = nullptr;
 
@@ -30,17 +30,17 @@ void timerInit(void (*callback)()) {
   // Set 80 divider for prescaler (see ESP32 Technical Reference Manual for more
   // info), count up. The counter starts to increase its value.
   timer = timerBegin(TIMER_ID, 80, true);
-  if (timer == nullptr) { Serial.println("Timer error"); }
-  // Attach onTimer function to our timer.
-  timerAttachInterrupt(timer, callback, true);
+  timerStop(timer);
+  timerWrite(timer, 0);
 
-  timerAlarmWrite(timer, 1000000, true);
-  timerAlarmEnable(timer);
+  timerAttachInterrupt(timer, callback, true);
 }
 
+// 70us
 void IRAM_ATTR startTimerAndTrigger(uint32_t delay) {
   timerWrite(timer, 0);
-  timerAlarmWrite(timer, delay, true);
+  timerAlarmWrite(timer, delay, false);
+  timerAlarmEnable(timer);
   timerStart(timer);
 }
 
