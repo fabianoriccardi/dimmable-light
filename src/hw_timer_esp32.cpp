@@ -44,6 +44,10 @@ void IRAM_ATTR startTimerAndTrigger(uint32_t delay) {
   timerStart(timer);
 }
 
+void setAlarm(uint32_t delay) {
+  timerAlarmWrite(timer, delay, false);
+}
+
 void IRAM_ATTR stopTimer() {
   timerStop(timer);
 }

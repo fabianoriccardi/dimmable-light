@@ -26,6 +26,8 @@ void timerInit(void (*callback)());
 
 void startTimerAndTrigger(uint32_t delay);
 
+void setAlarm(uint32_t delay);
+
 void stopTimer();
 
 #endif  // END HW_TIMER_ESP32_H

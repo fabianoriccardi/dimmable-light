@@ -191,19 +191,20 @@ void activate_thyristors() {
 #ifdef PREDEFINED_PULSE_LENGTH
     int delay = pinDelay[thyristorManaged].delay - pinDelay[firstToBeUpdated].delay - pulseWidth;
 #else
-    int delay = pinDelay[thyristorManaged].delay - pinDelay[firstToBeUpdated].delay;
+    int delayAbsolute = pinDelay[thyristorManaged].delay;
+    int delayRelative = delayAbsolute - pinDelay[firstToBeUpdated].delay;
 #endif
 
 #if defined(ARDUINO_ARCH_ESP8266)
-    timer1_write(US_TO_RTC_TIMER_TICKS(delay));
+    timer1_write(US_TO_RTC_TIMER_TICKS(delayRelative));
 #elif defined(ARDUINO_ARCH_ESP32)
-    startTimerAndTrigger(delay);
+    setAlarm(delayAbsolute);
 #elif defined(ARDUINO_ARCH_AVR)
-    if (!timerStartAndTrigger(microsecond2Tick(delay))) {
+    if (!timerStartAndTrigger(microsecond2Tick(delayRelative))) {
       Serial.println("activate_thyristors() error timer");
     }
 #elif defined(ARDUINO_ARCH_SAMD)
-  timerStart(microsecond2Tick(delay));
+  timerStart(microsecond2Tick(delayRelative));
 #endif
   } else {
 
@@ -220,22 +221,22 @@ void activate_thyristors() {
 #endif
 #else
     // If there are not more thyristors to serve, set timer to turn off gates' signal
-    uint16_t delay = semiPeriodLength - gateTurnOffTime - pinDelay[firstToBeUpdated].delay;
+    uint16_t delayAbsolute = semiPeriodLength - gateTurnOffTime;
+    uint16_t delayRelative = delayAbsolute - pinDelay[firstToBeUpdated].delay;
 #if defined(ARDUINO_ARCH_ESP8266)
     timer1_attachInterrupt(turn_off_gates_int);
-    timer1_write(US_TO_RTC_TIMER_TICKS(delay));
+    timer1_write(US_TO_RTC_TIMER_TICKS(delayRelative));
 #elif defined(ARDUINO_ARCH_ESP32)
-    // setCallback(turn_off_gates_int);
     nextISR = INT_TYPE::TURN_OFF_GATES;
-    startTimerAndTrigger(delay);
+    setAlarm(delayAbsolute);
 #elif defined(ARDUINO_ARCH_AVR)
     timerSetCallback(turn_off_gates_int);
-    if (!timerStartAndTrigger(microsecond2Tick(delay))) {
+    if (!timerStartAndTrigger(microsecond2Tick(delayRelative))) {
       Serial.println("activate_thyristors() error timer");
     }
 #elif defined(ARDUINO_ARCH_SAMD)
     timerSetCallback(turn_off_gates_int);
-    timerStart(microsecond2Tick(delay));
+    timerStart(microsecond2Tick(delayRelative));
 #endif
 #endif
   }
@@ -387,21 +388,22 @@ void zero_cross_int() {
   // so a provvisory solution if to set the relative callback to NULL!
   // NOTE 2: this improvement should be think even for multiple lamp!
   if (thyristorManaged < Thyristor::nThyristors && pinDelay[thyristorManaged].delay < semiPeriodLength - 50) {
+    uint16_t delayAbsolute = pinDelay[thyristorManaged].delay;
 #if defined(ARDUINO_ARCH_ESP8266)
     timer1_attachInterrupt(activate_thyristors);
-    timer1_write(US_TO_RTC_TIMER_TICKS(pinDelay[thyristorManaged].delay));
+    timer1_write(US_TO_RTC_TIMER_TICKS(delayAbsolute));
 #elif defined(ARDUINO_ARCH_ESP32)
     // setCallback(activate_thyristors);
     nextISR = INT_TYPE::ACTIVATE_THYRISTORS;
-    startTimerAndTrigger(pinDelay[thyristorManaged].delay);
+    startTimerAndTrigger(delayAbsolute);
 #elif defined(ARDUINO_ARCH_AVR)
     timerSetCallback(activate_thyristors);
-    if (!timerStartAndTrigger(microsecond2Tick(pinDelay[thyristorManaged].delay))) {
+    if (!timerStartAndTrigger(microsecond2Tick(delayAbsolute))) {
       Serial.println("zero_cross_int() error timer");
     }
 #elif defined(ARDUINO_ARCH_SAMD)
   timerSetCallback(activate_thyristors);
-  timerStart(microsecond2Tick(pinDelay[thyristorManaged].delay));
+  timerStart(microsecond2Tick(delayAbsolute));
 #endif
   } else {
 #if defined(ARDUINO_ARCH_ESP8266)
