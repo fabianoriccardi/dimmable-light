@@ -330,13 +330,15 @@ void zero_cross_int() {
       if (Thyristor::thyristors[i]->delay == 0) {
         alwaysOnCounter++;
         pinDelay[i].delay = 0;
-      } else if (Thyristor::thyristors[i]->delay <= startMargin) {
-        pinDelay[i].delay = startMargin;
+      } else if (Thyristor::thyristors[i]->delay < startMargin) {
+        alwaysOnCounter++;
+        pinDelay[i].delay = 0;
       } else if (Thyristor::thyristors[i]->delay == semiPeriodLength) {
         alwaysOffCounter++;
         pinDelay[i].delay = semiPeriodLength;
-      } else if (Thyristor::thyristors[i]->delay >= semiPeriodLength - endMargin) {
-        pinDelay[i].delay = semiPeriodLength - endMargin;
+      } else if (Thyristor::thyristors[i]->delay > semiPeriodLength - endMargin) {
+        alwaysOffCounter++;
+        pinDelay[i].delay = semiPeriodLength;
       } else {
         pinDelay[i].delay = Thyristor::thyristors[i]->delay;
       }
@@ -394,7 +396,7 @@ void zero_cross_int() {
   // NOTE: don't know why, but the timer seem trigger even when it is not set...
   // so a provvisory solution if to set the relative callback to NULL!
   // NOTE 2: this improvement should be think even for multiple lamp!
-  if (thyristorManaged < Thyristor::nThyristors) {
+  if (thyristorManaged < Thyristor::nThyristors && pinDelay[thyristorManaged].delay < semiPeriodLength) {
     uint16_t delayAbsolute = pinDelay[thyristorManaged].delay;
 #if defined(ARDUINO_ARCH_ESP8266)
     timer1_attachInterrupt(activate_thyristors);
@@ -413,6 +415,13 @@ void zero_cross_int() {
   timerStart(microsecond2Tick(delayAbsolute));
 #endif
   } else {
+
+    // This while is dedicated to all those thyristor wih delay == semiPeriodLength-margin; those
+    // are the ones who shouldn't turn on, hence they can be skipped
+    while (thyristorManaged < Thyristor::nThyristors && pinDelay[thyristorManaged].delay == semiPeriodLength) {
+      thyristorManaged++;
+    }
+
 #if defined(ARDUINO_ARCH_ESP8266)
     // Given the Arduino HAL and esp8266 technical reference manual,
     // when timer triggers, the counter stops because it has reached zero
