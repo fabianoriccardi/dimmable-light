@@ -33,7 +33,7 @@ void timerInit(void (*callback)()) {
   timerStop(timer);
   timerWrite(timer, 0);
 
-  timerAttachInterrupt(timer, callback, true);
+  timerAttachInterrupt(timer, callback, false);
 }
 
 // 70us

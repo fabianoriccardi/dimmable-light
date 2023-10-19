@@ -133,6 +133,7 @@ static uint8_t thyristorManaged = 0;
  * to be turned off by turn_off_gates_int at the end of the semi-period.
  */
 static uint8_t alwaysOnCounter = 0;
+static uint8_t alwaysOffCounter = 0;
 
 #if defined(ARDUINO_ARCH_ESP8266)
 void HW_TIMER_IRAM_ATTR turn_off_gates_int() {
@@ -167,17 +168,16 @@ void activate_thyristors() {
        // Consider the "near" thyristors
        pinDelay[thyristorManaged + 1].delay - pinDelay[firstToBeUpdated].delay < mergePeriod &&
        // Exclude the one who must remain totally off
-       pinDelay[thyristorManaged].delay < semiPeriodLength - endMargin;
+       pinDelay[thyristorManaged].delay <= semiPeriodLength - endMargin;
        thyristorManaged++) {
     digitalWrite(pinDelay[thyristorManaged].pin, HIGH);
   }
   digitalWrite(pinDelay[thyristorManaged].pin, HIGH);
   thyristorManaged++;
 
-  // This while is dedicated to all those thyristor wih delay >= semiPeriodLength-margin; those are
+  // This while is dedicated to all those thyristor wih delay == semiPeriodLength-margin; those are
   // the ones who shouldn't turn on, hence they can be skipped
-  while (thyristorManaged < Thyristor::nThyristors
-         && pinDelay[thyristorManaged].delay >= semiPeriodLength - endMargin) {
+  while (thyristorManaged < Thyristor::nThyristors && pinDelay[thyristorManaged].delay == semiPeriodLength) {
     thyristorManaged++;
   }
 
@@ -321,12 +321,20 @@ void zero_cross_int() {
   // Update the structures and set thresholds, if needed
   if (Thyristor::newDelayValues && !Thyristor::updatingStruct) {
     Thyristor::newDelayValues = false;
+    alwaysOffCounter = 0;
+    alwaysOnCounter = 0;
     for (int i = 0; i < Thyristor::nThyristors; i++) {
       pinDelay[i].pin = Thyristor::thyristors[i]->pin;
       // Rounding delays to avoid error and unexpected behaviour due to
       // non-ideal thyristors and not perfect sine wave
-      if (Thyristor::thyristors[i]->delay > 0 && Thyristor::thyristors[i]->delay <= startMargin) {
+      if (Thyristor::thyristors[i]->delay == 0) {
+        alwaysOnCounter++;
+        pinDelay[i].delay = 0;
+      } else if (Thyristor::thyristors[i]->delay <= startMargin) {
         pinDelay[i].delay = startMargin;
+      } else if (Thyristor::thyristors[i]->delay == semiPeriodLength) {
+        alwaysOffCounter++;
+        pinDelay[i].delay = semiPeriodLength;
       } else if (Thyristor::thyristors[i]->delay >= semiPeriodLength - endMargin) {
         pinDelay[i].delay = semiPeriodLength - endMargin;
       } else {
@@ -341,7 +349,7 @@ void zero_cross_int() {
   // if all are on and off, I can disable the zero cross interrupt
   if (_allThyristorsOnOff) {
     for (int i = 0; i < Thyristor::nThyristors; i++) {
-      if (pinDelay[i].delay == semiPeriodLength - endMargin) {
+      if (pinDelay[i].delay == semiPeriodLength) {
         digitalWrite(pinDelay[i].pin, LOW);
       } else {
         digitalWrite(pinDelay[i].pin, HIGH);
@@ -376,7 +384,6 @@ void zero_cross_int() {
     digitalWrite(pinDelay[thyristorManaged].pin, HIGH);
     thyristorManaged++;
   }
-  alwaysOnCounter = thyristorManaged;
 
   // This block of code is inteded to manage the case near to the next semi-period:
   // In this case we should avoid to trigger the timer, because the effective semiperiod
@@ -387,7 +394,7 @@ void zero_cross_int() {
   // NOTE: don't know why, but the timer seem trigger even when it is not set...
   // so a provvisory solution if to set the relative callback to NULL!
   // NOTE 2: this improvement should be think even for multiple lamp!
-  if (thyristorManaged < Thyristor::nThyristors && pinDelay[thyristorManaged].delay < semiPeriodLength - 50) {
+  if (thyristorManaged < Thyristor::nThyristors) {
     uint16_t delayAbsolute = pinDelay[thyristorManaged].delay;
 #if defined(ARDUINO_ARCH_ESP8266)
     timer1_attachInterrupt(activate_thyristors);
@@ -441,6 +448,8 @@ void Thyristor::setDelay(uint16_t newDelay) {
       Serial.println(thyristors[i]->delay);
     }
   }
+
+  if (newDelay > semiPeriodLength) { newDelay = semiPeriodLength; }
 
   // Reorder the array to speed up the interrupt.
   // This mini-algorithm works on a different memory area wrt the interrupt,
