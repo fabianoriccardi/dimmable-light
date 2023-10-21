@@ -73,7 +73,7 @@ jobs:
 
       # clone the repo using the `checkout` action
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Arduino Lint
         uses: arduino/arduino-lint-action@v1
@@ -82,7 +82,7 @@ jobs:
 
       # this library is not in the Arduino registry, so it must be installed manually
       - name: Checkout SerialCommand library
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: kroimon/Arduino-SerialCommand
           ref: master
