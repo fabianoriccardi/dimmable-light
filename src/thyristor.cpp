@@ -138,7 +138,7 @@ static uint8_t alwaysOffCounter = 0;
 #if defined(ARDUINO_ARCH_ESP8266)
 void HW_TIMER_IRAM_ATTR turn_off_gates_int() {
 #elif defined(ARDUINO_ARCH_ESP32)
-void IRAM_ATTR turn_off_gates_int() {
+void ARDUINO_ISR_ATTR turn_off_gates_int() {
 #else
 void turn_off_gates_int() {
 #endif
@@ -155,7 +155,7 @@ void turn_off_gates_int() {
 #if defined(ARDUINO_ARCH_ESP8266)
 void HW_TIMER_IRAM_ATTR activate_thyristors() {
 #elif defined(ARDUINO_ARCH_ESP32)
-void IRAM_ATTR activate_thyristors() {
+void ARDUINO_ISR_ATTR activate_thyristors() {
 #else
 void activate_thyristors() {
 #endif
@@ -261,7 +261,7 @@ static uint32_t total = 0;
 #if defined(ARDUINO_ARCH_ESP8266)
 void HW_TIMER_IRAM_ATTR zero_cross_int() {
 #elif defined(ARDUINO_ARCH_ESP32)
-void IRAM_ATTR zero_cross_int() {
+void ARDUINO_ISR_ATTR zero_cross_int() {
 #else
 void zero_cross_int() {
 #endif
@@ -437,7 +437,7 @@ void zero_cross_int() {
 #if defined(ARDUINO_ARCH_ESP8266)
 void HW_TIMER_IRAM_ATTR isr_selector() {
 #elif defined(ARDUINO_ARCH_ESP32)
-void isr_selector() {
+void ARDUINO_ISR_ATTR isr_selector() {
 #else
 void isr_selector() {
 #endif

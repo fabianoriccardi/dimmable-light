@@ -36,14 +36,14 @@ void timerInit(void (*callback)()) {
   timerAttachInterrupt(timer, callback, false);
 }
 
-void IRAM_ATTR startTimerAndTrigger(uint32_t delay) {
+void ARDUINO_ISR_ATTR startTimerAndTrigger(uint32_t delay) {
   timerWrite(timer, 0);
   timerAlarmWrite(timer, delay, false);
   timerAlarmEnable(timer);
   timerStart(timer);
 }
 
-void setAlarm(uint32_t delay) {
+void ARDUINO_ISR_ATTR setAlarm(uint32_t delay) {
   timerAlarmWrite(timer, delay, false);
 
   // On core v2.0.0-2.0.1, the timer alarm is automatically disabled after triggering,
@@ -51,7 +51,7 @@ void setAlarm(uint32_t delay) {
   timerAlarmEnable(timer);
 }
 
-void IRAM_ATTR stopTimer() {
+void ARDUINO_ISR_ATTR stopTimer() {
   timerStop(timer);
 }
 
