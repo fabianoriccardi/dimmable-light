@@ -36,7 +36,6 @@ void timerInit(void (*callback)()) {
   timerAttachInterrupt(timer, callback, false);
 }
 
-// 70us
 void IRAM_ATTR startTimerAndTrigger(uint32_t delay) {
   timerWrite(timer, 0);
   timerAlarmWrite(timer, delay, false);
@@ -46,6 +45,10 @@ void IRAM_ATTR startTimerAndTrigger(uint32_t delay) {
 
 void setAlarm(uint32_t delay) {
   timerAlarmWrite(timer, delay, false);
+
+  // On core v2.0.0-2.0.1, the timer alarm is automatically disabled after triggering,
+  // so re-enable the alarm
+  timerAlarmEnable(timer);
 }
 
 void IRAM_ATTR stopTimer() {
