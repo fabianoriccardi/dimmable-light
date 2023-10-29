@@ -41,7 +41,7 @@ jobs:
 
           - config-name: esp8266-v3
             platform-url: https://arduino.esp8266.com/stable/package_esp8266com_index.json
-            arduino-platform: esp8266:esp8266@3.0.2
+            arduino-platform: esp8266:esp8266@3.1.2
             arduino-boards-fqbn: esp8266:esp8266:d1_mini
 
           - config-name: esp32-v1
