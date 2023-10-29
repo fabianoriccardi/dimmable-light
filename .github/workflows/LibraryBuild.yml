@@ -51,7 +51,7 @@ jobs:
 
           - config-name: esp32-v2
             platform-url: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
-            arduino-platform: esp32:esp32@2.0.4
+            arduino-platform: esp32:esp32@2.0.14
             arduino-boards-fqbn: esp32:esp32:esp32
 
           - config-name: arduino-uno
