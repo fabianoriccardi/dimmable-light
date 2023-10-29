@@ -191,7 +191,10 @@ void activate_thyristors() {
 
   if (thyristorManaged < Thyristor::nThyristors) {
     int delayAbsolute = pinDelay[thyristorManaged].delay;
+
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_SAMD)
     int delayRelative = delayAbsolute - pinDelay[firstToBeUpdated].delay;
+#endif
 
 #if defined(ARDUINO_ARCH_ESP8266)
     timer1_write(US_TO_RTC_TIMER_TICKS(delayRelative));
@@ -220,7 +223,11 @@ void activate_thyristors() {
 #else
     // If there are not more thyristors to serve, set timer to turn off gates' signal
     uint16_t delayAbsolute = semiPeriodLength - gateTurnOffTime;
+
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_SAMD)
     uint16_t delayRelative = delayAbsolute - pinDelay[firstToBeUpdated].delay;
+#endif
+
 #if defined(ARDUINO_ARCH_ESP8266)
     timer1_attachInterrupt(turn_off_gates_int);
     timer1_write(US_TO_RTC_TIMER_TICKS(delayRelative));
