@@ -22,6 +22,11 @@
 
 #include <Arduino.h>
 
+// This workaround is necessary to support compilation on ESP32-Arduino v1.0.x
+#ifndef ARDUINO_ISR_ATTR
+#define ARDUINO_ISR_ATTR
+#endif
+
 void timerInit(void (*callback)());
 
 void startTimerAndTrigger(uint32_t delay);
