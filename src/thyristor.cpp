@@ -50,7 +50,7 @@
 // If not, a char is printed on serial.
 //#define CHECK_MANAGED_THYR
 
-// Force the signal lenght of thyristor's gate. If not enabled, the signal to gate
+// Force the signal length of thyristor's gate. If not enabled, the signal to gate
 // is turned off through an interrupt just before the end of the period.
 // Look at gateTurnOffTime constant for more info.
 //#define PREDEFINED_PULSE_LENGTH
@@ -94,7 +94,9 @@ static_assert(endMargin - gateTurnOffTime > mergePeriod, "endMargin must be grea
                                                          "(gateTurnOffTime + mergePeriod)");
 
 #ifdef PREDEFINED_PULSE_LENGTH
-// Length of pulse of sync gate. this parameter is not applied if thyristor is fully on or off
+// Length of pulse on thyristor's gate pin. This parameter is not applied if thyristor is fully on
+// or off. This option is suitable only for very short pulses, since it blocks the ISR for the
+// specified amount of time.
 static uint8_t pulseWidth = 15;
 #endif
 
@@ -188,12 +190,8 @@ void activate_thyristors() {
 #endif
 
   if (thyristorManaged < Thyristor::nThyristors) {
-#ifdef PREDEFINED_PULSE_LENGTH
-    int delay = pinDelay[thyristorManaged].delay - pinDelay[firstToBeUpdated].delay - pulseWidth;
-#else
     int delayAbsolute = pinDelay[thyristorManaged].delay;
     int delayRelative = delayAbsolute - pinDelay[firstToBeUpdated].delay;
-#endif
 
 #if defined(ARDUINO_ARCH_ESP8266)
     timer1_write(US_TO_RTC_TIMER_TICKS(delayRelative));
