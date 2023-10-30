@@ -24,13 +24,14 @@
 #include <Arduino.h>
 
 /**
- * This parameter controls the timer used by dimmers. Timer0 is used by
- * Arduino core, so you shouldn't use it. Moreover, Timer0 and Timer2 are
- * just 8bit: this affects the dimmer's resolution control. From my experience,
- * 8 bits are not so much to have smooth control on incandescence bulbs,
- * I would suggest you to use other timers (16bits).
+ * This parameter controls the timer used by this library. Timer0 is used by Arduino core, so you
+ * shouldn't use it. The remaining timers are 8-bits or 16-bits. From my experience with
+ * incandescence bulbs, I have observed sharp steps in brightness when using 8-bits timers, so I
+ * decided to set as default the first available 16-bit timer: the *1*.
  *
- * TIMER_ID ranges [1;5] (on arduino mega)
+ * Free timers ID:
+ * - [1;2] on Arduino Uno (ATmega328P)
+ * - [1;5] on Arduino Mega (ATmega2560)
  */
 #define TIMER_ID 1
 

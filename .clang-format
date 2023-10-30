@@ -152,3 +152,4 @@ UseTab: Never
 WhitespaceSensitiveMacros: []
 AlignConsecutiveMacros: AcrossEmptyLines
 AlignArrayOfStructures: Left
+CommentPragmas: '^#define'

@@ -26,12 +26,11 @@
  * These defines affect the declaration of this class and the relative wrappers.
  */
 
-// Set how the network frequency is selected.
-// The first 2 options fix the frequency to the common values (respectively to
-// 50 and 60Hz) at compile time.
-// The third option allows you change network frequency at runtime. This method
-// enables the setFrequency() method. The main drawback is that it is a bit more
-// inefficient w.r.t the "fixed frequency" alternatives.
+// Set the network frequency.
+// The first 2 options fix the frequency to the common values (respectively to 50 and 60Hz) at
+// compile time. The third option allows you change network frequency at runtime. This option
+// automatically enables the setFrequency() method. The main drawback is that it requires a few more
+// resources w.r.t. the "fixed frequency" alternatives.
 // Select one and ONLY one among the following alternatives:
 //#define NETWORK_FREQ_FIXED_50HZ
 //#define NETWORK_FREQ_FIXED_60HZ
@@ -46,27 +45,23 @@
 //#define MONITOR_FREQUENCY
 
 /**
- * This is the core class of this library, to be used to get the finest control
- * on thyristors.
+ * This is the core class of this library, that provides the finest control on thyristors.
  *
- * NOTE: Design Principle for this library: The concept of Thyristor is agnostic
- * to controlled appliance, hence measurement unit to control them should be also
- * appliance-agnostic. However, this will lead to more abstract code,
- * an undesiderable effect especially in contextes such as Arduino,
- * oriented to be as user-friendly as possible.
+ * NOTE: Design Principle for this library: There are 2 main abstraction levels: the first one,
+ * represented by Thyristor class, is agnostic about the controlled load (it doesn't assume a lamp,
+ * a heater or a motor). The second one provides a simpler and more concrete interface, presenting
+ * simplified APIs to the user as expected by an Arduino library, and it is exemplified by
+ * DimmableLight class.
+ * Now, I'm aware that this is positive because it allows to write very
+ * readable code IF the appliance is a light, but it is limiting and weird if the user is going to
+ * use another appliance.
  *
- * For these reason, I decided to separate the library in 2 main level of classes:
- * a low level one (appliance-agnostic), and a higher level one for final
- * user (a nicer appliance-dependent wrapper, e.g. Dimmable Light).
- *
- * About this class, the "core" of the library, the name of the method
- * to control a dimmer is setDelay(..) and not, for example, setPower(..),
- * setBrightness(..),... This gives a precise idea of what's
- * happening in electrical world, that is controlling the activation time
- * of the thyristor.
- * Secondly, the measurement unit is expressed in microsecond,
- * allowing the finest and feasible control reachable with old and cheap
- * MCUs such as Arduino Uno (often still exceeding the real need).
+ * About this class, the "core" of the library, the name of the method to control a dimmer is
+ * setDelay(..) and not, for example, setPower(..), setBrightness(..), ... This gives a precise idea
+ * of what's happening at electrical level, that is controlling the activation time of the
+ * thyristor. Secondly, the measurement unit is expressed in microseconds, allowing the finest and
+ * feasible control reachable with almost any MCU avaialble on the market (including Arduino UNO
+ * based on ATmega328p).
  */
 class Thyristor {
 public:
