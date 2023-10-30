@@ -281,8 +281,20 @@ void zero_cross_int() {
     uint32_t diff = now - lastTime;
 
 #ifdef PRINT_INT_PERIOD
-    if (diff < semiPeriodLength - semiPeriodShrinkMargin) { Serial.println(String('B') + diff); }
-    if (diff > semiPeriodLength + semiPeriodExpandMargin) { Serial.println(String('A') + diff); }
+    if (diff < semiPeriodLength - semiPeriodShrinkMargin) {
+#ifdef ARDUINO_ARCH_ESP32
+      ets_printf("B%d\n", diff);
+#else
+      Serial.println(String('B') + diff);
+#endif
+    }
+    if (diff > semiPeriodLength + semiPeriodExpandMargin) {
+#ifdef ARDUINO_ARCH_ESP32
+      ets_printf("A%d\n", diff);
+#else
+      Serial.println(String('A') + diff);
+#endif
+    }
 #endif
 
 #ifdef FILTER_INT_PERIOD
@@ -318,8 +330,12 @@ void zero_cross_int() {
 
 #ifdef CHECK_MANAGED_THYR
   if (thyristorManaged != Thyristor::nThyristors) {
+#ifdef ARDUINO_ARCH_ESP32
+    ets_printf("E%d\n", thyristorManaged);
+#else
     Serial.print("E");
     Serial.println(thyristorManaged);
+#endif
   }
 #endif
 
