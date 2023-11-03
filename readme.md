@@ -7,22 +7,23 @@ A library to manage thyristors (aka dimmer or triac) and phase-fired control (ak
 ## Motivations
 
 At the very beginning, this library was born from the curiosity to experiment the performance and capabilities of hardware timer on ESP8266 and to control old-fashioned incandescence lights.
-In the second instance, I needed to move thyristor controller to other microcontrollers, and the library had to adapt to the underlying hardware timers, which often vary for specifications and expose a very different interface from architecture to architecture. Moreover, at the time there weren't multi-platform libraries to control thyristor, so I decided to extend and maintain this library.
+In the second instance, I wanted to port the original piece of software to ESP32, and so I started to conceive a flexible software architecture that better adapts to different hardware platforms. Moreover, at the time there weren't multi-platform libraries to control thyristors, so I decided to publish, extend, and maintain this library over time.
 
 ### About the timers
 
-Actually, it was interesting (and sometime frustrating) to discover that a *simple* peripheral such as timer can really vary from architecture to architecture. ESP8266 is equipped with 2 timers, but one is dedicated to Wi-Fi management. This can complicate the development of applications that require multiple and simultaneous use of timer. Moreover, it hasn't "advanced" capabilities such as input compare, multiple output compare channels, and bidirectional counter. At least, these 2 timers are 32-bit. ESP32 is way better than its predecessor: it has 4 64-bit counters with up and down counters, but again no input capture and just 1 output compare channel per timer. Finally, I tried the ATmega328 of AVR family. The main difference and drawback is that they have only 8-bit or 16-bit timers, but this is reasonable if you consider that they were launched in the late 1996, when 8-bit microcontrollers were the standard. However, they provide more functionalities such as input compare and output compare with multiple channels and uniformed control registers over the different family's models. Moreover, they are well-supported by C header files containing complete registers' specifications.
-For sure, among these MCUs, the most complete implementation is provided by the old but gold AVR family.
-This brief overview gives a glimpse of the variety of timers embedded in microcontrollers, and it highlights the importance of building an abstraction layer that hides these differences and expose the essential functionalities needed to control thyristors: one-shot trigger and stop the timer.
+Actually, it was interesting (and sometime frustrating) to discover that a *simple* peripheral such as timer can heavily vary among different platforms.
+For example, the ESP8266 is equipped with 2 timers, but only one is usable by the user since the other is reserved for Wi-Fi management. This can lead immediately to a complicate development if the user application needs the timer for multi purposes. For this reason, [ESP8266TimerInterrupt](https://github.com/khoih-prog/ESP8266TimerInterrupt) was born. Moreover, that timer hasn't "advanced" capabilities such as input compare, multiple output compare channels, a bidirectional counter, and it is only 23-bit. Another example is the ESP32, that is way better than its predecessor: it has 4 64-bit timers with up and down counters, but still no input capture and just 1 output compare channel per timer. Finally, I cannot avoid mentioning the AVR ATmega's timers: they have multiple full-featured 8-bit or 16-bit timers running at lower clock frequency than modern MCUs, which may reduce the overall resolution of dimmer control or lead to more complicated ISRs to handle multiple rollovers. At least, AVR MCUs, compared to ESP8266 and ESP32, are well-supported by C header files containing complete registers' specifications.
+This brief overview gives a glimpse of the variety of properties to consider while working with timers embedded in microcontrollers, and it highlights the importance of building an abstraction layer that hides all these differences and exposes the 2 primitives needed to control thyristors: one-shot timer activation and stop counting.
 
 ## Features
 
-1. Control multiple thyristors at the same time
+1. Control multiple thyristors using a single hardware timer
 2. Compatible with multiple platforms (ESP8266/ESP32/AVR/SAMD)
 3. Interrupt optimization (trigger interrupts only if necessary, no periodic interrupt)
-4. Control the load via gate activation time or relative power
+4. Control the load by 2 measurement unit: gate activation time or linearized relative power
+5. Documented parameters to finely tune the library on your hardware and requirements
 
-Here a comparison against 2 similar and popular libraries:
+Here the comparison against 2 similar and popular libraries:
 
 |                                          | Dimmable Light for Arduino                  | [RobotDynOfficial/RDBDimmer](https://github.com/RobotDynOfficial/RBDDimmer) | [circuitar/Dimmer](https://github.com/circuitar/Dimmer) |
 |------------------------------------------|---------------------------------------------|-----------------------------------------------------------------------------|---------------------------------------------------------|

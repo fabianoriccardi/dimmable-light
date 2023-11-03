@@ -1,22 +1,22 @@
-/***************************************************************************
- *   This file is part of Dimmable Light for Arduino, a library to         *
- *   control dimmers.                                                      *
- *                                                                         *
- *   Copyright (C) 2018-2022  Fabiano Riccardi                             *
- *                                                                         *
- *   Dimmable Light for Arduino is free software; you can redistribute     *
- *   it and/or modify it under the terms of the GNU Lesser General Public  *
- *   License as published by the Free Software Foundation; either          *
- *   version 2.1 of the License, or (at your option) any later version.    *
- *                                                                         *
- *   This library is distributed in the hope that it will be useful,       *
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU     *
- *   Lesser General Public License for more details.                       *
- *                                                                         *
- *   You should have received a copy of the GNU General Public License     *
- *   along with this program; if not, see <http://www.gnu.org/licenses/>   *
- ***************************************************************************/
+/******************************************************************************
+ *  This file is part of Dimmable Light for Arduino, a library to control     *
+ *  dimmers.                                                                  *
+ *                                                                            *
+ *  Copyright (C) 2018-2023  Fabiano Riccardi                                 *
+ *                                                                            *
+ *  Dimmable Light for Arduino is free software; you can redistribute         *
+ *  it and/or modify it under the terms of the GNU Lesser General Public      *
+ *  License as published by the Free Software Foundation; either              *
+ *  version 2.1 of the License, or (at your option) any later version.        *
+ *                                                                            *
+ *  This library is distributed in the hope that it will be useful,           *
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of            *
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU          *
+ *  Lesser General Public License for more details.                           *
+ *                                                                            *
+ *  You should have received a copy of the GNU Lesser General Public License  *
+ *  along with this library; if not, see <http://www.gnu.org/licenses/>.      *
+ ******************************************************************************/
 #include "thyristor.h"
 #include "circular_queue.h"
 #include <Arduino.h>
@@ -33,24 +33,21 @@
 #error "only ESP8266, ESP32, AVR, SAMD architectures are supported"
 #endif
 
-// Check if zero cross interrupts are evenly time-spaced (i.e. no spurious interrupt)
-// If the interrupt is "too" close to the previous one, ignore the current one.
-// To define if two interrupts are too close, look at semiPeriodShrinkMargin and
-// semiPeriodExpandMargin constant
+// Ignore zero-cross interrupts when they occurs too early w.r.t semi-period ideal length.
+// The constant *semiPeriodShrinkMargin* defines the "too early" margin.
+// This filter affects the MONITOR_FREQUENCY measurement.
 //#define FILTER_INT_PERIOD
 
-// FOR DEBUG PURPOSE ONLY:
-// If the FILTER_INT_PERIOD is enabled, print on Serial the time passed
-// from the previous interrupt. when the semi-period length is "wrong"
-// according to semiPeriodShrinkMargin and semiPeriodExpandMargin thresholds.
+// FOR DEBUG PURPOSE ONLY. This option requires FILTER_INT_PERIOD enabled.
+// Print on serial port the time passed from the previous zero cross interrupt when the semi-period
+// length is exceed the interval defined by *semiPeriodShrinkMargin* and *semiPeriodExpandMargin*.
 //#define PRINT_INT_PERIOD
 
-// FOR DEBUG PURPOSE ONLY:
-// check if all the lights were managed in the last semi-period.
-// If not, a char is printed on serial.
+// FOR DEBUG PURPOSE ONLY.
+// Prints a char on the serial port if not all thyristors are managed in a semi-period.
 //#define CHECK_MANAGED_THYR
 
-// Force the signal lenght of thyristor's gate. If not enabled, the signal to gate
+// Force the signal length of thyristor's gate. If not enabled, the signal to gate
 // is turned off through an interrupt just before the end of the period.
 // Look at gateTurnOffTime constant for more info.
 //#define PREDEFINED_PULSE_LENGTH
@@ -66,35 +63,38 @@ static const uint16_t semiPeriodLength = 8333;
 static uint16_t semiPeriodLength = 0;
 #endif
 
-// The margins are precautions against noise, electrical spikes and frequency skew errors.
-// Delay values before startMargin turn the thyristor always ON.
-// Delay values after endMargin turn the thyristor always OFF.
-// Tune this parameters accordingly to your setup (electrical network and MCU).
-// Values are expressed in microseconds
+// These margins are precautions against noise, electrical spikes and frequency skew errors.
+// Activation delays lower than *startMargin* turn the thyristor fully ON.
+// Activation delays higher than *endMargin* turn the thyristor fully OFF.
+// Tune this parameters accordingly to your setup (electrical network, MCU, and ZC circuitry).
+// Values are expressed in microseconds.
 static const uint16_t startMargin = 200;
 static const uint16_t endMargin = 500;
 
-// This parameter represents the time span in which 2 (or more) very near delays are merged:
-// This could be necessary for 2 main reasons:
+// This parameter represents the time span in which 2 (or more) very near delays are merged (the
+// higher ones are merged in the smaller one). This could be necessary for 2 main reasons:
 // 1) Efficiency, in fact in some applications you will never seem differences between
 //    near delays, hence raising many interrupts is useless.
 // 2) MCU inability to satisfy very tight "timer start".
 // After some experiments on incandescence light bulbs, I noted that even 50 microseconds
-// are not negligible, so I decided to set threshold lower that 20microsecond (note that
-// ESP8266 API documentation suggests to set timer on >10us). If you would to use 8bit
-// timers on AVR, you should set a bigger mergePeriod (e.g. 100us).
+// are not negligible, so I decided to set threshold lower than 20microsecond. Before lowering this
+// value, check the documentation of the specific MCU since some have limitations. For example,
+// ESP8266 API documentation suggests to set timer dealy higher than >10us. If you use 8-bit timers
+// on AVR, you should set a bigger mergePeriod (e.g. 100us).
 static const uint16_t mergePeriod = 20;
 
-// Period (in us) before the end of the semiperiod, when an interrupt is trigged to
-// turn off each gate signal. Ignore this parameter if you use a predefined pulse length.
-// Look at PREDEFINED_PULSE_LENGTH constant for more info.
+// Period in microseconds before the end of the semiperiod when an interrupt is triggered to
+// turn off all gate signals. This parameter doesn't have any effect if you enable
+// PREDEFINED_PULSE_LENGTH.
 static const uint16_t gateTurnOffTime = 300;
 
 static_assert(endMargin - gateTurnOffTime > mergePeriod, "endMargin must be greater than "
                                                          "(gateTurnOffTime + mergePeriod)");
 
 #ifdef PREDEFINED_PULSE_LENGTH
-// Length of pulse of sync gate. this parameter is not applied if thyristor is fully on or off
+// Length of pulse on thyristor's gate pin. This parameter is not applied if thyristor is fully on
+// or off. This option is suitable only for very short pulses, since it blocks the ISR for the
+// specified amount of time.
 static uint8_t pulseWidth = 15;
 #endif
 
@@ -103,37 +103,41 @@ struct PinDelay {
   uint16_t delay;
 };
 
+enum class INT_TYPE { ACTIVATE_THYRISTORS, TURN_OFF_GATES };
+
+static INT_TYPE nextISR = INT_TYPE::ACTIVATE_THYRISTORS;
+
 /**
- * Temporary struct to provide the interrupt a memory concurrent-safe
- * NOTE: this structure is manipulated by interrupt routine
+ * Temporary struct manipulated by the ISR storing the timing information about each dimmer.
  */
 static struct PinDelay pinDelay[Thyristor::N];
 
 /**
- * Summary about thyristors state used by interrupt (concurrent-safe)
+ * Summary of thyristors' state used by ISR (concurrent-safe).
  */
 static bool _allThyristorsOnOff = true;
 
 /**
- * Tell if zero cross interrupt is enabled.
+ * Tell if zero-cross interrupt is enabled.
  */
 static bool interruptEnabled = false;
 
 /**
- * Number of thyristors already managed in the current semi-period
+ * Number of thyristors already managed in the current semi-period.
  */
 static uint8_t thyristorManaged = 0;
 
 /**
  * Number of thyristors FULLY on. The remaining ones must be turned
- * to be turned off by turn_off_gates_int at the end of the semi-period.
+ * off by turn_off_gates_int at the end of the semi-period.
  */
 static uint8_t alwaysOnCounter = 0;
+static uint8_t alwaysOffCounter = 0;
 
 #if defined(ARDUINO_ARCH_ESP8266)
 void HW_TIMER_IRAM_ATTR turn_off_gates_int() {
 #elif defined(ARDUINO_ARCH_ESP32)
-void IRAM_ATTR turn_off_gates_int() {
+void ARDUINO_ISR_ATTR turn_off_gates_int() {
 #else
 void turn_off_gates_int() {
 #endif
@@ -143,14 +147,13 @@ void turn_off_gates_int() {
 }
 
 /**
- * Timer routine to turn on one or more thyristors.
- * This function will be called multiple times per semi-period (in case of multi
- * lamps with different at least a different delay value).
+ * Timer routine to turn on one or more thyristors. This function may be be called multiple times
+ * per semi-period depending on the current thyristors configuration.
  */
 #if defined(ARDUINO_ARCH_ESP8266)
 void HW_TIMER_IRAM_ATTR activate_thyristors() {
 #elif defined(ARDUINO_ARCH_ESP32)
-void IRAM_ATTR activate_thyristors() {
+void ARDUINO_ISR_ATTR activate_thyristors() {
 #else
 void activate_thyristors() {
 #endif
@@ -163,17 +166,16 @@ void activate_thyristors() {
        // Consider the "near" thyristors
        pinDelay[thyristorManaged + 1].delay - pinDelay[firstToBeUpdated].delay < mergePeriod &&
        // Exclude the one who must remain totally off
-       pinDelay[thyristorManaged].delay < semiPeriodLength - endMargin;
+       pinDelay[thyristorManaged].delay <= semiPeriodLength - endMargin;
        thyristorManaged++) {
     digitalWrite(pinDelay[thyristorManaged].pin, HIGH);
   }
   digitalWrite(pinDelay[thyristorManaged].pin, HIGH);
   thyristorManaged++;
 
-  // This while is dedicated to all those thyristor wih delay >= semiPeriodLength-margin; those are
+  // This while is dedicated to all those thyristor wih delay == semiPeriodLength-margin; those are
   // the ones who shouldn't turn on, hence they can be skipped
-  while (thyristorManaged < Thyristor::nThyristors
-         && pinDelay[thyristorManaged].delay >= semiPeriodLength - endMargin) {
+  while (thyristorManaged < Thyristor::nThyristors && pinDelay[thyristorManaged].delay == semiPeriodLength) {
     thyristorManaged++;
   }
 
@@ -184,22 +186,22 @@ void activate_thyristors() {
 #endif
 
   if (thyristorManaged < Thyristor::nThyristors) {
-#ifdef PREDEFINED_PULSE_LENGTH
-    int delay = pinDelay[thyristorManaged].delay - pinDelay[firstToBeUpdated].delay - pulseWidth;
-#else
-    int delay = pinDelay[thyristorManaged].delay - pinDelay[firstToBeUpdated].delay;
+    int delayAbsolute = pinDelay[thyristorManaged].delay;
+
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_SAMD)
+    int delayRelative = delayAbsolute - pinDelay[firstToBeUpdated].delay;
 #endif
 
 #if defined(ARDUINO_ARCH_ESP8266)
-    timer1_write(US_TO_RTC_TIMER_TICKS(delay));
+    timer1_write(US_TO_RTC_TIMER_TICKS(delayRelative));
 #elif defined(ARDUINO_ARCH_ESP32)
-    startTimerAndTrigger(delay);
+    setAlarm(delayAbsolute);
 #elif defined(ARDUINO_ARCH_AVR)
-    if (!timerStartAndTrigger(microsecond2Tick(delay))) {
+    if (!timerStartAndTrigger(microsecond2Tick(delayRelative))) {
       Serial.println("activate_thyristors() error timer");
     }
 #elif defined(ARDUINO_ARCH_SAMD)
-  timerStart(microsecond2Tick(delay));
+  timerStart(microsecond2Tick(delayRelative));
 #endif
   } else {
 
@@ -216,21 +218,26 @@ void activate_thyristors() {
 #endif
 #else
     // If there are not more thyristors to serve, set timer to turn off gates' signal
-    uint16_t delay = semiPeriodLength - gateTurnOffTime - pinDelay[firstToBeUpdated].delay;
+    uint16_t delayAbsolute = semiPeriodLength - gateTurnOffTime;
+
+#if defined(ARDUINO_ARCH_ESP8266) || defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_SAMD)
+    uint16_t delayRelative = delayAbsolute - pinDelay[firstToBeUpdated].delay;
+#endif
+
 #if defined(ARDUINO_ARCH_ESP8266)
     timer1_attachInterrupt(turn_off_gates_int);
-    timer1_write(US_TO_RTC_TIMER_TICKS(delay));
+    timer1_write(US_TO_RTC_TIMER_TICKS(delayRelative));
 #elif defined(ARDUINO_ARCH_ESP32)
-    setCallback(turn_off_gates_int);
-    startTimerAndTrigger(delay);
+    nextISR = INT_TYPE::TURN_OFF_GATES;
+    setAlarm(delayAbsolute);
 #elif defined(ARDUINO_ARCH_AVR)
     timerSetCallback(turn_off_gates_int);
-    if (!timerStartAndTrigger(microsecond2Tick(delay))) {
+    if (!timerStartAndTrigger(microsecond2Tick(delayRelative))) {
       Serial.println("activate_thyristors() error timer");
     }
 #elif defined(ARDUINO_ARCH_SAMD)
     timerSetCallback(turn_off_gates_int);
-    timerStart(microsecond2Tick(delay));
+    timerStart(microsecond2Tick(delayRelative));
 #endif
 #endif
   }
@@ -247,7 +254,7 @@ static uint32_t lastTime = 0;
 #endif
 
 #ifdef MONITOR_FREQUENCY
-// Circular Queue to store the value to compute the moving average
+// Circular queue to compute the moving average
 static CircularQueue<uint32_t, 5> queue;
 static uint32_t total = 0;
 #endif
@@ -255,7 +262,7 @@ static uint32_t total = 0;
 #if defined(ARDUINO_ARCH_ESP8266)
 void HW_TIMER_IRAM_ATTR zero_cross_int() {
 #elif defined(ARDUINO_ARCH_ESP32)
-void IRAM_ATTR zero_cross_int() {
+void ARDUINO_ISR_ATTR zero_cross_int() {
 #else
 void zero_cross_int() {
 #endif
@@ -270,8 +277,20 @@ void zero_cross_int() {
     uint32_t diff = now - lastTime;
 
 #ifdef PRINT_INT_PERIOD
-    if (diff < semiPeriodLength - semiPeriodShrinkMargin) { Serial.println(String('B') + diff); }
-    if (diff > semiPeriodLength + semiPeriodExpandMargin) { Serial.println(String('A') + diff); }
+    if (diff < semiPeriodLength - semiPeriodShrinkMargin) {
+#ifdef ARDUINO_ARCH_ESP32
+      ets_printf("B%d\n", diff);
+#else
+      Serial.println(String('B') + diff);
+#endif
+    }
+    if (diff > semiPeriodLength + semiPeriodExpandMargin) {
+#ifdef ARDUINO_ARCH_ESP32
+      ets_printf("A%d\n", diff);
+#else
+      Serial.println(String('A') + diff);
+#endif
+    }
 #endif
 
 #ifdef FILTER_INT_PERIOD
@@ -307,22 +326,36 @@ void zero_cross_int() {
 
 #ifdef CHECK_MANAGED_THYR
   if (thyristorManaged != Thyristor::nThyristors) {
+#ifdef ARDUINO_ARCH_ESP32
+    ets_printf("E%d\n", thyristorManaged);
+#else
     Serial.print("E");
     Serial.println(thyristorManaged);
+#endif
   }
 #endif
 
   // Update the structures and set thresholds, if needed
   if (Thyristor::newDelayValues && !Thyristor::updatingStruct) {
     Thyristor::newDelayValues = false;
+    alwaysOffCounter = 0;
+    alwaysOnCounter = 0;
     for (int i = 0; i < Thyristor::nThyristors; i++) {
       pinDelay[i].pin = Thyristor::thyristors[i]->pin;
-      // Rounding delays to avoid error and unexpected behaviour due to
+      // Rounding delays to avoid error and unexpected behavior due to
       // non-ideal thyristors and not perfect sine wave
-      if (Thyristor::thyristors[i]->delay > 0 && Thyristor::thyristors[i]->delay <= startMargin) {
-        pinDelay[i].delay = startMargin;
-      } else if (Thyristor::thyristors[i]->delay >= semiPeriodLength - endMargin) {
-        pinDelay[i].delay = semiPeriodLength - endMargin;
+      if (Thyristor::thyristors[i]->delay == 0) {
+        alwaysOnCounter++;
+        pinDelay[i].delay = 0;
+      } else if (Thyristor::thyristors[i]->delay < startMargin) {
+        alwaysOnCounter++;
+        pinDelay[i].delay = 0;
+      } else if (Thyristor::thyristors[i]->delay == semiPeriodLength) {
+        alwaysOffCounter++;
+        pinDelay[i].delay = semiPeriodLength;
+      } else if (Thyristor::thyristors[i]->delay > semiPeriodLength - endMargin) {
+        alwaysOffCounter++;
+        pinDelay[i].delay = semiPeriodLength;
       } else {
         pinDelay[i].delay = Thyristor::thyristors[i]->delay;
       }
@@ -335,7 +368,7 @@ void zero_cross_int() {
   // if all are on and off, I can disable the zero cross interrupt
   if (_allThyristorsOnOff) {
     for (int i = 0; i < Thyristor::nThyristors; i++) {
-      if (pinDelay[i].delay == semiPeriodLength - endMargin) {
+      if (pinDelay[i].delay == semiPeriodLength) {
         digitalWrite(pinDelay[i].pin, LOW);
       } else {
         digitalWrite(pinDelay[i].pin, HIGH);
@@ -370,7 +403,6 @@ void zero_cross_int() {
     digitalWrite(pinDelay[thyristorManaged].pin, HIGH);
     thyristorManaged++;
   }
-  alwaysOnCounter = thyristorManaged;
 
   // This block of code is inteded to manage the case near to the next semi-period:
   // In this case we should avoid to trigger the timer, because the effective semiperiod
@@ -381,23 +413,32 @@ void zero_cross_int() {
   // NOTE: don't know why, but the timer seem trigger even when it is not set...
   // so a provvisory solution if to set the relative callback to NULL!
   // NOTE 2: this improvement should be think even for multiple lamp!
-  if (thyristorManaged < Thyristor::nThyristors && pinDelay[thyristorManaged].delay < semiPeriodLength - 50) {
+  if (thyristorManaged < Thyristor::nThyristors && pinDelay[thyristorManaged].delay < semiPeriodLength) {
+    uint16_t delayAbsolute = pinDelay[thyristorManaged].delay;
 #if defined(ARDUINO_ARCH_ESP8266)
     timer1_attachInterrupt(activate_thyristors);
-    timer1_write(US_TO_RTC_TIMER_TICKS(pinDelay[thyristorManaged].delay));
+    timer1_write(US_TO_RTC_TIMER_TICKS(delayAbsolute));
 #elif defined(ARDUINO_ARCH_ESP32)
-    setCallback(activate_thyristors);
-    startTimerAndTrigger(pinDelay[thyristorManaged].delay);
+    // setCallback(activate_thyristors);
+    nextISR = INT_TYPE::ACTIVATE_THYRISTORS;
+    startTimerAndTrigger(delayAbsolute);
 #elif defined(ARDUINO_ARCH_AVR)
     timerSetCallback(activate_thyristors);
-    if (!timerStartAndTrigger(microsecond2Tick(pinDelay[thyristorManaged].delay))) {
+    if (!timerStartAndTrigger(microsecond2Tick(delayAbsolute))) {
       Serial.println("zero_cross_int() error timer");
     }
 #elif defined(ARDUINO_ARCH_SAMD)
   timerSetCallback(activate_thyristors);
-  timerStart(microsecond2Tick(pinDelay[thyristorManaged].delay));
+  timerStart(microsecond2Tick(delayAbsolute));
 #endif
   } else {
+
+    // This while is dedicated to all those thyristor wih delay == semiPeriodLength-margin; those
+    // are the ones who shouldn't turn on, hence they can be skipped
+    while (thyristorManaged < Thyristor::nThyristors && pinDelay[thyristorManaged].delay == semiPeriodLength) {
+      thyristorManaged++;
+    }
+
 #if defined(ARDUINO_ARCH_ESP8266)
     // Given the Arduino HAL and esp8266 technical reference manual,
     // when timer triggers, the counter stops because it has reached zero
@@ -407,6 +448,20 @@ void zero_cross_int() {
 #elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_SAMD)
     // Given actual HAL, AVR and SAMD counter automatically stops on interrupt
 #endif
+  }
+}
+
+#if defined(ARDUINO_ARCH_ESP8266)
+void HW_TIMER_IRAM_ATTR isr_selector() {
+#elif defined(ARDUINO_ARCH_ESP32)
+void ARDUINO_ISR_ATTR isr_selector() {
+#else
+void isr_selector() {
+#endif
+  if (nextISR == INT_TYPE::ACTIVATE_THYRISTORS) {
+    activate_thyristors();
+  } else if (nextISR == INT_TYPE::TURN_OFF_GATES) {
+    turn_off_gates_int();
   }
 }
 
@@ -420,12 +475,14 @@ void Thyristor::setDelay(uint16_t newDelay) {
     }
   }
 
+  if (newDelay > semiPeriodLength) { newDelay = semiPeriodLength; }
+
   // Reorder the array to speed up the interrupt.
-  // This mini-algorithm works on a different memory area wrt the interrupt,
-  // so it is concurrent-safe code
+  // This mini-algorithm works on a different memory area w.r.t. the ISR,
+  // so it is concurrent-safe
 
   updatingStruct = true;
-  // Array example, it is always ordered, higher values means lower delay
+  // Array example, it is always ordered, higher values means lower brightness levels
   // [45,678,5000,7500,9000]
   if (newDelay > delay) {
     if (verbosity > 2) Serial.println("\tlowering the light..");
@@ -528,19 +585,19 @@ void Thyristor::begin() {
 
 #if defined(ARDUINO_ARCH_ESP8266)
   timer1_attachInterrupt(activate_thyristors);
-  // These 2 registers assignements are the "unrolling" of:
+  // These 2 registers assignments are the "unrolling" of:
   // timer1_enable(TIM_DIV16, TIM_EDGE, TIM_SINGLE);
   T1C = (1 << TCTE) | ((TIM_DIV16 & 3) << TCPD) | ((TIM_EDGE & 1) << TCIT) | ((TIM_SINGLE & 1) << TCAR);
   T1I = 0;
 #elif defined(ARDUINO_ARCH_ESP32)
-  timerInit(activate_thyristors);
+  timerInit(isr_selector);
 #elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_SAMD)
   timerSetCallback(activate_thyristors);
   timerBegin();
 #endif
 
 #ifdef MONITOR_FREQUENCY
-  // Starts immediatly to sense the electrical network
+  // Starts immediately to sense the eletricity grid
 
   interruptEnabled = true;
   attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, RISING);

@@ -15,7 +15,11 @@ extern DimmableLightLinearized
 #endif
 
 #if defined(ESP8266)
-  lights[N_LIGHTS] = { { 5 }, { 4 }, { 14 }, { 12 }, { 15 }, { 16 }, { 0 }, { 2 } };
+  // Remember that GPIO0 (D3) and GPIO2 (D4) are "critical" since they control the boot phase.
+  // I have to disconnect them to make it boot when using Krida's dimmers. If you want to
+  // use those pins without disconnecting and connecting the wires, you need additional circuitry to
+  // "protect" them.
+    lights[N_LIGHTS] = { { 5 }, { 4 }, { 14 }, { 12 }, { 15 }, { 16 }, { 0 }, { 2 } };
 #elif defined(ESP32)
   lights[N_LIGHTS] = { { 4 }, { 16 }, { 17 }, { 5 }, { 18 }, { 19 }, { 21 }, { 22 } };
 #elif defined(AVR)  // Arduino
