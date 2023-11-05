@@ -53,7 +53,11 @@ void timerSetCallback(void (*f)());
  *
  * NOTE: 0 or 1 values are not accepted
  */
-bool timerStartAndTrigger(uint16_t tick);
+void timerStartAndTrigger(uint16_t tick);
+
+void timerSetAlarm(uint16_t tick);
+
+void timerStop();
 
 #endif  // HW_TIMER_ARDUINO_H
 
