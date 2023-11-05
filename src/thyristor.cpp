@@ -69,7 +69,7 @@ static uint16_t semiPeriodLength = 0;
 // Tune this parameters accordingly to your setup (electrical network, MCU, and ZC circuitry).
 // Values are expressed in microseconds.
 static const uint16_t startMargin = 200;
-static const uint16_t endMargin = 600;
+static const uint16_t endMargin = 500;
 
 // This parameter represents the time span in which 2 (or more) very near delays are merged (the
 // higher ones are merged in the smaller one). This could be necessary for 2 main reasons:
@@ -144,6 +144,10 @@ void turn_off_gates_int() {
   for (int i = alwaysOnCounter; i < Thyristor::nThyristors; i++) {
     digitalWrite(pinDelay[i].pin, LOW);
   }
+
+#if defined(ARDUINO_ARCH_AVR)
+  timerStop();
+#endif
 }
 
 /**
