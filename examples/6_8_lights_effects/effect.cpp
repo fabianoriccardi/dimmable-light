@@ -19,11 +19,14 @@ extern DimmableLightLinearized
   // I have to disconnect them to make it boot when using Krida's dimmers. If you want to
   // use those pins without disconnecting and connecting the wires, you need additional circuitry to
   // "protect" them.
-    lights[N_LIGHTS] = { { 5 }, { 4 }, { 14 }, { 12 }, { 15 }, { 16 }, { 0 }, { 2 } };
+  lights[N_LIGHTS] = { { 5 }, { 4 }, { 14 }, { 12 }, { 15 }, { 16 }, { 0 }, { 2 } };
 #elif defined(ESP32)
   lights[N_LIGHTS] = { { 4 }, { 16 }, { 17 }, { 5 }, { 18 }, { 19 }, { 21 }, { 22 } };
 #elif defined(AVR)  // Arduino
-lights[N_LIGHTS] = { { 3 }, { 4 }, { 5 }, { 6 }, { 7 }, { 8 }, { 9 }, { 10 } };
+lights[N_LIGHTS] = {
+  { 3 },  { 4 },  { 5 },  { 6 },  { 7 },  { 8 },  { 9 },  { 10 },
+  { 11 }, { 12 }, { 22 }, { 23 }, { 24 }, { 25 }, { 26 }, { 28 },
+};
 #elif defined(ARDUINO_ARCH_SAMD)
 lights[N_LIGHTS] = { { 3 }, { 4 }, { 5 }, { 6 }, { 7 }, { 8 }, { 9 }, { 10 } };
 #endif

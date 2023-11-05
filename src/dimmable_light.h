@@ -126,7 +126,7 @@ public:
   };
 
 private:
-  static const uint8_t N = 8;
+  static const uint8_t N = Thyristor::N;
   static uint8_t nLights;
 
   Thyristor thyristor;

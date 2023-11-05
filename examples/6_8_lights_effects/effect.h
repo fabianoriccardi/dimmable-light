@@ -10,7 +10,7 @@
 
 #include <stdint.h>
 
-const int N_LIGHTS = 8;
+const int N_LIGHTS = 16;
 
 #if defined(ESP8266)
 const int syncPin = 13;

@@ -157,7 +157,7 @@ public:
   static void frequencyMonitorAlwaysOn(bool enable);
 #endif
 
-  static const uint8_t N = 8;
+  static const uint8_t N = 16;
 
 private:
   /**
