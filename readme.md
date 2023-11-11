@@ -37,7 +37,7 @@ Here the comparison against 2 similar and popular libraries:
 | Smart interrupt management         | yes, automatically activated only if needed  | no                                                   | no                                | no |
 | Number of interrupts per semi-period (1)         | number of instantiated dimmers + 1  | 100                                                   | 100                                | 3 |
 
-(1) In the worst case, with default settings
+(1) In the worst case, with default settings\
 (2) If the hardware timer allows it, otherwise it will be lower
 
 ## Installation
