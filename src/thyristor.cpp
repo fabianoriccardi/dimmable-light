@@ -304,7 +304,7 @@ void zero_cross_int() {
 #if defined(ARDUINO_ARCH_AVR)
     // Early timer start, only for avr. This is necessary since the instructions executed in this
     // ISR take much time (more than 30us with only 4 dimmers). Before the end of this ISR, either
-    // the timer will be then stopped or the alarm time will be properly set.
+    // the timer is stop or the alarm time is properly set.
     timerStartAndTrigger(microsecond2Tick(15000));
 #endif
 
