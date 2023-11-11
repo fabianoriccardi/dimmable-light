@@ -25,7 +25,7 @@ This brief overview gives a glimpse of the variety of properties to consider whi
 
 Here the comparison against 2 similar and popular libraries:
 
-|                                    | Dimmable Light for Arduino                            | [RobotDynOfficial/<br>RDBDimmer](https://github.com/RobotDynOfficial/RBDDimmer)                                            | [circuitar/Dimmer](https://github.com/circuitar/Dimmer)                          | [AJMansfield/TriacDimmer](https://github.com/AJMansfield/TriacDimmer) |
+|                                    | Dimmable Light for Arduino                            | [RobotDynOfficial/<br>RDBDimmer](https://github.com/RobotDynOfficial/RBDDimmer)                                            | [circuitar/Dimmer](https://github.com/circuitar/Dimmer)                          | [AJMansfield/<br>TriacDimmer](https://github.com/AJMansfield/TriacDimmer) |
 |----------------------------------- |--------------------------------------------- |----------------------------------------------------- |---------------------------------- |---------------------------------- |
 | Multiple dimmers                   | yes                                          | yes                                                  | yes                               | 2 |
 | Supported frequencies                    | 50/60Hz                                 | 50Hz                                            | 50/60Hz                         | 50/60Hz |
