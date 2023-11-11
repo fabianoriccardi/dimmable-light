@@ -1,0 +1,100 @@
+{
+  "name": "Dimmable Light for Arduino",
+  "version": "1.5.1",
+  "authors": {
+    "name": "Fabiano Riccardi",
+    "email": "fabiano.riccardi@outlook.com"
+  },
+  "description": "This library allows to easily control dimmers (also known as thyristors).",
+  "keywords": [
+    "dimmer",
+    "triac",
+    "thyristor",
+    "timer",
+    "light",
+    "arduino-library",
+    "phase-fired control"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fabianoriccardi/dimmable-light"
+  },
+  "licence": "LGPL-2.1-or-later",
+  "frameworks": [
+    "arduino"
+  ],
+  "platforms": [
+    "espressif8266",
+    "espressif32",
+    "atmelavr",
+    "atmelsam"
+  ],
+  "dependencies": [
+    {
+      "owner": "mike-matera",
+      "name": "ArduinoSTL",
+      "version": "^1.3.3",
+      "platforms": [
+        "atmelavr"
+      ]
+    }
+  ],
+  "examples": [
+    {
+      "name": "1_dimmable_light",
+      "base": "examples/1_dimmable_light",
+      "files": [
+        "1_dimmable_light.ino"
+      ]
+    },
+    {
+      "name": "2_dimmable_lights",
+      "base": "examples/2_dimmable_lights",
+      "files": [
+        "2_dimmable_lights.ino"
+      ]
+    },
+    {
+      "name": "3_dimmable_light_5_light",
+      "base": "examples/3_dimmable_light_5_light",
+      "files": [
+        "3_dimmable_light_5_light.ino"
+      ]
+    },
+    {
+      "name": "4_lights_manager",
+      "base": "examples/4_lights_manager",
+      "files": [
+        "4_lights_manager.ino"
+      ]
+    },
+    {
+      "name": "5_dimmable_manager_n_lights",
+      "base": "examples/5_dimmable_manager_n_lights",
+      "files": [
+        "5_dimmable_manager_n_lights.ino"
+      ]
+    },
+    {
+      "name": "6_8_lights_effects",
+      "base": "examples/6_8_lights_effects",
+      "files": [
+        "6_8_lights_effects.ino"
+      ]
+    },
+    {
+      "name": "7_linearized_dimmable_light",
+      "base": "examples/7_linearized_dimmable_light",
+      "files": [
+        "7_linearized_dimmable_light.ino"
+      ]
+    },
+    {
+      "name": "8_set_frequency_automatically",
+      "base": "examples/8_set_frequency_automatically",
+      "files": [
+        "8_set_frequency_automatically.ino"
+      ]
+    }
+  ]
+}

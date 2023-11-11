@@ -13,7 +13,7 @@
 const int N_LIGHTS = 8;
 
 #if defined(ESP8266)
-const int syncPin = D7;
+const int syncPin = 13;
 #elif defined(ESP32)
 const int syncPin = 23;
 #elif defined(AVR)
@@ -27,7 +27,6 @@ extern DimmableLight lights[];
 #elif defined(LINEARIZED_VALUES)
 extern DimmableLightLinearized lights[];
 #endif
-
 
 extern void (*effect)();
 // The period between a call and the next one in millisecond
@@ -45,8 +44,9 @@ void doOnOffSweep();
 void doInvertedDim();
 void doCircularSwipe();
 void doRandomBri();
-void doRandomBriPeehole();
+void doRandomBriPeephole();
 void doRandomPushExtremeValues();
+void doCircularSwipeRegular();
 
 void offAllLights();
 

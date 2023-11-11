@@ -1,55 +1,88 @@
 # Dimmable Light for Arduino
-A library to manage thyristors (aka dimmer or triac) and phase-fired control (aka phase-cutting control) in Arduino environment. 
 
-## Features
-The main features of this library:
+[![arduino-library-badge](https://www.ardu-badge.com/badge/Dimmable%20Light%20for%20Arduino.svg?)](https://www.ardu-badge.com/Dimmable%20Light%20for%20Arduino) ![Compile Library Examples](https://github.com/fabianoriccardi/dimmable-light/actions/workflows/LibraryBuild.yml/badge.svg)
 
-1. Control indipendently many thyristors at the same time
-2. Support to multiple platforms (ESP8266/ESP32/AVR/SAMD)
-3. Raise interrupts only if strictly necessary (i.e. when the applicance has to turn on, no useless periodic interrupts)
-4. Control effective delivered power to appliances, not just thyristor's activation time
-
-Here a complete comparison among the most similar libraries:
-
-|                                   	| Dimmable Light for Arduino                           	| [RobotDynOfficial/RDBDimmer](https://github.com/RobotDynOfficial/RBDDimmer)                                           	| [circuitar/Dimmer](https://github.com/circuitar/Dimmer)                         	| [AJMansfield/TriacDimmer](https://github.com/AJMansfield/TriacDimmer) |
-|-----------------------------------	|---------------------------------------------	|-----------------------------------------------------	|----------------------------------	|----------------------------------	|
-| Multiple dimmers                  	| yes                                         	| yes                                                 	| yes                              	| 2 |
-| Supported Frequencies                   	| 50/60Hz                                	| 50Hz                                           	| 50/60Hz                        	| 50/60Hz |
-| Supported architecture            	| AVR, SAMD, ESP8266, ESP32                   	| AVR, SAMD, ESP8266, ESP32, STM32F1, STM32F4, SAM 	| AVR                              	| AVR |
-| Control *effective* delivered power 	| yes, dynamic calculation                    	| no                                                  	| yes, static lookup table 	| no |
-| Embedded automations          	| no                                          	| yes, automatic fade to new value                   	| yes, swipe effect                	| no |
-| Optional zero-crossing mode | no                                          	| no                                                  	| yes                              	| no |
-| Resolution                        	| up to 1us                                   	| 1/100 of semi-period energy                           	| 1/100 of semi-period length            	| 0.5 us |
-| Smart Interrupt Management        	| yes, automatically activated only if needed 	| no                                                  	| no                               	| no |
-| Number of interrupts per semi-period (1)        	| number of instantiated dimmers + 1 	| 100                                                  	| 100                               	| 3 |
-
-(1) In the worst case, with default settings 
+A library to manage thyristors (aka dimmer or triac) and phase-fired control (aka phase-cutting control) in Arduino environment.
 
 ## Motivations
-This library was born from the curiosity to learn how hardware timer works on ESP8266 (precision and flexibility) and to control old-fashioned incandescence lights.
 
-Actually it was interesting (and sometime frustrating) to discover that a *simple* peripheral such as timer can really vary from architecture to architecture. In my opinion, the ESP8266 is the worst implementation among these 3 architectures. It could be barely considered a timer/counter: no Input Compare, 1 Output Compare channel, only-down counter and single interrupt on 0 matching. It should carry only 2 of them, and, usually, the first is dedicated to WiFi management. This can stuck application requiring multiple and simultaneous PWM. The unique pro is that they are 32 bits. ESP32 is way better then its predecessor: 4 64bits counters with plenty functionalities, but again no input capture and just 1 output compare channel. The most surpring implementation was provided by old but gold AVR family. The main drawback is that they are only 8 or 16 bits, but you should consider that they are very old (they were launched more that 20 years ago) and 8-bit born. However, they provide many functionalities such as Input Compare/Output Compare with multiple channel and pretty clear and uniform control register over the different family's models. Moreover, they are well supported by well-written C header files containing complete registers' specifications.
+At the very beginning, this library was born from the curiosity to experiment the performance and capabilities of hardware timer on ESP8266 and to control old-fashioned incandescence lights.
+In the second instance, I wanted to port the original piece of software to ESP32, and so I started to conceive a flexible software architecture that better adapts to different hardware platforms. Moreover, at the time there weren't multi-platform libraries to control thyristors, so I decided to publish, extend, and maintain this library over time.
+
+### About the timers
+
+Actually, it was interesting (and sometime frustrating) to discover that a *simple* peripheral such as timer can heavily vary among different platforms.
+For example, the ESP8266 is equipped with 2 timers, but only one is usable by the user since the other is reserved for Wi-Fi management. This can lead immediately to a complicate development if the user application needs the timer for multi purposes. For this reason, [ESP8266TimerInterrupt](https://github.com/khoih-prog/ESP8266TimerInterrupt) was born. Moreover, that timer hasn't "advanced" capabilities such as input compare, multiple output compare channels, a bidirectional counter, and it is only 23-bit. Another example is the ESP32, that is way better than its predecessor: it has 4 64-bit timers with up and down counters, but still no input capture and just 1 output compare channel per timer. Finally, I cannot avoid mentioning the AVR ATmega's timers: they have multiple full-featured 8-bit or 16-bit timers running at lower clock frequency than modern MCUs, which may reduce the overall resolution of dimmer control or lead to more complicated ISRs to handle multiple rollovers. At least, AVR MCUs, compared to ESP8266 and ESP32, are well-supported by C header files containing complete registers' specifications.
+This brief overview gives a glimpse of the variety of properties to consider while working with timers embedded in microcontrollers, and it highlights the importance of building an abstraction layer that hides all these differences and exposes the 2 primitives needed to control thyristors: one-shot timer activation and stop counting.
+
+## Features
+
+1. Control multiple thyristors using a single hardware timer
+2. Compatible with multiple platforms (ESP8266/ESP32/AVR/SAMD)
+3. Interrupt optimization (trigger interrupts only if necessary, no periodic interrupt)
+4. Control the load by 2 measurement unit: gate activation time or linearized relative power
+5. Documented parameters to finely tune the library on your hardware and requirements
+
+Here the comparison against 2 similar and popular libraries:
+
+|                                    | Dimmable Light for Arduino                            | [RobotDynOfficial/RDBDimmer](https://github.com/RobotDynOfficial/RBDDimmer)                                            | [circuitar/Dimmer](https://github.com/circuitar/Dimmer)                          | [AJMansfield/TriacDimmer](https://github.com/AJMansfield/TriacDimmer) |
+|----------------------------------- |--------------------------------------------- |----------------------------------------------------- |---------------------------------- |---------------------------------- |
+| Multiple dimmers                   | yes                                          | yes                                                  | yes                               | 2 |
+| Supported Frequencies                    | 50/60Hz                                 | 50Hz                                            | 50/60Hz                         | 50/60Hz |
+| Supported architecture             | AVR, SAMD, ESP8266, ESP32                    | AVR, SAMD, ESP8266, ESP32, STM32F1, STM32F4, SAM  | AVR                               | AVR |
+| Control *effective* delivered power  | yes, dynamic calculation                     | no                                                   | yes, static lookup table  | no |
+| Embedded automations           | no                                           | yes, automatic fade to new value                    | yes, swipe effect                 | no |
+| Optional zero-crossing mode | no                                           | no                                                   | yes                               | no |
+| Resolution                         | up to 1us                                    | 1/100 of semi-period energy                            | 1/100 of semi-period length             | 0.5 us |
+| Smart Interrupt Management         | yes, automatically activated only if needed  | no                                                   | no                                | no |
+| Number of interrupts per semi-period (1)         | number of instantiated dimmers + 1  | 100                                                   | 100                                | 3 |
+
+(1) In the worst case, with default settings
+(2) If the hardware timer allows it, otherwise it will be lower
 
 ## Installation
-You can install Dimmable Light for Arduino through Arduino Library Manager or cloning this repository.
 
-### Requirements
-You need Arduino IDE and the appropriate board packages. If you want to use the library on AVR boards such as Arduino/Genuino Uno, you also need [ArduinoSTL](https://github.com/mike-matera/ArduinoSTL) (available on Arduino Library Manager). If you want to compile the 6th example (the most complete), you also need [ArduinoSerialCommand](https://github.com/kroimon/Arduino-SerialCommand) library.
+The latest version of Dimmable Light for Arduino is available on Arduino Library Manager and on [PlatformIO registry](https://registry.platformio.org/libraries/fabianoriccardi/Dimmable%20Light%20for%20Arduino).
+
+On AVR boards such as Arduino/Genuino Uno, you also need [ArduinoSTL](https://github.com/mike-matera/ArduinoSTL) (available on Arduino Library Manager).
+If you want to compile the 6th example (the most complete), you also need [ArduinoSerialCommand](https://github.com/kroimon/Arduino-SerialCommand) library.
+
+> 📝 *for AVR core*: use AVR Core v1.8.2 or lower. This is because an incompatibility between ArduinoSTL and new versions of AVR core.
+
+> 📝 *for PlatformIO users*: in `platformio.ini` file it is recommeded to add in `env` section the setting `lib_compat_mode = strict` to avoid conflicts with the default STL included in all environments (but not in Arduino-AVR core) and ArduinoSTL.
 
 ## Usage
-The main APIs are accessible through DimmableLight class. First, you must instantiate one or more DimmableLight, specifying the corresponding pin. Second, you must set Zero Cross pin, calling the static method *setSyncPin(..)*. Finally you must call static method *begin()*: it enables an interrupt on Zero Cross Detection, checking if thyristor(s) must be activated. To set the delivered power level, call method *setBrightness(..)*: it accepts value from 0 to 255, fitting into 8 bit. More details and ready-to-use code in *examples* folder.
 
-If you encounter flickering problem due to noise on eletrical network, you can try to enable (uncommenting) *FILTER_INT_PERIOD* define at the begin of thyristor.cpp file.
+The main APIs are accessible through DimmableLight class. Instantiate one or more DimmableLight, specifying the corresponding activation pin.
 
-If you have strong memory constrain, you can drop the functionalities provided by *dimmable_light_manager.h/cpp* (i.e. you can delete those files).
+    DimmableLight dimmer(3);
 
-For more details check the [Wiki](https://github.com/fabiuz7/Dimmable-Light-Arduino/wiki).
+Set the Zero Cross pin, calling the static method `setSyncPin`:
+
+    DimmableLight::setSyncPin(2);
+
+Then call the static method `begin`:
+
+    DimmableLight::begin();
+
+it enables the interrupt on Zero Cross Detection that checks if any thyristor must be activated. To set the activation time, call the method `setBrightness`:
+
+    dimmer.setBrightness(150);
+
+the given value is the relative activation time w.r.t. the semi-period length. The method accepts values in range [0; 255].
+
+If you encounter flickering problem due to noise on eletrical network, you can try to enable (uncomment) `#define FILTER_INT_PERIOD` at the begin of `thyristor.cpp` file.
+
+If you have strict memory constrain, you can drop the functionalities provided by `dimmable_light_manager.h/cpp` (i.e. you can delete those files).
+
+For ready-to-use code look in `examples` folder. For more details check the header files and the [Wiki](https://github.com/fabianoriccardi/dimmable-light/wiki).
 
 ## Examples
-Along with the library there are 7 examples. If you are a beginner you should start from the first one. Note that examples 3 and 5 work only for esp8266 and esp32 mcu because their dependency on Ticker library. Example number 7 shows how to linearly control dimmer setting the effective energy delivered instead activation time.
 
-The 6th is the most interesting because it provide a good set of effects, selectable from serial port. This example requires 8 dimmers, each one to control a bulb. [Here](https://youtu.be/DRJcCIZw_Mw) you can find a brief video showing the 9th and 11th effect. I had used [this board](https://www.ebay.it/itm/8CH-AC-LED-BULB-DIMMER-SSR-RELAY-110V-220V-SMART-HOME-ARDUINO-RASPBERRY/122631760038), but you can easily replace it with equivalent one.
-In these images you can see the full hardware setting:
+Along with the library, there are 8 examples. If you are a beginner, you should start from the first one. Note that examples 3 and 5 work only for ESP8266 and ESP32 because of their dependency on Ticker library. Example 7 shows how to control linearly the energy delivered to the load instead of controlling directly the gate activation time.
+
+The example 6 demonstrates various fascinating luminous effects and requires 8 dimmers, each one to control a light. [Here](https://youtu.be/DRJcCIZw_Mw) you can find a brief video showing the 9th and 11th effect. I had used [this board](https://www.ebay.it/itm/124269741187), but you can find an equivalent one.
+In these images, you can see the full hardware setting:
 
 !["Lamps"](https://i.ibb.co/zVBRB9k/IMG-4045.jpg "Lamps")
 8 incandescence bulbs.
