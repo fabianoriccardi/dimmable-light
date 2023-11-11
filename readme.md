@@ -28,13 +28,13 @@ Here the comparison against 2 similar and popular libraries:
 |                                    | Dimmable Light for Arduino                            | [RobotDynOfficial/RDBDimmer](https://github.com/RobotDynOfficial/RBDDimmer)                                            | [circuitar/Dimmer](https://github.com/circuitar/Dimmer)                          | [AJMansfield/TriacDimmer](https://github.com/AJMansfield/TriacDimmer) |
 |----------------------------------- |--------------------------------------------- |----------------------------------------------------- |---------------------------------- |---------------------------------- |
 | Multiple dimmers                   | yes                                          | yes                                                  | yes                               | 2 |
-| Supported Frequencies                    | 50/60Hz                                 | 50Hz                                            | 50/60Hz                         | 50/60Hz |
-| Supported architecture             | AVR, SAMD, ESP8266, ESP32                    | AVR, SAMD, ESP8266, ESP32, STM32F1, STM32F4, SAM  | AVR                               | AVR |
+| Supported frequencies                    | 50/60Hz                                 | 50Hz                                            | 50/60Hz                         | 50/60Hz |
+| Supported architectures             | AVR, SAMD, ESP8266, ESP32                    | AVR, SAMD, ESP8266, ESP32, STM32F1, STM32F4, SAM  | AVR                               | AVR |
 | Control *effective* delivered power  | yes, dynamic calculation                     | no                                                   | yes, static lookup table  | no |
-| Embedded automations           | no                                           | yes, automatic fade to new value                    | yes, swipe effect                 | no |
+| Predefined effects           | no                                           | yes, automatic fade to new value                    | yes, swipe effect                 | no |
 | Optional zero-crossing mode | no                                           | no                                                   | yes                               | no |
-| Resolution                         | up to 1us                                    | 1/100 of semi-period energy                            | 1/100 of semi-period length             | 0.5 us |
-| Smart Interrupt Management         | yes, automatically activated only if needed  | no                                                   | no                                | no |
+| Time resolution                         | up to 1us                                    | 1/100 of semi-period energy                            | 1/100 of semi-period length             | 0.5 us |
+| Smart interrupt management         | yes, automatically activated only if needed  | no                                                   | no                                | no |
 | Number of interrupts per semi-period (1)         | number of instantiated dimmers + 1  | 100                                                   | 100                                | 3 |
 
 (1) In the worst case, with default settings
