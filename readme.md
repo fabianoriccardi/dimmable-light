@@ -33,7 +33,7 @@ Here the comparison against 2 similar and popular libraries:
 | Control *effective* delivered power  | yes, dynamic calculation                     | no                                                   | yes, static lookup table  | no |
 | Predefined effects           | no                                           | yes, automatic fade to new value                    | yes, swipe effect                 | no |
 | Optional zero-crossing mode | no                                           | no                                                   | yes                               | no |
-| Time resolution                         | 1us (2)                                    | 1/100 of semi-period energy                            | 1/100 of semi-period length             | 0.5 us |
+| Time resolution                         | 1us (2)                                    | 1/100 of semi-period energy                            | 1/100 of semi-period length             | 0.5us |
 | Smart interrupt management         | yes, automatically activated only if needed  | no                                                   | no                                | no |
 | Number of interrupts per semi-period (1)         | number of instantiated dimmers + 1  | 100                                                   | 100                                | 3 |
 
