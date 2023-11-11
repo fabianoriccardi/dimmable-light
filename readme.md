@@ -23,7 +23,7 @@ This brief overview gives a glimpse of the variety of properties to consider whi
 4. Control the load by 2 measurement unit: gate activation time or linearized relative power
 5. Documented parameters to finely tune the library on your hardware and requirements
 
-Here the comparison against 2 similar and popular libraries:
+Here the comparison against 3 similar and popular libraries:
 
 |                                    | Dimmable Light for Arduino                            | [RobotDynOfficial/<br>RDBDimmer](https://github.com/RobotDynOfficial/RBDDimmer)                                            | [circuitar/Dimmer](https://github.com/circuitar/Dimmer)                          | [AJMansfield/<br>TriacDimmer](https://github.com/AJMansfield/TriacDimmer) |
 |----------------------------------- |--------------------------------------------- |----------------------------------------------------- |---------------------------------- |---------------------------------- |
