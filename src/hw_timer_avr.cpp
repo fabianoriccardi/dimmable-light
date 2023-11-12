@@ -69,8 +69,8 @@
 static void (*timer_callback)() = nullptr;
 
 ISR(TIMER_COMPA_VECTOR(TIMER_ID)) {
-  // Stop counter
-  TCCRxB(TIMER_ID) = 0;
+  // Disable interrupt of Output Compare A
+  TIMSKx(TIMER_ID) &= 0b11111101;
 
   if (timer_callback != nullptr) { timer_callback(); }
 }
@@ -111,7 +111,8 @@ uint16_t microsecond2Tick(uint16_t micro) {
 void timerBegin() {
   // clean control registers TCCRxA and TCC2B registers
   TCCRxA(TIMER_ID) = 0;
-  TCCRxB(TIMER_ID) = 0;
+  // Set CTC mode
+  TCCRxB(TIMER_ID) = 0x08;
 
   // Reset the counter
   // From the AVR datasheet: "To do a 16-bit write, the high byte must be written
@@ -123,17 +124,14 @@ void timerBegin() {
   TCNTxH(TIMER_ID) = 0;
   TCNTxL(TIMER_ID) = 0;
 #endif
-
-  // enable interrupt of Output Compare A
-  TIMSKx(TIMER_ID) = 1 << OCIExA(TIMER_ID);
 }
 
 void timerSetCallback(void (*f)()) {
   timer_callback = f;
 }
 
-bool timerStartAndTrigger(uint16_t tick) {
-  if (tick <= 1) { return false; }
+void timerStartAndTrigger(uint16_t tick) {
+  timerStop();
 
 #if N_BIT_TIMER == 8
   TCNTx(TIMER_ID) = 0;
@@ -155,9 +153,27 @@ bool timerStartAndTrigger(uint16_t tick) {
   TCCRxB(TIMER_ID) = 0x07;
 #elif N_BIT_TIMER == 16
   // 0x02: start counter with prescaler 8
-  TCCRxB(TIMER_ID) = 0x02;
+  TCCRxB(TIMER_ID) |= 0x02;
 #endif
-  return true;
+
+  // enable interrupt of Output Compare A
+  TIMSKx(TIMER_ID) = 1 << OCIExA(TIMER_ID);
+}
+
+void timerSetAlarm(uint16_t tick) {
+#if N_BIT_TIMER == 8
+  OCRxA(TIMER_ID) = tick;
+#elif N_BIT_TIMER == 16
+  OCRxAH(TIMER_ID) = tick >> 8;
+  OCRxAL(TIMER_ID) = tick;
+#endif
+
+  // enable interrupt of Output Compare A
+  TIMSKx(TIMER_ID) = 1 << OCIExA(TIMER_ID);
+}
+
+void timerStop() {
+  TCCRxB(TIMER_ID) &= 0b11111000;
 }
 
 #endif  // END AVR
