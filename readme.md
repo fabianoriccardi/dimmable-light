@@ -23,33 +23,33 @@ This brief overview gives a glimpse of the variety of properties to consider whi
 4. Control the load by 2 measurement unit: gate activation time or linearized relative power
 5. Documented parameters to finely tune the library on your hardware and requirements
 
-Here the comparison against 2 similar and popular libraries:
+Here the comparison against 3 similar and popular libraries:
 
-|                                          | Dimmable Light for Arduino                  | [RobotDynOfficial/RDBDimmer](https://github.com/RobotDynOfficial/RBDDimmer) | [circuitar/Dimmer](https://github.com/circuitar/Dimmer) |
-|------------------------------------------|---------------------------------------------|-----------------------------------------------------------------------------|---------------------------------------------------------|
-| Multiple dimmers                         | yes                                         | yes                                                                         | yes                                                     |
-| Supported Frequencies                    | 50/60Hz                                     | 50Hz                                                                        | 50/60Hz                                                 |
-| Supported architectures                  | AVR, SAMD, ESP8266, ESP32, RP2040           | AVR, SAMD, ESP8266, ESP32, STM32F1, STM32F4, SAM                            | AVR                                                     |
-| Control *effective* delivered power      | yes, dynamic calculation                    | no                                                                          | yes, static lookup table                                |
-| Predefined effects                       | no                                          | yes, automatic fade to new value                                            | yes, swipe effect                                       |
-| Optional zero-crossing mode              | no                                          | no                                                                          | yes                                                     |
-| Time resolution                          | 1us (2)                                     | 1/100 of semi-period energy                                                 | 1/100 of semi-period length                             |
-| Smart Interrupt Management               | yes, automatically activated only if needed | no                                                                          | no                                                      |
-| Number of interrupts per semi-period (1) | number of instantiated dimmers + 1          | 100                                                                         | 100                                                     |                                              |
+|                                    | Dimmable Light for Arduino                            | [RobotDynOfficial/<br>RDBDimmer](https://github.com/RobotDynOfficial/RBDDimmer)                                            | [circuitar/Dimmer](https://github.com/circuitar/Dimmer)                          | [AJMansfield/<br>TriacDimmer](https://github.com/AJMansfield/TriacDimmer) |
+|----------------------------------- |--------------------------------------------- |----------------------------------------------------- |---------------------------------- |---------------------------------- |
+| Multiple dimmers                   | yes                                          | yes                                                  | yes                               | 2 |
+| Supported frequencies                    | 50/60Hz                                 | 50Hz                                            | 50/60Hz                         | 50/60Hz |
+| Supported architectures             | AVR, SAMD, ESP8266, ESP32, RP2040                  | AVR, SAMD, ESP8266, ESP32, STM32F1, STM32F4, SAM  | AVR                               | AVR |
+| Control *effective* delivered power  | yes, dynamic calculation                     | no                                                   | yes, static lookup table  | no |
+| Predefined effects           | no                                           | yes, automatic fade to new value                    | yes, swipe effect                 | no |
+| Optional zero-crossing mode | no                                           | no                                                   | yes                               | no |
+| Time resolution                         | 1us (2)                                    | 1/100 of semi-period energy                            | 1/100 of semi-period length             | 0.5us |
+| Smart interrupt management         | yes, automatically activated only if needed  | no                                                   | no                                | no |
+| Number of interrupts per semi-period (1)         | number of instantiated dimmers + 1  | 100                                                   | 100                                | 3 |
 
-(1) In the worst case, with default settings
+(1) In the worst case, with default settings\
 (2) If the hardware timer allows it, otherwise it will be lower
-
-### Requirements
-
-You need Arduino IDE and the appropriate board packages. On AVR boards such as Arduino/Genuino Uno, you also need [ArduinoSTL](https://github.com/mike-matera/ArduinoSTL) (available on Arduino Library Manager).
-If you want to compile the 6th example (the most complete), you also need [ArduinoSerialCommand](https://github.com/kroimon/Arduino-SerialCommand) library.
-
-> :warning: *for AVR core*: use AVR Core v1.8.2 or lower. This is because an incompatibility between ArduinoSTL and new versions of AVR core, hopefully it will be soon solved.
 
 ## Installation
 
 The latest version of Dimmable Light for Arduino is available on Arduino Library Manager and on [PlatformIO registry](https://registry.platformio.org/libraries/fabianoriccardi/Dimmable%20Light%20for%20Arduino).
+
+On AVR boards such as Arduino/Genuino Uno, you also need [ArduinoSTL](https://github.com/mike-matera/ArduinoSTL) (available on Arduino Library Manager).
+If you want to compile the 6th example (the most complete), you also need [ArduinoSerialCommand](https://github.com/kroimon/Arduino-SerialCommand) library.
+
+> 📝 *for AVR core*: use AVR Core v1.8.2 or lower. This is because an incompatibility between ArduinoSTL and new versions of AVR core.
+
+> 📝 *for PlatformIO users*: in `platformio.ini` file it is recommeded to add in `env` section the setting `lib_compat_mode = strict` to avoid conflicts with the default STL included in all environments (but not in Arduino-AVR core) and ArduinoSTL.
 
 ## Usage
 

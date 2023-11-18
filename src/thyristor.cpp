@@ -146,6 +146,10 @@ void turn_off_gates_int() {
   for (int i = alwaysOnCounter; i < Thyristor::nThyristors; i++) {
     digitalWrite(pinDelay[i].pin, LOW);
   }
+
+#if defined(ARDUINO_ARCH_AVR)
+  timerStop();
+#endif
 }
 
 /**
@@ -175,8 +179,8 @@ void activate_thyristors() {
   digitalWrite(pinDelay[thyristorManaged].pin, HIGH);
   thyristorManaged++;
 
-  // This while is dedicated to all those thyristor wih delay == semiPeriodLength-margin; those are
-  // the ones who shouldn't turn on, hence they can be skipped
+  // This while is dedicated to all those thyristors with delay == semiPeriodLength-margin; those
+  // are the ones who shouldn't turn on, hence they can be skipped
   while (thyristorManaged < Thyristor::nThyristors && pinDelay[thyristorManaged].delay == semiPeriodLength) {
     thyristorManaged++;
   }
@@ -199,9 +203,7 @@ void activate_thyristors() {
 #elif defined(ARDUINO_ARCH_ESP32)
     setAlarm(delayAbsolute);
 #elif defined(ARDUINO_ARCH_AVR)
-    if (!timerStartAndTrigger(microsecond2Tick(delayRelative))) {
-      Serial.println("activate_thyristors() error timer");
-    }
+    timerSetAlarm(microsecond2Tick(delayRelative));
 #elif defined(ARDUINO_ARCH_SAMD)
   timerStart(microsecond2Tick(delayRelative));
 #elif defined(ARDUINO_ARCH_RP2040) && !defined(ARDUINO_ARCH_MBED)
@@ -240,9 +242,7 @@ void activate_thyristors() {
     setAlarm(delayAbsolute);
 #elif defined(ARDUINO_ARCH_AVR)
     timerSetCallback(turn_off_gates_int);
-    if (!timerStartAndTrigger(microsecond2Tick(delayRelative))) {
-      Serial.println("activate_thyristors() error timer");
-    }
+    timerSetAlarm(microsecond2Tick(delayRelative));
 #elif defined(ARDUINO_ARCH_SAMD)
     timerSetCallback(turn_off_gates_int);
     timerStart(microsecond2Tick(delayRelative));
@@ -312,6 +312,16 @@ void zero_cross_int() {
     if (diff < semiPeriodLength - semiPeriodShrinkMargin) { return; }
 #endif
 
+#endif
+
+#if defined(ARDUINO_ARCH_AVR)
+    // Early timer start, only for avr. This is necessary since the instructions executed in this
+    // ISR take much time (more than 30us with only 4 dimmers). Before the end of this ISR, either
+    // the timer is stop or the alarm time is properly set.
+    timerStartAndTrigger(microsecond2Tick(15000));
+#endif
+
+#if defined(FILTER_INT_PERIOD) || defined(MONITOR_FREQUENCY)
 #ifdef MONITOR_FREQUENCY
     // if diff is very very greater than the theoretical value, the electrical signal
     // can be considered as lost for a while and I must reset my moving average.
@@ -437,9 +447,7 @@ void zero_cross_int() {
     startTimerAndTrigger(delayAbsolute);
 #elif defined(ARDUINO_ARCH_AVR)
     timerSetCallback(activate_thyristors);
-    if (!timerStartAndTrigger(microsecond2Tick(delayAbsolute))) {
-      Serial.println("zero_cross_int() error timer");
-    }
+    timerSetAlarm(microsecond2Tick(delayAbsolute));
 #elif defined(ARDUINO_ARCH_SAMD)
   timerSetCallback(activate_thyristors);
   timerStart(microsecond2Tick(delayAbsolute));
@@ -463,8 +471,10 @@ void zero_cross_int() {
     // and no-autorealod was set (this timer can only down-count).
 #elif defined(ARDUINO_ARCH_ESP32)
     stopTimer();
-#elif defined(ARDUINO_ARCH_AVR) || defined(ARDUINO_ARCH_SAMD)
-    // Given actual HAL, AVR and SAMD counter automatically stops on interrupt
+#elif defined(ARDUINO_ARCH_AVR)
+    timerStop();
+#elif defined(ARDUINO_ARCH_SAMD)
+  // Given actual HAL, and SAMD counter automatically stops on interrupt
 #elif defined(ARDUINO_ARCH_RP2040) && !defined(ARDUINO_ARCH_MBED)
     // Timer callback is not rescheduled
 #endif
