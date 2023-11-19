@@ -117,26 +117,20 @@ public:
   static void setSyncPin(uint8_t pin) {
     Thyristor::setSyncPin(pin);
   }
-  
+
   /**
-   * Set the pin direction (FALLING, RISING, CHANGE)
+   * Set the pin direction (RISING (default), FALLING, CHANGE).
    */
-  static void setSyncDir(uint8_t dir){
+  static void setSyncDir(uint8_t dir) {
     Thyristor::setSyncDir(dir);
   }
-  
+
   /**
-   * Set the pin direction (FALLING, RISING, CHANGE)
+   * Set the pin pullup (true = INPUT_PULLUP, false = INPUT). The internal pullup resistor is not
+   * available for each platform and each pin.
    */
-  static void setSyncPullup(bool pullup){
+  static void setSyncPullup(bool pullup) {
     Thyristor::setSyncPullup(pullup);
-  }
-  
-  /**
-   * Set the gate turn off time
-   */
-  static void setGateTurnOffTime(uint16_t turnOffTime){
-    Thyristor::setGateTurnOffTime(turnOffTime);
   }
 
   /**

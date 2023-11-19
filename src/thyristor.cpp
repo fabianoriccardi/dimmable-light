@@ -85,14 +85,13 @@ static const uint16_t endMargin = 500;
 // on AVR, you should set a bigger mergePeriod (e.g. 100us).
 static const uint16_t mergePeriod = 20;
 
-
 // Period in microseconds before the end of the semiperiod when an interrupt is triggered to
 // turn off all gate signals. This parameter doesn't have any effect if you enable
 // PREDEFINED_PULSE_LENGTH.
 static const uint16_t gateTurnOffTime = 300;
 
 static_assert(endMargin - gateTurnOffTime > mergePeriod, "endMargin must be greater than "
-                                                         "(gateTurnOffTime + mergePeriod)");    
+                                                         "(gateTurnOffTime + mergePeriod)");
 
 #ifdef PREDEFINED_PULSE_LENGTH
 // Length of pulse on thyristor's gate pin. This parameter is not applied if thyristor is fully on
@@ -610,7 +609,7 @@ void Thyristor::setDelay(uint16_t newDelay) {
 void Thyristor::turnOn() {
   setDelay(semiPeriodLength);
 }
-void Thyristor::begin(){
+void Thyristor::begin() {
   pinMode(syncPin, syncPullup ? INPUT_PULLUP : INPUT);
 
 #if defined(ARDUINO_ARCH_ESP8266)
@@ -776,14 +775,6 @@ bool Thyristor::mustInterruptBeReEnabled(uint16_t newDelay) {
   if (verbosity > 1) Serial.println(String("allThyristorsOnOff: ") + allThyristorsOnOff);
   return !interruptEnabled && interruptMustBeEnabled;
 }
-
-  /**
-   * Set the gate turn off time
-   */
-  void Thyristor::setGateTurnOffTime(uint16_t timeOff){
-    gateTurnOffTime = timeOff;
-  }
-
 
 uint8_t Thyristor::nThyristors = 0;
 Thyristor* Thyristor::thyristors[Thyristor::N] = { nullptr };

@@ -113,25 +113,21 @@ public:
   static void setSyncPin(uint8_t pin) {
     syncPin = pin;
   }
-  
+
   /**
-   * Set the pin direction (RISING, FALLING, CHANGE)
+   * Set the pin direction (RISING (default), FALLING, CHANGE).
    */
-  static void setSyncDir(uint8_t dir){
+  static void setSyncDir(uint8_t dir) {
     syncDir = dir;
   }
-  
+
   /**
-   * Set the pin pullup
+   * Set the pin pullup (true = INPUT_PULLUP, false = INPUT). The internal pullup resistor is not
+   * available for each platform and each pin.
    */
-  static void setSyncPullup(bool pullup){
+  static void setSyncPullup(bool pullup) {
     syncPullup = pullup;
   }
-  
-  /**
-   * Set the gate turn off time
-   */
-  static void setGateTurnOffTime(uint16_t timeOff);
 
   /**
    * Get frequency.
@@ -177,8 +173,6 @@ public:
 #endif
 
   static const uint8_t N = 8;
-  
-  
 
 private:
   /**
@@ -234,12 +228,12 @@ private:
    * Pin receiving the external Zero Cross signal.
    */
   static uint8_t syncPin;
-  
+
   /**
    * Pin direction (FALLING, RISING, CHANGE).
    */
   static uint8_t syncDir;
-  
+
   /**
    * Pin pullup active.
    */
