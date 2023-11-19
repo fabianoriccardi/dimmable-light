@@ -17,6 +17,29 @@
  *  You should have received a copy of the GNU Lesser General Public License  *
  *  along with this library; if not, see <http://www.gnu.org/licenses/>.      *
  ******************************************************************************/
-#include "dimmable_light_linearized.h"
 
-uint8_t DimmableLightLinearized::nLights = 0;
+#if defined(ARDUINO_ARCH_RP2040) && !defined(ARDUINO_ARCH_MBED)
+
+#ifndef HW_TIMER_PICO_H
+#define HW_TIMER_PICO_H
+
+#include <stdint.h>
+
+/**
+ * Initialize the timer.
+ */
+void timerBegin();
+
+/**
+ * Set callback function on timer triggers
+ */
+void timerSetCallback(void (*callback)());
+
+/**
+ * Start the timer to trigger after the specified number of microseconds.
+ */
+void timerStart(uint64_t t);
+
+#endif  // HW_TIMER_PICO_H
+
+#endif  // ARDUINO_ARCH_RP2040

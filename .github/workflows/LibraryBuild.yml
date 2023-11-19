@@ -1,0 +1,106 @@
+# This is the name of the workflow, visible on GitHub UI
+name: Compile Examples
+on:
+  push: # see: https://help.github.com/en/actions/reference/events-that-trigger-workflows#pull-request-event-pull_request
+    paths:
+      - '**.ino'
+      - '**.cpp'
+      - '**.h'
+      - '**LibraryBuild.yml'
+  pull_request:
+
+jobs:
+  build:
+    name: Compile for ${{ matrix.arduino-platform }}
+
+    # Target OS
+    runs-on: ubuntu-20.04
+
+    env:
+      # Comma separated list without double quotes around the list
+      REQUIRED_LIBRARIES:
+
+    strategy:
+      # The Matrix contains all the configuration to be tested. For each configuration, all the examples are tested
+      matrix:
+
+        # define each specific configuration
+        include:
+
+          # if the current configuration contains the parameter "config-name" and it is equal to "esp8266-v2",
+          # add the following parameters to this configuration. If board-type is never matched,
+          # a new singular configuration is created
+          - config-name: esp8266-v2
+            platform-url: https://arduino.esp8266.com/stable/package_esp8266com_index.json
+            # You can only state specific version, no semantic version rules
+            arduino-platform: esp8266:esp8266@2.7.4
+            # In arduino-boards-fqbn you can specify additional hardware parameters,
+            # like clock frequency or partition scheme
+            # Type "arduino-cli board listall" to view the available boards
+            arduino-boards-fqbn: esp8266:esp8266:d1_mini
+
+          - config-name: esp8266-v3
+            platform-url: https://arduino.esp8266.com/stable/package_esp8266com_index.json
+            arduino-platform: esp8266:esp8266@3.1.2
+            arduino-boards-fqbn: esp8266:esp8266:d1_mini
+
+          - config-name: esp32-v1
+            platform-url: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+            arduino-platform: esp32:esp32@1.0.6
+            arduino-boards-fqbn: esp32:esp32:esp32
+
+          - config-name: esp32-v2
+            platform-url: https://raw.githubusercontent.com/espressif/arduino-esp32/gh-pages/package_esp32_index.json
+            arduino-platform: esp32:esp32@2.0.14
+            arduino-boards-fqbn: esp32:esp32:esp32
+
+          - config-name: arduino-uno
+            arduino-platform: arduino:avr@1.8.2
+            arduino-boards-fqbn: arduino:avr:uno
+            sketches-exclude: 3_dimmable_light_5_light, 5_dimmable_manager_n_lights
+            required-libraries: ArduinoSTL
+
+          - config-name: arduino-nano-33-iot
+            arduino-platform: arduino:samd@1.8.13
+            arduino-boards-fqbn: arduino:samd:nano_33_iot
+            sketches-exclude: 3_dimmable_light_5_light, 5_dimmable_manager_n_lights
+
+          - config-name: rpi-pico
+            platform-url: https://github.com/earlephilhower/arduino-pico/releases/download/global/package_rp2040_index.json
+            arduino-platform: rp2040:rp2040@3.6.0
+            arduino-boards-fqbn: rp2040:rp2040:rpipico
+            sketches-exclude: 3_dimmable_light_5_light, 5_dimmable_manager_n_lights
+
+      # Do not cancel all jobs / architectures if one job fails
+      fail-fast: false
+
+    # This is the list of steps this job will run
+    steps:
+
+      # clone the repo using the `checkout` action
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Arduino Lint
+        uses: arduino/arduino-lint-action@v1
+        with:
+          library-manager: update
+
+      # this library is not in the Arduino registry, so it must be installed manually
+      - name: Checkout SerialCommand library
+        uses: actions/checkout@v4
+        with:
+          repository: kroimon/Arduino-SerialCommand
+          ref: master
+          path: CustomSerialCommand # must contain string "Custom"
+
+      - name: Compile all examples using the arduino-test-compile action
+        # Specify the git tag, not the Github release
+        uses: ArminJo/arduino-test-compile@v3.2.0
+        with:
+          arduino-board-fqbn: ${{ matrix.arduino-boards-fqbn }}
+          arduino-platform: ${{ matrix.arduino-platform }}
+          platform-url: ${{ matrix.platform-url }}
+          sketches-exclude: ${{ matrix.sketches-exclude }}
+          required-libraries: ${{ matrix.required-libraries }}
+          build-properties: '{ "8_set_frequency_automatically": "-DNETWORK_FREQ_RUNTIME -DMONITOR_FREQUENCY"}'

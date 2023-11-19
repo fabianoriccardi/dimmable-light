@@ -17,6 +17,38 @@
  *  You should have received a copy of the GNU Lesser General Public License  *
  *  along with this library; if not, see <http://www.gnu.org/licenses/>.      *
  ******************************************************************************/
-#include "dimmable_light_linearized.h"
 
-uint8_t DimmableLightLinearized::nLights = 0;
+#if defined(ARDUINO_ARCH_RP2040) && !defined(ARDUINO_ARCH_MBED)
+
+#include "hw_timer_pico.h"
+#include <Arduino.h>
+
+static void (*timer_callback)() = nullptr;
+static alarm_id_t alarm_id;
+static alarm_pool_t *alarm_pool;
+
+void timerBegin() {
+  alarm_pool = alarm_pool_get_default();
+}
+
+void timerSetCallback(void (*callback)()) {
+  timer_callback = callback;
+}
+
+void timerStart(uint64_t t) {
+  if (alarm_id) {
+    cancel_alarm(alarm_id);
+    alarm_id = 0;
+  }
+
+  alarm_id = alarm_pool_add_alarm_in_us(
+    alarm_pool, t,
+    [](alarm_id_t, void *) -> int64_t {
+      if (timer_callback != nullptr) { timer_callback(); }
+      alarm_id = 0;
+      return 0;  // Do not reschedule alarm
+    },
+    NULL, true);
+}
+
+#endif  // END ARDUINO_ARCH_RP2040

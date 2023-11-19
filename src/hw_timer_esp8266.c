@@ -29,9 +29,9 @@ in non autoload mode:
                         10 ~ 0x7fffff;
 * Returns      : NONE
 *******************************************************************************/
-void ICACHE_RAM_ATTR hw_timer_arm(u32 val)
+void HW_TIMER_IRAM_ATTR hw_timer_arm(u32 val)
 {
-    RTC_REG_WRITE(FRC1_LOAD_ADDRESS, US_TO_RTC_TIMER_TICKS(val));
+    HW_TIMER_REG_WRITE(FRC1_LOAD_ADDRESS, US_TO_RTC_TIMER_TICKS(val));
 }
 
 static void (* user_hw_timer_cb)(void) = NULL;
@@ -42,12 +42,12 @@ static void (* user_hw_timer_cb)(void) = NULL;
                         timer callback function,
 * Returns      : NONE
 *******************************************************************************/
-void ICACHE_RAM_ATTR hw_timer_set_func(void (* user_hw_timer_cb_set)(void))
+void HW_TIMER_IRAM_ATTR hw_timer_set_func(void (* user_hw_timer_cb_set)(void))
 {
     user_hw_timer_cb = user_hw_timer_cb_set;
 }
 
-static ICACHE_RAM_ATTR void  hw_timer_isr_cb(void)
+static HW_TIMER_IRAM_ATTR void  hw_timer_isr_cb(void)
 {
     if (user_hw_timer_cb != NULL) {
         (*(user_hw_timer_cb))();
@@ -66,13 +66,13 @@ u8 req:
                         1,  autoload mode,
 * Returns      : NONE
 *******************************************************************************/
-void ICACHE_RAM_ATTR hw_timer_init(FRC1_TIMER_SOURCE_TYPE source_type, u8 req)
+void HW_TIMER_IRAM_ATTR hw_timer_init(FRC1_TIMER_SOURCE_TYPE source_type, u8 req)
 {
     if (req == 1) {
-        RTC_REG_WRITE(FRC1_CTRL_ADDRESS,
+        HW_TIMER_REG_WRITE(FRC1_CTRL_ADDRESS,
                       FRC1_AUTO_LOAD | DIVDED_BY_16 | FRC1_ENABLE_TIMER | TM_EDGE_INT);
     } else {
-        RTC_REG_WRITE(FRC1_CTRL_ADDRESS,
+        HW_TIMER_REG_WRITE(FRC1_CTRL_ADDRESS,
                       DIVDED_BY_16 | FRC1_ENABLE_TIMER | TM_EDGE_INT);
     }
 
