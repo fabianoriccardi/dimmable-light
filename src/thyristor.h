@@ -20,7 +20,7 @@
 #ifndef THYRISTOR_H
 #define THYRISTOR_H
 
-#include <stdint.h>
+#include <Arduino.h>
 
 /**
  * These defines affect the declaration of this class and the relative wrappers.
@@ -117,7 +117,7 @@ public:
   /**
    * Set the pin direction (RISING (default), FALLING, CHANGE).
    */
-  static void setSyncDir(uint8_t dir) {
+  static void setSyncDir(decltype(RISING) dir) {
     syncDir = dir;
   }
 
@@ -232,7 +232,7 @@ private:
   /**
    * Pin direction (FALLING, RISING, CHANGE).
    */
-  static uint8_t syncDir;
+  static decltype(RISING) syncDir;
 
   /**
    * Pin pullup active.

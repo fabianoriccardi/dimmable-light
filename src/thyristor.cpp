@@ -782,6 +782,6 @@ bool Thyristor::newDelayValues = false;
 bool Thyristor::updatingStruct = false;
 bool Thyristor::allThyristorsOnOff = true;
 uint8_t Thyristor::syncPin = 255;
-uint8_t Thyristor::syncDir = RISING;
+decltype(RISING) Thyristor::syncDir = RISING;
 bool Thyristor::syncPullup = false;
 bool Thyristor::frequencyMonitorAlwaysEnabled = true;

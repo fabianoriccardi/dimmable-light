@@ -121,7 +121,7 @@ public:
   /**
    * Set the pin direction (RISING (default), FALLING, CHANGE).
    */
-  static void setSyncDir(uint8_t dir) {
+  static void setSyncDir(decltype(RISING) dir) {
     Thyristor::setSyncDir(dir);
   }
 
