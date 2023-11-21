@@ -2,7 +2,7 @@
  *  This file is part of Dimmable Light for Arduino, a library to control     *
  *  dimmers.                                                                  *
  *                                                                            *
- *  Copyright (C) 2018-2023  Fabiano Riccardi                                 *
+ *  Copyright (C) 2023  Adam Hoese                                            *
  *                                                                            *
  *  Dimmable Light for Arduino is free software; you can redistribute         *
  *  it and/or modify it under the terms of the GNU Lesser General Public      *
