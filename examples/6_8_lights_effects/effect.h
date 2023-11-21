@@ -20,6 +20,8 @@ const int syncPin = 23;
 const int syncPin = 2;
 #elif defined(ARDUINO_ARCH_SAMD)
 const int syncPin = 2;
+#elif (defined(ARDUINO_ARCH_RP2040) && !defined(ARDUINO_ARCH_MBED))
+const int syncPin = 2;
 #endif
 
 #if defined(RAW_VALUES)

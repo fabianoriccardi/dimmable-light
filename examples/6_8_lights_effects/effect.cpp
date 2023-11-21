@@ -26,6 +26,8 @@ extern DimmableLightLinearized
 lights[N_LIGHTS] = { { 3 }, { 4 }, { 5 }, { 6 }, { 7 }, { 8 }, { 9 }, { 10 } };
 #elif defined(ARDUINO_ARCH_SAMD)
 lights[N_LIGHTS] = { { 3 }, { 4 }, { 5 }, { 6 }, { 7 }, { 8 }, { 9 }, { 10 } };
+#elif (defined(ARDUINO_ARCH_RP2040) && !defined(ARDUINO_ARCH_MBED))
+lights[N_LIGHTS] = { { 3 }, { 4 }, { 5 }, { 6 }, { 7 }, { 8 }, { 9 }, { 10 } };
 #endif
 
 /**

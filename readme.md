@@ -18,7 +18,7 @@ This brief overview gives a glimpse of the variety of properties to consider whi
 ## Features
 
 1. Control multiple thyristors using a single hardware timer
-2. Compatible with multiple platforms (ESP8266/ESP32/AVR/SAMD)
+2. Compatible with multiple platforms (ESP8266/ESP32/AVR/SAMD/RP2040)
 3. Interrupt optimization (trigger interrupts only if necessary, no periodic interrupt)
 4. Control the load by 2 measurement unit: gate activation time or linearized relative power
 5. Documented parameters to finely tune the library on your hardware and requirements
@@ -29,7 +29,7 @@ Here the comparison against 3 similar and popular libraries:
 |----------------------------------- |--------------------------------------------- |----------------------------------------------------- |---------------------------------- |---------------------------------- |
 | Multiple dimmers                   | yes                                          | yes                                                  | yes                               | 2 |
 | Supported frequencies                    | 50/60Hz                                 | 50Hz                                            | 50/60Hz                         | 50/60Hz |
-| Supported architectures             | AVR, SAMD, ESP8266, ESP32                    | AVR, SAMD, ESP8266, ESP32, STM32F1, STM32F4, SAM  | AVR                               | AVR |
+| Supported architectures             | AVR, SAMD, ESP8266, ESP32, RP2040                  | AVR, SAMD, ESP8266, ESP32, STM32F1, STM32F4, SAM  | AVR                               | AVR |
 | Control *effective* delivered power  | yes, dynamic calculation                     | no                                                   | yes, static lookup table  | no |
 | Predefined effects           | no                                           | yes, automatic fade to new value                    | yes, swipe effect                 | no |
 | Optional zero-crossing mode | no                                           | no                                                   | yes                               | no |
