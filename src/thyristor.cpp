@@ -593,7 +593,7 @@ void Thyristor::setDelay(uint16_t newDelay) {
   if (enableInt) {
     if (verbosity > 2) Serial.println("Re-enabling interrupt");
     interruptEnabled = true;
-    attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, RISING);
+    attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, syncDir);
   }
 
   if (verbosity > 2) {
@@ -611,7 +611,7 @@ void Thyristor::turnOn() {
 }
 
 void Thyristor::begin() {
-  pinMode(digitalPinToInterrupt(syncPin), INPUT);
+  pinMode(syncPin, syncPullup ? INPUT_PULLUP : INPUT);
 
 #if defined(ARDUINO_ARCH_ESP8266)
   timer1_attachInterrupt(activate_thyristors);
@@ -632,7 +632,7 @@ void Thyristor::begin() {
   // Starts immediately to sense the eletricity grid
 
   interruptEnabled = true;
-  attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, RISING);
+  attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, syncDir);
 #endif
 }
 
@@ -699,7 +699,7 @@ void Thyristor::frequencyMonitorAlwaysOn(bool enable) {
 
     if (enable && !interruptEnabled) {
       interruptEnabled = true;
-      attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, RISING);
+      attachInterrupt(digitalPinToInterrupt(syncPin), zero_cross_int, syncDir);
     }
     frequencyMonitorAlwaysEnabled = enable;
 
@@ -783,4 +783,6 @@ bool Thyristor::newDelayValues = false;
 bool Thyristor::updatingStruct = false;
 bool Thyristor::allThyristorsOnOff = true;
 uint8_t Thyristor::syncPin = 255;
+decltype(RISING) Thyristor::syncDir = RISING;
+bool Thyristor::syncPullup = false;
 bool Thyristor::frequencyMonitorAlwaysEnabled = true;

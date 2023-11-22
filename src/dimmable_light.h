@@ -119,6 +119,21 @@ public:
   }
 
   /**
+   * Set the pin direction (RISING (default), FALLING, CHANGE).
+   */
+  static void setSyncDir(decltype(RISING) dir) {
+    Thyristor::setSyncDir(dir);
+  }
+
+  /**
+   * Set the pin pullup (true = INPUT_PULLUP, false = INPUT). The internal pullup resistor is not
+   * available for each platform and each pin.
+   */
+  static void setSyncPullup(bool pullup) {
+    Thyristor::setSyncPullup(pullup);
+  }
+
+  /**
    * Return the number of instantiated lights.
    */
   static uint8_t getLightNumber() {

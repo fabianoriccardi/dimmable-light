@@ -20,7 +20,7 @@
 #ifndef THYRISTOR_H
 #define THYRISTOR_H
 
-#include <stdint.h>
+#include <Arduino.h>
 
 /**
  * These defines affect the declaration of this class and the relative wrappers.
@@ -112,6 +112,21 @@ public:
    */
   static void setSyncPin(uint8_t pin) {
     syncPin = pin;
+  }
+
+  /**
+   * Set the pin direction (RISING (default), FALLING, CHANGE).
+   */
+  static void setSyncDir(decltype(RISING) dir) {
+    syncDir = dir;
+  }
+
+  /**
+   * Set the pin pullup (true = INPUT_PULLUP, false = INPUT). The internal pullup resistor is not
+   * available for each platform and each pin.
+   */
+  static void setSyncPullup(bool pullup) {
+    syncPullup = pullup;
   }
 
   /**
@@ -213,6 +228,16 @@ private:
    * Pin receiving the external Zero Cross signal.
    */
   static uint8_t syncPin;
+
+  /**
+   * Pin direction (FALLING, RISING, CHANGE).
+   */
+  static decltype(RISING) syncDir;
+
+  /**
+   * Pin pullup active.
+   */
+  static bool syncPullup;
 
   /**
    * 0) no messages
