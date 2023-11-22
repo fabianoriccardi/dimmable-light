@@ -609,6 +609,7 @@ void Thyristor::setDelay(uint16_t newDelay) {
 void Thyristor::turnOn() {
   setDelay(semiPeriodLength);
 }
+
 void Thyristor::begin() {
   pinMode(syncPin, syncPullup ? INPUT_PULLUP : INPUT);
 
