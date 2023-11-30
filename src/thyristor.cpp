@@ -73,7 +73,7 @@ static uint16_t semiPeriodLength = 0;
 static const uint16_t startMargin = 200;
 static const uint16_t endMargin = 500;
 
-// This parameter represents the time span in which 2 (or more) very near delays are merged (the
+// Merge Period represents the time span in which 2 (or more) very near delays are merged (the
 // higher ones are merged in the smaller one). This could be necessary for 2 main reasons:
 // 1) Efficiency, in fact in some applications you will never seem differences between
 //    near delays, hence raising many interrupts is useless.
@@ -82,8 +82,17 @@ static const uint16_t endMargin = 500;
 // are not negligible, so I decided to set threshold lower than 20microsecond. Before lowering this
 // value, check the documentation of the specific MCU since some have limitations. For example,
 // ESP8266 API documentation suggests to set timer dealy higher than >10us. If you use 8-bit timers
-// on AVR, you should set a bigger mergePeriod (e.g. 100us).
+// on AVR, you should set a bigger Merge Period (e.g. 100us). Moreover, you should also consider the
+// number of instantiated dimmers: ISRs will take more time as the dimmer count increases, so you
+// may need to increase Merge Period. The default value is intended to handle up to 8 dimmers.
+#if defined(ARDUINO_ARCH_AVR)
+//  This longer Merge Period is due to the implementation of digitalWrite(..) on AVR core, which is
+//  slower than others. In particular, on Arduino Uno R3 and Arduino Mega it takes,
+//  respectively, about 5us and 6us to execute.
+static const uint16_t mergePeriod = 20 + Thyristor::N * 6;
+#else
 static const uint16_t mergePeriod = 20;
+#endif
 
 // Period in microseconds before the end of the semiperiod when an interrupt is triggered to
 // turn off all gate signals. This parameter doesn't have any effect if you enable
