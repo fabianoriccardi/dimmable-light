@@ -22,23 +22,24 @@ This brief overview gives a glimpse of the variety of properties to consider whi
 3. Interrupt optimization (trigger interrupts only if necessary, no periodic interrupt)
 4. Control the load by 2 measurement unit: gate activation time or linearized relative power
 5. Documented parameters to finely tune the library on your hardware and requirements
+6. Real-time monitor of AC frequency
 
 Here the comparison against 3 similar and popular libraries:
 
-|                                    | Dimmable Light for Arduino                            | [RobotDynOfficial/<br>RDBDimmer](https://github.com/RobotDynOfficial/RBDDimmer)                                            | [circuitar/Dimmer](https://github.com/circuitar/Dimmer)                          | [AJMansfield/<br>TriacDimmer](https://github.com/AJMansfield/TriacDimmer) |
-|----------------------------------- |--------------------------------------------- |----------------------------------------------------- |---------------------------------- |---------------------------------- |
-| Multiple dimmers                   | yes                                          | yes                                                  | yes                               | 2 |
-| Supported frequencies                    | 50/60Hz                                 | 50Hz                                            | 50/60Hz                         | 50/60Hz |
-| Supported architectures             | AVR, SAMD, ESP8266, ESP32, RP2040                  | AVR, SAMD, ESP8266, ESP32, STM32F1, STM32F4, SAM  | AVR                               | AVR |
-| Control *effective* delivered power  | yes, dynamic calculation                     | no                                                   | yes, static lookup table  | no |
-| Predefined effects           | no                                           | yes, automatic fade to new value                    | yes, swipe effect                 | no |
-| Optional zero-crossing mode | no                                           | no                                                   | yes                               | no |
-| Time resolution                         | 1us (2)                                    | 1/100 of semi-period energy                            | 1/100 of semi-period length             | 0.5us |
-| Smart interrupt management         | yes, automatically activated only if needed  | no                                                   | no                                | no |
-| Number of interrupts per semi-period (1)         | number of instantiated dimmers + 1  | 100                                                   | 100                                | 3 |
+|                                          | Dimmable Light for Arduino                   | [RobotDynOfficial/<br>RDBDimmer](https://github.com/RobotDynOfficial/RBDDimmer) | [circuitar/Dimmer](https://github.com/circuitar/Dimmer) | [AJMansfield/<br>TriacDimmer](https://github.com/AJMansfield/TriacDimmer) |
+|----------------------------------------- |--------------------------------------------- |----------------------------------------------------- |---------------------------------------- |------------ |
+| Multiple dimmers                         | yes                                          | yes                                                  | yes                                     | 2           |
+| Supported frequencies                    | 50/60Hz                                      | 50Hz                                                 | 50/60Hz                                 | 50/60Hz     |
+| Supported architectures                  | AVR, SAMD, ESP8266, ESP32, RP2040            | AVR, SAMD, ESP8266, ESP32, STM32F1, STM32F4, SAM     | AVR                                     | AVR         |
+| Control *effective* delivered power      | yes, dynamic calculation                     | no                                                   | yes, static lookup table                | no          |
+| Fade gradually to new value              | no                                           | no                                                   | yes, configurable speed                 | no          |
+| Full-wave mode                           | no                                           | no                                                   | yes (count mode)                        | no          |
+| Time resolution                          | 1μs                                          | 1/100 of semi-period length (83μs@60Hz)              | 1/100 of semi-period energy (83μs@60Hz) | 0.5μs       |
+| Smart interrupt management               | yes, automatically activated only if needed  | no                                                   | no                                      | no          |
+| Number of interrupts per semi-period (1) | number of instantiated dimmers + 1           | 100                                                  | 100                                     | 3           |
+| Frequency monitor                        | yes                                          | no                                                   | no                                      | no          |
 
-(1) In the worst case, with default settings\
-(2) If the hardware timer allows it, otherwise it will be lower
+(1) In the worst case, with default settings
 
 ## Installation
 
