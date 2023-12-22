@@ -272,6 +272,13 @@ private:
   friend void activate_thyristors();
   friend void zero_cross_int();
   friend void turn_off_gates_int();
+
+public:
+  #ifdef FILTER_INT_PERIOD
+  // In microsecond
+  static int semiPeriodShrinkMargin;
+  static int semiPeriodExpandMargin;
+  #endif
 };
 
 #endif  // END THYRISTOR_H
