@@ -267,8 +267,8 @@ void activate_thyristors() {
 
 #ifdef FILTER_INT_PERIOD
 // In microsecond
-const static int semiPeriodShrinkMargin = 50;
-const static int semiPeriodExpandMargin = 50;
+int Thyristor::semiPeriodShrinkMargin = 50;
+int Thyristor::semiPeriodExpandMargin = 50;
 #endif
 
 #if defined(FILTER_INT_PERIOD) || defined(MONITOR_FREQUENCY)
@@ -299,14 +299,14 @@ void zero_cross_int() {
     uint32_t diff = now - lastTime;
 
 #ifdef PRINT_INT_PERIOD
-    if (diff < semiPeriodLength - semiPeriodShrinkMargin) {
+    if (diff < semiPeriodLength - Thyristor::semiPeriodShrinkMargin) {
 #ifdef ARDUINO_ARCH_ESP32
       ets_printf("B%d\n", diff);
 #else
       Serial.println(String('B') + diff);
 #endif
     }
-    if (diff > semiPeriodLength + semiPeriodExpandMargin) {
+    if (diff > semiPeriodLength + Thyristor::semiPeriodExpandMargin) {
 #ifdef ARDUINO_ARCH_ESP32
       ets_printf("A%d\n", diff);
 #else
@@ -318,7 +318,7 @@ void zero_cross_int() {
 #ifdef FILTER_INT_PERIOD
     // Filters out spurious interrupts. The effectiveness of this simple
     // filter could vary depending on noise on electrical networ.
-    if (diff < semiPeriodLength - semiPeriodShrinkMargin) { return; }
+    if (diff < semiPeriodLength - Thyristor::semiPeriodShrinkMargin) { return; }
 #endif
 
 #endif
